@@ -11,7 +11,7 @@ export default function AuthLayout({
       <header className="border-b bg-background absolute top-0 left-0 right-0">
         <div className="container flex items-center justify-between h-16 px-4 mx-auto sm:px-8">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold">Transcare</span>
+            <span className="text-xl font-semibold">Transcare</span>
           </Link>
 
           <ModeToggle />
