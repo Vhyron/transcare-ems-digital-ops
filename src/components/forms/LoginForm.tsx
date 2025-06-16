@@ -1,6 +1,6 @@
 "use client";
 
-import { GalleryVerticalEnd } from "lucide-react";
+import { GalleryVerticalEnd, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useState } from "react";
+import { login } from "../../actions/auth.action";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -26,6 +29,8 @@ export default function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<LoginFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,9 +39,26 @@ export default function LoginForm({
     },
   });
 
-  const handleSubmit = (data: LoginFormData) => {
-    // TODO: Handle form submission logic here
-    console.log("Form submitted with data:", data);
+  const handleSubmit = async (data: LoginFormData) => {
+    setIsLoading(true);
+
+    try {
+      const res = await login(data);
+
+      if (res?.error) {
+        toast.error("Sign In Failed", {
+          description:
+            res.error ||
+            "Unable to authenticate. Please check your credentials and try again.",
+        });
+        setIsLoading(false);
+        return;
+      }
+    } catch (error: any) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -64,7 +86,8 @@ export default function LoginForm({
                     <FormControl>
                       <Input
                         type="email"
-                        placeholder="m@example.com"
+                        placeholder="example@email.com"
+                        disabled={isLoading}
                         {...field}
                       />
                     </FormControl>
@@ -79,14 +102,15 @@ export default function LoginForm({
                   <FormItem>
                     <FormLabel>Password *</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input type="password" disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Login
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading && <Loader className="size-4 animate-spin" />}
+                {isLoading ? "Logging in..." : "Login"}
               </Button>
             </div>
           </div>
