@@ -1,6 +1,6 @@
-import { useSidebar } from "./ui/sidebar";
+import { useSidebar } from "../../ui/sidebar";
 
-const NavHeader = () => {
+const NavHeader = ({ title = "Transcare EMS" }: { title?: string }) => {
   const { state } = useSidebar();
 
   return (
@@ -9,7 +9,7 @@ const NavHeader = () => {
         state === "expanded" ? "block" : "hidden"
       }`}
     >
-      Transcare EMS
+      {title}
     </div>
   );
 };

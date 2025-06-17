@@ -39,7 +39,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // console.log("Middleware user:", user);
+  console.log("Middleware user:", user?.email);
+  console.log("Middleware user:", user?.user_metadata.user_role);
 
   if (
     !user &&
@@ -53,9 +54,15 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && request.nextUrl.pathname.startsWith("/login")) {
-    // user is logged in, trying to access login page will be redirected to the home page
+    // user is logged in, trying to access login page
+    // will be redirected to the home page based on their role
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    if (user.user_metadata?.user_role === "admin") {
+      url.pathname = "/admin-dashboard";
+    } else if (user.user_metadata?.user_role === "staff") {
+      url.pathname = "/staff-dashboard";
+    }
+
     return NextResponse.redirect(url);
   }
 
