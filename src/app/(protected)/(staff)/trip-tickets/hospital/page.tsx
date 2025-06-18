@@ -1,0 +1,160 @@
+"use client";
+
+import { useRef } from "react";
+import SignatureCanvas from "react-signature-canvas";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+
+export default function HospitalTripForm() {
+  const nurseSigRef = useRef<SignatureCanvas | null>(null);
+  const billingSigRef = useRef<SignatureCanvas | null>(null);
+  const ambulanceSigRef = useRef<SignatureCanvas | null>(null);
+
+  const clearSignature = (ref: React.RefObject<SignatureCanvas | null>) => {
+    ref.current?.clear();
+  };
+
+  return (
+    <div className="p-10 w-full">
+      <h1 className="text-xl font-bold mb-6">
+        Transcare Emergency Medical Services - Hospital Trip Ticket
+      </h1>
+
+      <form className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm px-10">
+        {[
+          { label: "Date", type: "date" },
+          { label: "Time", type: "time" },
+        ].map(({ label, type }, i) => (
+          <div key={i}>
+            <label className="block mb-1 font-medium ">{label}</label>
+            <Input type={type} className="h-10 text-base" />
+          </div>
+        ))}
+
+        {[{ label: "Room" }, { label: "Vehicle" }, { label: "Plate" }].map(
+          ({ label }, i) => (
+            <div key={i}>
+              <label className="block mb-1 font-medium">{label}</label>
+              <Input type="text" className="h-10 text-base" />
+            </div>
+          )
+        )}
+
+        <div>
+          <label className="block mb-1 font-medium">Patient Name</label>
+          <Input type="text" className="h-10 text-base" />
+        </div>
+        <div>
+          <label className="block mb-1 font-medium">Age/Sex</label>
+          <Input type="text" className="h-10 text-base" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Purpose</label>
+          <Input
+            type="text"
+            className="h-10 text-base"
+            defaultValue="Pick up"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Destination</label>
+          <Input type="text" className="h-10 text-base" />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Type</label>
+          <select className="w-full h-10 text-base border rounded px-2">
+            {["REG", "HMO", "P/N", "InHOUSE"].map((type) => (
+              <option key={type} value={type} className=" text-gray-700">
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">TARE</label>
+          <select className="w-full h-10 text-base border rounded px-2">
+            {["REG", "SCD", "PWD", "CR"].map((opt) => (
+              <option key={opt} value={opt} className="text-gray-700">
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Billing</label>
+          <select className="w-full h-10 text-base border rounded px-2">
+            {["DRP", "P/N", "BILLED", "CSR/P", "CSR/WP"].map((opt) => (
+              <option key={opt} value={opt}  className=" text-gray-700">
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {[
+          "Gross",
+          "Discount",
+          "Payables",
+          "VAT",
+          "Vatables",
+          "ZeroVAT",
+          "Withholding",
+        ].map((field, i) => (
+          <div key={i}>
+            <label className="block mb-1 font-medium">{field}</label>
+            <Input type="text" className="h-10 text-base" />
+          </div>
+        ))}
+
+        <div className="col-span-1 md:col-span-3">
+          <label className="block mb-1 font-medium">Remarks</label>
+          <Textarea className="w-full h-24 text-base" />
+        </div>
+
+        <div className="col-span-1 md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {[
+            { label: "Nurse", ref: nurseSigRef },
+            { label: "Admitting/Billing", ref: billingSigRef },
+            { label: "Ambulance Staff", ref: ambulanceSigRef },
+          ].map(({ label, ref }, index) => (
+            <div key={index}>
+              <label className="block mb-1 font-medium">
+                Signature Over Printed Name ({label})
+              </label>
+              <div className="border border-gray-300 p-3 rounded-md">
+                <SignatureCanvas
+                  ref={ref}
+                  penColor="black"
+                  canvasProps={{
+                    width: 500,
+                    height: 200,
+                    className: "bg-white shadow-md rounded",
+                  }}
+                />
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearSignature(ref)}
+                    type="button"
+                  >
+                    Clear
+                  </Button>
+                  <Button variant="outline" size="sm" type="button">
+                    Upload
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </form>
+    </div>
+  );
+}
