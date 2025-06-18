@@ -6,10 +6,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// function to manually add role for supabase user_metadata for testing only
+// function to manually add role for supabase user_metadata for admin initialization and for testing only
 async function main() {
   const { data, error } = await supabase.auth.admin.updateUserById(
-    "bc7a5dea-2792-4f08-996b-d0bff6e4f5e6", // get id manually from supabase
+    "ac09707f-bf5d-48f3-bdb7-4ad73bcabfb8", // get id manually from supabase
     {
       user_metadata: {
         user_role: "admin", // edit role here
