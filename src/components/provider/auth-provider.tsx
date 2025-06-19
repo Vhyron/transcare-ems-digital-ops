@@ -2,7 +2,7 @@
 
 import { User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
-import { createClient } from "../../utils/supabase/client";
+import { createClient } from "../../lib/supabase/client";
 
 interface AuthContextType {
   user: User | null;

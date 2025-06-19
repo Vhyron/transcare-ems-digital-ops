@@ -14,7 +14,6 @@ import {
 import NavHeader from "../sidebar-components/nav-header";
 import { Bus, ClipboardList, FilePlus, Grid2X2 } from "lucide-react";
 
-// This is sample data.
 const data = {
   user: {
     name: "Staff",

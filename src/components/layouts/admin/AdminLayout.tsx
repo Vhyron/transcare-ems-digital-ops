@@ -3,18 +3,11 @@ import { AdminSidebar } from "./AdminSidebar";
 
 interface Props {
   children: React.ReactNode;
-  breadcrumbs?: {
-    items: Array<{
-      label: string;
-      href?: string;
-      isPage?: boolean;
-    }>;
-  };
 }
 
-export default function AdminLayout({ children, breadcrumbs }: Props) {
+export default function AdminLayout({ children }: Props) {
   return (
-    <BaseDashboardLayout sidebar={<AdminSidebar />} breadcrumbs={breadcrumbs}>
+    <BaseDashboardLayout sidebar={<AdminSidebar />}>
       {children}
     </BaseDashboardLayout>
   );
