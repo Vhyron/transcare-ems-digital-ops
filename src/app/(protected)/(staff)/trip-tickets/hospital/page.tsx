@@ -36,55 +36,65 @@ export default function HospitalTripForm() {
         Transcare Emergency Medical Services - Hospital Trip Ticket
       </h1>
 
-      {/* Section 1: Trip Details */}
       <div className="mb-10 border rounded-lg p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Trip Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-          {[{ label: "Date", type: "date" }, { label: "Time", type: "time" }].map(({ label, type }, i) => (
-            <div key={i}>
-              <label className="block mb-1 font-medium">{label}</label>
-              <Input type={type} className="h-10 text-base" />
-            </div>
-          ))}
 
-          {[{ label: "Room" }, { label: "Vehicle" }, { label: "Plate" }].map(({ label }, i) => (
-            <div key={i}>
-              <label className="block mb-1 font-medium">{label}</label>
-              <Input type="text" className="h-10 text-base" />
-            </div>
-          ))}
-
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm mb-6">
+          <div>
+            <label className="block mb-1 font-medium">Date</label>
+            <Input type="date" className="h-10 text-base" />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Time</label>
+            <Input type="time" className="h-10 text-base" />
+          </div>
+          <div>
+            <label className="block mb-1 font-medium">Room</label>
+            <Input type="text" className="h-10 text-base" />
+          </div>
           <div>
             <label className="block mb-1 font-medium">Type</label>
             <select className="w-full h-10 text-base border rounded px-2">
               {["BLS", "ALS", "BLS-ER", "ALS1"].map((type) => (
-                <option key={type} value={type} className="text-gray-700">
+                <option key={type} value={type}>
                   {type}
                 </option>
               ))}
             </select>
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
           <div>
-            <label className="block mb-1 font-medium">Patient Name</label>
+            <label className="block mb-1 font-medium">Vehicle</label>
             <Input type="text" className="h-10 text-base" />
           </div>
-
+          <div>
+            <label className="block mb-1 font-medium">Plate</label>
+            <Input type="text" className="h-10 text-base" />
+          </div>
           <div>
             <label className="block mb-1 font-medium">Age/Sex</label>
             <Input type="text" className="h-10 text-base" />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
+          <div>
+            <label className="block mb-1 font-medium">Patient Name</label>
+            <Input type="text" className="h-10 text-base" />
+          </div>
           <div>
             <label className="block mb-1 font-medium">Purpose</label>
             <Input type="text" className="h-10 text-base" />
           </div>
-
           <div>
             <label className="block mb-1 font-medium">Pick up</label>
             <Input type="text" className="h-10 text-base" />
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
           <div>
             <label className="block mb-1 font-medium">Destination</label>
             <Input type="text" className="h-10 text-base" />
@@ -92,7 +102,6 @@ export default function HospitalTripForm() {
         </div>
       </div>
 
-      {/* Section 2: Billing & Signatures */}
       <div className="border rounded-lg p-6 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Billing and Signatures</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
@@ -150,36 +159,45 @@ export default function HospitalTripForm() {
           </div>
         </div>
 
-        {/* Signatures */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {[{ label: "Nurse", ref: nurseSigRef }, { label: "Admitting/Billing", ref: billingSigRef }, { label: "Ambulance Staff", ref: ambulanceSigRef }].map(
-            ({ label, ref }, index) => (
-              <div key={index}>
-                <label className="block mb-1 font-medium">
-                  Signature Over Printed Name ({label})
-                </label>
-                <div className="border border-gray-300 p-3 rounded-md" ref={containerRef}>
-                  <SignatureCanvas
-                    ref={ref}
-                    penColor="black"
-                    canvasProps={{
-                      width: canvasWidth,
-                      height: 200,
-                      className: "bg-white shadow-md rounded w-full",
-                    }}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <Button variant="outline" size="sm" onClick={() => clearSignature(ref)} type="button">
-                      Clear
-                    </Button>
-                    <Button variant="outline" size="sm" type="button">
-                      Upload
-                    </Button>
-                  </div>
+          {[
+            { label: "Nurse", ref: nurseSigRef },
+            { label: "Admitting/Billing", ref: billingSigRef },
+            { label: "Ambulance Staff", ref: ambulanceSigRef },
+          ].map(({ label, ref }, index) => (
+            <div key={index}>
+              <label className="block mb-1 font-medium">
+                Signature Over Printed Name ({label})
+              </label>
+              <div
+                className="border border-gray-300 p-3 rounded-md"
+                ref={containerRef}
+              >
+                <SignatureCanvas
+                  ref={ref}
+                  penColor="black"
+                  canvasProps={{
+                    width: canvasWidth,
+                    height: 200,
+                    className: "bg-white shadow-md rounded w-full",
+                  }}
+                />
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearSignature(ref)}
+                    type="button"
+                  >
+                    Clear
+                  </Button>
+                  <Button variant="outline" size="sm" type="button">
+                    Upload
+                  </Button>
                 </div>
               </div>
-            )
-          )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
