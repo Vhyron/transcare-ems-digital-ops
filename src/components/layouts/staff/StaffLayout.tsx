@@ -3,18 +3,11 @@ import { StaffSidebar } from "./StaffSidebar";
 
 interface Props {
   children: React.ReactNode;
-  breadcrumbs?: {
-    items: Array<{
-      label: string;
-      href?: string;
-      isPage?: boolean;
-    }>;
-  };
 }
 
-export default function StaffLayout({ children, breadcrumbs }: Props) {
+export default function StaffLayout({ children }: Props) {
   return (
-    <BaseDashboardLayout sidebar={<StaffSidebar />} breadcrumbs={breadcrumbs}>
+    <BaseDashboardLayout sidebar={<StaffSidebar />}>
       {children}
     </BaseDashboardLayout>
   );

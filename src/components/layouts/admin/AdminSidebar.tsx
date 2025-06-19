@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sidebar";
 import NavHeader from "../sidebar-components/nav-header";
 
-// This is sample data.
 const data = {
   user: {
     name: "Admin",
@@ -35,6 +34,10 @@ const data = {
         {
           title: "All Staff",
           url: "/staff",
+        },
+        {
+          title: "Add Staff",
+          url: "/staff/new",
         },
         {
           title: "Roles & Permissions",
