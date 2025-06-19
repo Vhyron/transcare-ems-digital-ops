@@ -1,15 +1,32 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
+
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 export default function HospitalTripForm() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const nurseSigRef = useRef<SignatureCanvas | null>(null);
   const billingSigRef = useRef<SignatureCanvas | null>(null);
   const ambulanceSigRef = useRef<SignatureCanvas | null>(null);
+  const [canvasWidth, setCanvasWidth] = useState(300);
+
+  useEffect(() => {
+    const updateWidth =
+     () => {
+      if (containerRef.current) {
+        setCanvasWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   const clearSignature = (ref: React.RefObject<SignatureCanvas | null>) => {
     ref.current?.clear();
@@ -90,7 +107,7 @@ export default function HospitalTripForm() {
           <label className="block mb-1 font-medium">Billing</label>
           <select className="w-full h-10 text-base border rounded px-2">
             {["DRP", "P/N", "BILLED", "CSR/P", "CSR/WP"].map((opt) => (
-              <option key={opt} value={opt}  className=" text-gray-700">
+              <option key={opt} value={opt} className=" text-gray-700">
                 {opt}
               </option>
             ))}
@@ -127,14 +144,14 @@ export default function HospitalTripForm() {
               <label className="block mb-1 font-medium">
                 Signature Over Printed Name ({label})
               </label>
-              <div className="border border-gray-300 p-3 rounded-md">
+              <div className="border border-gray-300 p-3 rounded-md " ref={containerRef}>
                 <SignatureCanvas
                   ref={ref}
                   penColor="black"
                   canvasProps={{
-                    width: 500,
+                    width: canvasWidth,
                     height: 200,
-                    className: "bg-white shadow-md rounded",
+                    className: "bg-white shadow-md rounded w-full",
                   }}
                 />
                 <div className="flex gap-2 mt-2">
