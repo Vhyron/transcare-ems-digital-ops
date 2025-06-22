@@ -1,7 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { NewUser, usersTable } from "@/db/schema/users.schema";
+import {
+  NewUser,
+  UpdateUserSchema,
+  usersTable,
+} from "@/db/schema/users.schema";
 import { eq } from "drizzle-orm";
 
 export async function getUserById(id: string) {
@@ -28,12 +32,17 @@ export async function createUser(user: NewUser) {
 }
 
 export async function updateUser(id: string, data: Partial<NewUser>) {
+  const validated = UpdateUserSchema.safeParse(data);
+  if (validated?.error) {
+    return { error: validated.error };
+  }
+
   const [updatedUser] = await db
     .update(usersTable)
-    .set(data)
+    .set(validated.data)
     .where(eq(usersTable.id, id))
     .returning();
-  return updatedUser;
+  return { data: updatedUser };
 }
 
 export async function deleteUser(id: string) {
