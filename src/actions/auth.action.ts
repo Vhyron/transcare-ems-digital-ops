@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "../lib/supabase/server";
 import { redirect } from "next/navigation";
+import { NewStaffFormData } from "../components/forms/NewStaffForm";
 
 export async function login(data: { email: string; password: string }) {
   const supabase = await createClient();
@@ -24,6 +25,34 @@ export async function login(data: { email: string; password: string }) {
   } else if (user?.user_metadata?.user_role === "staff") {
     redirect("/staff-dashboard");
   }
+}
+
+export async function registerStaff(data: NewStaffFormData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.confirmPassword,
+    options: {
+      data: {
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        user_role: "staff",
+      },
+    },
+  });
+
+  if (error) {
+    console.error("Signup Error: ", error);
+    return { error: error.message, data: null };
+  }
+
+  revalidatePath("/", "layout");
+
+  return { data: user, error: null };
 }
 
 export async function logout() {
