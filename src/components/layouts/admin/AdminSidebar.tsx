@@ -13,18 +13,13 @@ import {
 } from "@/components/ui/sidebar";
 import NavHeader from "../sidebar-components/nav-header";
 import { adminNavs } from "../../../utils/constant/nav-data";
-
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@transcare.ph",
-    avatar: "https://github.com/admin-avatar.png",
-  },
-};
+import { useAuth } from "../../provider/auth-provider";
 
 export function AdminSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const { user, loading } = useAuth();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -34,7 +29,16 @@ export function AdminSidebar({
         <NavMain items={adminNavs} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            email: user?.email || "",
+            name: `${user?.user_metadata?.firstName || ""} ${
+              user?.user_metadata?.lastName || ""
+            }`,
+            avatar: "https://github.com/shadcn.png",
+          }}
+          loading={loading}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

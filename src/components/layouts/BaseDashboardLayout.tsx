@@ -1,9 +1,13 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { ModeToggle } from "../ModeToggle";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,25 +16,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ModeToggle } from "../ModeToggle";
+import { generateBreadcrumbs } from "@/utils/breadcrumbs";
 
 interface BaseDashboardLayoutProps {
   children: React.ReactNode;
   sidebar: React.ReactNode;
-  breadcrumbs?: {
-    items: Array<{
-      label: string;
-      href?: string;
-      isPage?: boolean;
-    }>;
-  };
+  userRole: "admin" | "staff";
 }
 
 export function BaseDashboardLayout({
   children,
   sidebar,
-  breadcrumbs,
+  userRole,
 }: BaseDashboardLayoutProps) {
+  const pathname = usePathname();
+  const breadcrumbs = generateBreadcrumbs(pathname, userRole);
+
   return (
     <SidebarProvider>
       {sidebar}
@@ -42,10 +43,10 @@ export function BaseDashboardLayout({
               orientation="vertical"
               className="mr-2 data-[orientation=vertical]:h-4"
             />
-            {breadcrumbs && (
+            {breadcrumbs.length > 0 && (
               <Breadcrumb>
                 <BreadcrumbList>
-                  {breadcrumbs.items.map((item, index) => (
+                  {breadcrumbs.map((item, index) => (
                     <div key={index} className="flex items-center">
                       {index > 0 && (
                         <BreadcrumbSeparator className="hidden md:block" />

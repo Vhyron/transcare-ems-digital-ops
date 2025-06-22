@@ -7,7 +7,7 @@ interface Props {
 
 export default function StaffLayout({ children }: Props) {
   return (
-    <BaseDashboardLayout sidebar={<StaffSidebar />}>
+    <BaseDashboardLayout sidebar={<StaffSidebar />} userRole="staff">
       {children}
     </BaseDashboardLayout>
   );
