@@ -10,7 +10,7 @@ import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export default function HospitalTripForm() {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  // const containerRef = useRef<HTMLDivElement | null>(null);
   const nurseSigRef = useRef<SignatureCanvas | null>(null);
   const billingSigRef = useRef<SignatureCanvas | null>(null);
   const ambulanceSigRef = useRef<SignatureCanvas | null>(null);
@@ -25,9 +25,9 @@ export default function HospitalTripForm() {
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
 
-  const openModal = (type: "nurse" | "billing" | "ambulance") => {
-    setActiveSig(type);
-  };
+  // const openModal = (type: "nurse" | "billing" | "ambulance") => {
+  //   setActiveSig(type);
+  // };
 
   const getRefByType = (type: string | null) => {
     if (type === "nurse") return nurseSigRef;
