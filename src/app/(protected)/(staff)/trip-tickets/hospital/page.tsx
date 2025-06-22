@@ -88,7 +88,7 @@ export default function HospitalTripForm() {
       ref.current.clear();
       (ref.current as any).loadFromDataURL(dataUrl);
     }
-  }, [activeSig]);
+  }, [activeSig, sigData]);
 
   useEffect(() => {
     if (modalCanvasRef.current) {
