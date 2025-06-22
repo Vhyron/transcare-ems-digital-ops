@@ -1,6 +1,5 @@
 "use client";
 
-import { FileText, Grid2X2, Users2 } from "lucide-react";
 import * as React from "react";
 
 import { NavMain } from "@/components/layouts/sidebar-components/nav-main";
@@ -13,6 +12,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import NavHeader from "../sidebar-components/nav-header";
+import { adminNavs } from "../../../utils/constant/nav-data";
 
 const data = {
   user: {
@@ -20,46 +20,6 @@ const data = {
     email: "admin@transcare.ph",
     avatar: "https://github.com/admin-avatar.png",
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin-dashboard",
-      icon: Grid2X2,
-    },
-    {
-      title: "Staff Management",
-      url: "/staff",
-      icon: Users2,
-      items: [
-        {
-          title: "All Staff",
-          url: "/staff",
-        },
-        {
-          title: "Add Staff",
-          url: "/staff/new",
-        },
-        {
-          title: "Roles & Permissions",
-          url: "/staff/roles",
-        },
-      ],
-    },
-    {
-      title: "Form Approvals",
-      icon: FileText,
-      items: [
-        {
-          title: "Pending Forms",
-          url: "/forms/pending",
-        },
-        {
-          title: "Reviewed Forms",
-          url: "/forms/reviewed",
-        },
-      ],
-    },
-  ],
 };
 
 export function AdminSidebar({
@@ -71,7 +31,7 @@ export function AdminSidebar({
         <NavHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={adminNavs} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
