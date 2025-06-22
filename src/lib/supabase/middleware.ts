@@ -39,8 +39,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("Middleware user:", user?.email);
-  console.log("User Role:", user?.user_metadata.user_role);
+  console.log("Middleware-User:", user?.email);
+  console.log("User Metadata:", user?.user_metadata);
 
   if (
     !user &&
