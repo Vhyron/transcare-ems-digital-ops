@@ -1,6 +1,5 @@
 "use client";
 
-import { FileText, Grid2X2, Users2 } from "lucide-react";
 import * as React from "react";
 
 import { NavMain } from "@/components/layouts/sidebar-components/nav-main";
@@ -13,68 +12,33 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import NavHeader from "../sidebar-components/nav-header";
-
-const data = {
-  user: {
-    name: "Admin",
-    email: "admin@transcare.ph",
-    avatar: "https://github.com/admin-avatar.png",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin-dashboard",
-      icon: Grid2X2,
-    },
-    {
-      title: "Staff Management",
-      url: "/staff",
-      icon: Users2,
-      items: [
-        {
-          title: "All Staff",
-          url: "/staff",
-        },
-        {
-          title: "Add Staff",
-          url: "/staff/new",
-        },
-        {
-          title: "Roles & Permissions",
-          url: "/staff/roles",
-        },
-      ],
-    },
-    {
-      title: "Form Approvals",
-      icon: FileText,
-      items: [
-        {
-          title: "Pending Forms",
-          url: "/forms/pending",
-        },
-        {
-          title: "Reviewed Forms",
-          url: "/forms/reviewed",
-        },
-      ],
-    },
-  ],
-};
+import { adminNavs } from "../../../utils/constant/nav-data";
+import { useAuth } from "../../provider/auth-provider";
 
 export function AdminSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const { user, loading } = useAuth();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <NavHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={adminNavs} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            email: user?.email || "",
+            name: `${user?.user_metadata?.firstName || ""} ${
+              user?.user_metadata?.lastName || ""
+            }`,
+            avatar: "https://github.com/shadcn.png",
+          }}
+          loading={loading}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

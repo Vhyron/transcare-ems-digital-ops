@@ -7,7 +7,7 @@ interface Props {
 
 export default function AdminLayout({ children }: Props) {
   return (
-    <BaseDashboardLayout sidebar={<AdminSidebar />}>
+    <BaseDashboardLayout sidebar={<AdminSidebar />} userRole="admin">
       {children}
     </BaseDashboardLayout>
   );

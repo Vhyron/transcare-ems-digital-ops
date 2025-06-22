@@ -7,36 +7,50 @@ import { createClient } from "../../lib/supabase/client";
 interface AuthContextType {
   user: User | null;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const supabase = createClient();
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-
-  const supabase = createClient();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserWithCurrency = async () => {
+    const getInitialUser = async () => {
       const {
         data: { user: supabaseUser },
         error,
       } = await supabase.auth.getUser();
 
-      if (error || !supabaseUser) {
-        console.error(error);
+      if (error) {
+        console.error("Error getting user:", error);
         setUser(null);
-        return;
+      } else {
+        setUser(supabaseUser);
       }
 
-      setUser(supabaseUser);
+      setLoading(false);
     };
 
-    fetchUserWithCurrency();
-  }, [supabase]);
+    getInitialUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

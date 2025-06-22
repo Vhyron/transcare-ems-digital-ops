@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import {
@@ -18,21 +18,10 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import { NavItem } from "../../../utils/constant/nav-data";
+import Link from "next/link";
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string;
-    url?: string;
-    icon?: LucideIcon;
-    isActive?: boolean;
-    items?: {
-      title: string;
-      url: string;
-    }[];
-  }[];
-}) {
+export function NavMain({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
@@ -64,9 +53,9 @@ export function NavMain({
                             asChild
                             isActive={pathname === subItem.url}
                           >
-                            <a href={subItem.url}>
+                            <Link href={subItem.url}>
                               <span>{subItem.title}</span>
-                            </a>
+                            </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
                       ))}
@@ -79,10 +68,10 @@ export function NavMain({
             return (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild isActive={pathname === item.url}>
-                  <a href={item.url} title={item.title}>
+                  <Link href={item.url} title={item.title}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );
