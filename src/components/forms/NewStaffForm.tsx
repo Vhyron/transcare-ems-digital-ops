@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from "../ui/form";
 import { useRouter } from "next/navigation";
-import { registerStaff } from "../../actions/auth.action";
+import { createUser } from "../../actions/auth.action";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
 
@@ -54,17 +54,18 @@ export default function NewStaffForm() {
     setIsLoading(true);
 
     try {
-      const res = await registerStaff(data);
+      const res = await createUser(data);
 
       if (res?.error) {
-        toast.error("Error registering new staff", {
+        toast.error("Failed to register staff.", {
           description: res.error,
+          richColors: true
         });
         return;
       }
 
-      toast.success("New staff registered successfully!", {
-        description: "Email confirmation was sent to their email!",
+      toast.success("Staff Registered!", {
+        description: "New staff has been added, let them know!",
       });
 
       form.reset();
