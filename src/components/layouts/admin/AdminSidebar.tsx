@@ -26,15 +26,14 @@ export function AdminSidebar({
         <NavHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={adminNavs} />
+        <NavMain items={adminNavs} label="Admin Dashboard" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser
           user={{
             email: user?.email || "",
-            name: `${user?.user_metadata?.firstName || ""} ${
-              user?.user_metadata?.lastName || ""
-            }`,
+            name: `${user?.user_metadata?.firstName || ""} ${user?.user_metadata?.lastName || ""
+              }`,
             avatar: "https://github.com/shadcn.png",
           }}
           loading={loading}
