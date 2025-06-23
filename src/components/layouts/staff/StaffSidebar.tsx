@@ -23,18 +23,17 @@ export function StaffSidebar({
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <NavHeader title="Staff Sidebar" />
+        <NavHeader />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={staffNavs} />
+        <NavMain items={staffNavs} label="Staff Dashboard" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser
           user={{
             email: user?.email || "",
-            name: `${user?.user_metadata?.firstName || ""} ${
-              user?.user_metadata?.lastName || ""
-            }`,
+            name: `${user?.user_metadata?.firstName || ""} ${user?.user_metadata?.lastName || ""
+              }`,
             avatar: "https://github.com/shadcn.png",
           }}
           loading={loading}
