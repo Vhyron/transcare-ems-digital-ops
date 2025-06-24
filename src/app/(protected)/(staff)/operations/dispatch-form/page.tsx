@@ -116,29 +116,20 @@ export default function HospitalTripForm() {
   return (
     <div className="p-10 w-full">
       <h1 className="text-xl font-bold mb-6">
-        Transcare Emergency Medical Services - Hospital Trip Ticket
+        Transcare Emergency Medical Services - Operation Dispatch Form
       </h1>
 
       <div className="mb-10 border rounded-lg p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Trip Details</h2>
-
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm mb-6">
           <div>
-            <label className="block mb-1 font-medium">Date</label>
-            <Input type="date" className="h-10 text-base" />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Time</label>
-            <Input type="time" className="h-10 text-base" />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Room</label>
+            <label className="block mb-1 font-medium">Event Title</label>
             <Input type="text" className="h-10 text-base" />
           </div>
+
           <div>
-            <label className="block mb-1 font-medium">Type</label>
-            <select className="w-full h-10 text-base border rounded px-2">
-              {["BLS", "ALS", "BLS-ER", "ALS1"].map((type) => (
+            <label className="block mb-1 font-medium">Event Type</label>
+            <select className="w-full h-10 text-base border rounded px-2 ">
+              {["PAID", "CHARITY", "BILLING", "DISCOUNTED"].map((type) => (
                 <option key={type} value={type} className="text-gray-700">
                   {type}
                 </option>
@@ -149,50 +140,30 @@ export default function HospitalTripForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
           <div>
-            <label className="block mb-1 font-medium">Vehicle</label>
+            <label className="block mb-1 font-medium">
+              Event Owner (Contact Person)
+            </label>
             <Input type="text" className="h-10 text-base" />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Plate</label>
-            <Input type="text" className="h-10 text-base" />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Age/Sex</label>
+            <label className="block mb-1 font-medium">Contact Details</label>
             <Input type="text" className="h-10 text-base" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
           <div>
-            <label className="block mb-1 font-medium">Patient Name</label>
+            <label className="block mb-1 font-medium">
+              Event Organizer (Third Party)
+            </label>
             <Input type="text" className="h-10 text-base" />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Purpose</label>
-            <select className="w-full h-10 text-base border rounded px-2">
-              {["THOC", "MGH", "Procedural Run", "NON Emergency Patient Transfer", "NON Emergency Commercial Transfer", "Long Distance Conduction"].map((type) => (
-                <option key={type} value={type} className="text-gray-700">
-                  {type}
-                </option>
-              ))}
-            </select>{" "}
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Pick up</label>
+            <label className="block mb-1 font-medium">Contact Details</label>
             <Input type="text" className="h-10 text-base" />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-          <div>
-            <label className="block mb-1 font-medium">Destination</label>
-            <Input type="text" className="h-10 text-base" />
-          </div>
-        </div>
-      </div>
-
-      <div className="border rounded-lg p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Billing and Signatures</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
           <div>
             <label className="block mb-1 font-medium">Type</label>
@@ -246,94 +217,6 @@ export default function HospitalTripForm() {
             <label className="block mb-1 font-medium">Remarks</label>
             <Textarea className="w-full h-24 text-base" />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {[
-            { label: "Nurse", ref: nurseSigRef, key: "nurse" },
-            { label: "Admitting/Billing", ref: billingSigRef, key: "billing" },
-            {
-              label: "Ambulance Staff",
-              ref: ambulanceSigRef,
-              key: "ambulance",
-            },
-          ].map(({ label, key }) => (
-            <div key={key}>
-              <label className="block mb-1 font-medium">
-                Signature Over Printed Name ({label})
-              </label>
-              <div
-                className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
-                onClick={() => setActiveSig(key as typeof activeSig)}
-              >
-                {sigData[key] ? (
-                  <img
-                    src={sigData[key]}
-                    alt={`${label} signature`}
-                    className="max-h-[100px]"
-                  />
-                ) : (
-                  <Plus className="h-8 w-8 text-gray-500" />
-                )}
-              </div>
-            </div>
-          ))}
-
-          <Dialog.Root
-            open={!!activeSig}
-            onOpenChange={(open) => !open && setActiveSig(null)}
-          >
-            <Dialog.Portal>
-              <Dialog.Title>
-                <VisuallyHidden>Signature Dialog</VisuallyHidden>
-              </Dialog.Title>
-              <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-              <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-                  <Dialog.Close asChild>
-                    <button
-                      className="absolute  right-6 text-gray-700 hover:text-black"
-                      onClick={() => setActiveSig(null)}
-                    >
-                      <X className="w-10 h-10" />
-                    </button>
-                  </Dialog.Close>
-                  <div ref={modalCanvasRef} className="flex-1">
-                    <SignatureCanvas
-                      ref={getRefByType(activeSig)}
-                      penColor="black"
-                      canvasProps={{
-                        width: sigCanvasSize.width,
-                        height: sigCanvasSize.height,
-                        className: "bg-gray-100 rounded shadow ",
-                      }}
-                    />
-                  </div>
-
-                  <div className="absolute left-6 flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor="sig-upload">
-                      <Button size="sm" variant="secondary">
-                        Upload
-                      </Button>
-                    </label>
-                    <Button size="sm" variant="secondary" onClick={clearSig}>
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={uploadSig}>
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
         </div>
       </div>
     </div>
