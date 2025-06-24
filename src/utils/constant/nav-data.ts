@@ -102,7 +102,7 @@ export const staffNavs: NavItem[] = [
     items: [
       {
         title: "Dispatch Form",
-        url: "/operations/dispatch-form",
+        url: "/operations/dispatch-form/pages",
         breadcrumbs: [
           { label: "Operations" },
           { label: "Dispatch Form", isPage: true },
