@@ -26,6 +26,13 @@ export async function getUserByEmail(email: string) {
   return user;
 }
 
+export async function listAllStaff() {
+  return await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.user_role, "staff"));
+}
+
 export async function createUser(user: NewUser) {
   const [newUser] = await db.insert(usersTable).values(user).returning();
   return newUser;

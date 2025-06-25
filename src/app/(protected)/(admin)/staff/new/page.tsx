@@ -2,8 +2,8 @@ import NewStaffForm from "../../../../../components/forms/NewStaffForm";
 
 const NewStaffPage = () => {
   return (
-    <section className="pt-4 space-y-4">
-      <div>
+    <>
+      <div className="mb-4">
         <h1 className="text-2xl font-bold">Add New Staff</h1>
 
         <p className="text-muted-foreground mt-1">
@@ -13,7 +13,7 @@ const NewStaffPage = () => {
       </div>
 
       <NewStaffForm />
-    </section>
+    </>
   );
 };
 
