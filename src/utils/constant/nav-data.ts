@@ -116,15 +116,8 @@ export const staffNavs: NavItem[] = [
           { label: "Census Record", isPage: true },
         ],
       },
-    ],
-  },
-  {
-    title: "Trip Tickets",
-    icon: Bus,
-    url: "/trip-tickets",
-    items: [
       {
-        title: "Hospital Trip Ticket",
+        title: "Trip Tickets",
         url: "/trip-tickets/hospital",
         breadcrumbs: [
           { label: "Trip Tickets" },
@@ -133,6 +126,21 @@ export const staffNavs: NavItem[] = [
       },
     ],
   },
+  // {
+  //   title: "Trip Tickets",
+  //   icon: Bus,
+  //   url: "/trip-tickets",
+  //   items: [
+  //     {
+  //       title: "Hospital Trip Ticket",
+  //       url: "/trip-tickets/hospital",
+  //       breadcrumbs: [
+  //         { label: "Trip Tickets" },
+  //         { label: "Hospital Trip Ticket", isPage: true },
+  //       ],
+  //     },
+  //   ],
+  // },
   {
     title: "More Forms",
     icon: FilePlus,
