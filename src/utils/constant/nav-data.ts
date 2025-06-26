@@ -1,5 +1,4 @@
 import {
-  Bus,
   ClipboardList,
   FilePlus,
   FileText,
@@ -49,15 +48,6 @@ export const adminNavs: NavItem[] = [
           { label: "Staff Management" },
           { label: "All Staff", href: "/staff" },
           { label: "Add Staff", isPage: true },
-        ],
-      },
-      {
-        title: "Roles & Permissions",
-        url: "/staff/roles",
-        breadcrumbs: [
-          { label: "Staff Management" },
-          { label: "All Staff", href: "/staff" },
-          { label: "Roles & Permissions", isPage: true },
         ],
       },
     ],

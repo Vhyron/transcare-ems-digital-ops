@@ -69,7 +69,7 @@ export function BaseDashboardLayout({
 
           <ModeToggle />
         </header>
-        <div className="flex flex-col flex-1 gap-4 p-4 pt-0">{children}</div>
+        <div className="flex flex-col flex-1 gap-4 p-4">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
