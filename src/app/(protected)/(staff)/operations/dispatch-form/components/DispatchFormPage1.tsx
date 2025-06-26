@@ -100,12 +100,16 @@ export default function DispatchFormPage1() {
           </div>
           <div className="flex items-end justify-center gap-10 align-center">
             <div className="flex items-center gap-4">
-              <Checkbox id="indoor" className="w-8 h-8"/>
-              <label htmlFor="indoor" className="text-base font-medium">Indoor</label>
+              <Checkbox id="indoor" className="w-8 h-8" />
+              <label htmlFor="indoor" className="text-base font-medium">
+                Indoor
+              </label>
             </div>
             <div className="flex items-center gap-4">
-              <Checkbox id="outdoor" className="w-8 h-8"/>
-              <label htmlFor="outdoor" className="text-base font-medium">Outdoor</label>
+              <Checkbox id="outdoor" className="w-8 h-8" />
+              <label htmlFor="outdoor" className="text-base font-medium">
+                Outdoor
+              </label>
             </div>
           </div>
         </div>
@@ -124,6 +128,7 @@ export default function DispatchFormPage1() {
             <Textarea rows={4} className="text-base" />
           </div>
         </div>
+        <h2 className="text-lg font-semibold mb-2">Crowd Management</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {["Access", "Security", "Risk", "Others"].map((category) => (
@@ -139,6 +144,7 @@ export default function DispatchFormPage1() {
             </div>
           ))}
         </div>
+<h2 className="text-lg font-semibold mb-2">Crowd Information</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>

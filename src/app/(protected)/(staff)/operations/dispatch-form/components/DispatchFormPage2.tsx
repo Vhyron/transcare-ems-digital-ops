@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useRef, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
@@ -171,6 +172,10 @@ export default function DispatchFormPage2() {
               className="h-10 text-base mb-2"
             />
           ))}
+        </div>
+        <div>
+          <label className="block mb-2 font-medium">Special Consideration</label>
+          <Textarea className="h-10 text-base mb-2"></Textarea>
         </div>
         <div className="border rounded-lg p-4 space-y-4">
           <h2 className="text-lg font-semibold border-b pb-2">
