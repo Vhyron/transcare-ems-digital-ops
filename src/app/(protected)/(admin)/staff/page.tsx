@@ -1,7 +1,6 @@
 import { listAllStaff } from "../../../../actions/users.action";
-import { StaffTable } from "../../../../components/tables/StaffTable";
 import { columns } from "./columns";
-import { DataTable } from "./data-table";
+import { DataTable } from "../../../../components/table/data-table";
 
 const StaffPage = async () => {
   const staffs = await listAllStaff();
