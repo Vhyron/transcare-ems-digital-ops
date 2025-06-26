@@ -1,12 +1,16 @@
-import { listAllStaff } from "../../../../actions/users.action";
+"use client";
+
 import { columns } from "./columns";
 import { DataTable } from "../../../../components/table/data-table";
+import { useStaffs } from "../../../../hooks/use-user";
+import Loading from "../../../../components/Loading";
 
-const StaffPage = async () => {
-  const staffs = await listAllStaff();
+const StaffPage = () => {
+  const { data = [], error, isLoading } = useStaffs();
 
-  if (!staffs) {
-    return "Loading...";
+  if (isLoading) return <Loading />;
+  if (error) {
+    return <div>Error loading staff data</div>;
   }
 
   return (
@@ -20,7 +24,7 @@ const StaffPage = async () => {
         </p>
       </div>
 
-      <DataTable columns={columns} data={staffs} />
+      <DataTable columns={columns} data={data} />
     </>
   );
 };

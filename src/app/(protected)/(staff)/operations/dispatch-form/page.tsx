@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
