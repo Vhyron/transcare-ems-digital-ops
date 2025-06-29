@@ -1,7 +1,6 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useRef, useEffect, useState } from "react";
@@ -66,14 +65,6 @@ export default function DispatchFormPage2() {
   const [crewCredential, setCrewCredential] = useState("");
   const [crewCredentialOther, setCrewCredentialOther] = useState("");
 
-  const [ambulanceModel, setAmbulanceModel] = useState("");
-  const [ambulanceModelOther, setAmbulanceModelOther] = useState("");
-
-  const [ambulanceType, setAmbulanceType] = useState("");
-  const [ambulanceTypeOther, setAmbulanceTypeOther] = useState("");
-
-  const [patientStatus, setPatientStatus] = useState("");
-  const [patientStatusOther, setPatientStatusOther] = useState("");
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
