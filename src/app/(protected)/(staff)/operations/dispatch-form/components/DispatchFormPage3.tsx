@@ -21,6 +21,16 @@ export default function DispatchFormPage3() {
     "nurse" | "billing" | "ambulance" | null
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  
+  // New state for managing rows
+  const [numberOfRows, setNumberOfRows] = useState(10);
+  const maxRows = 20;
+
+  const addRow = () => {
+    if (numberOfRows < maxRows) {
+      setNumberOfRows(prev => prev + 1);
+    }
+  };
 
   const getRefByType = (type: string | null) => {
     if (type === "nurse") return teamLeaderSigRef;
@@ -90,6 +100,7 @@ export default function DispatchFormPage3() {
       setSigCanvasSize({ width, height });
     }
   }, [activeSig]);
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">
@@ -107,34 +118,51 @@ export default function DispatchFormPage3() {
         </div>
       </div>
 
-      <table className="w-full border text-sm">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            {["No.", "Name", "Title", "Position", "IN", "OUT", "Signature"].map(
-              (head, idx) => (
-                <th key={idx} className="p-2 border">
-                  {head}
-                </th>
-              )
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: 21 }, (_, i) => (
-            <tr key={i}>
-              <td className="border p-1">{i + 1}</td>
-              {[..."     "].map((_, j) => (
-                <td key={j} className="border p-1">
-                  <input
-                    type="text"
-                    className="w-full p-1 text-sm border rounded"
-                  />
-                </td>
-              ))}
+      <div className="mb-4 flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Rows: {numberOfRows} / {maxRows}
+        </div>
+        <Button 
+          onClick={addRow} 
+          disabled={numberOfRows >= maxRows}
+          size="sm"
+          variant="outline"
+        >
+          <Plus className="w-4 h-4 mr-1" />
+          Add Row
+        </Button>
+      </div>
+
+      <div className={`w-full border ${numberOfRows > 20 ? 'max-h-96 overflow-y-auto' : ''}`}>
+        <table className="w-full text-sm">
+          <thead className="sticky top-0">
+            <tr className="text-left">
+              {["No.", "Name", "Title", "Position", "IN", "OUT", "Signature"].map(
+                (head, idx) => (
+                  <th key={idx} className="p-2 border">
+                    {head}
+                  </th>
+                )
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {Array.from({ length: numberOfRows }, (_, i) => (
+              <tr key={i}>
+                <td className="border p-1">{i + 1}</td>
+                {[..."     "].map((_, j) => (
+                  <td key={j} className="border p-1">
+                    <input
+                      type="text"
+                      className="w-full p-1 text-sm border rounded"
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         {[
@@ -162,7 +190,7 @@ export default function DispatchFormPage3() {
               {signatureLabel} ({label})
             </label>
             <div
-              className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
+              className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px]  hover:bg-gray-100 cursor-pointer"
               onClick={() => setActiveSig(key as typeof activeSig)}
             >
               {sigData[key] ? (

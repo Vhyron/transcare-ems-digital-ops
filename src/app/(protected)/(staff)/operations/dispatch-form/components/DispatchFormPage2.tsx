@@ -11,6 +11,46 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
+function SelectWithOthers({
+  options,
+  value,
+  onChange,
+  otherValue,
+  onOtherChange,
+}: {
+  options: string[];
+  value: string;
+  onChange: (val: string) => void;
+  otherValue?: string;
+  onOtherChange?: (val: string) => void;
+}) {
+  return (
+    <div className="space-y-2 w-full">
+      <select
+        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ backgroundColor: "#0a0a0a", color: "white" }}
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+        <option value="Others">Others</option>
+      </select>
+      {value === "Others" && (
+        <input
+          className="mt-2 border border-gray-300 rounded-md px-3 py-2 w-full"
+          placeholder="Please specify"
+          value={otherValue}
+          onChange={(e) => onOtherChange?.(e.target.value)}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function DispatchFormPage2() {
   const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
   const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
@@ -19,6 +59,22 @@ export default function DispatchFormPage2() {
     width: 950,
     height: 750,
   });
+
+  const [typeOfService, setTypeOfService] = useState("");
+  const [typeOfServiceOther, setTypeOfServiceOther] = useState("");
+
+  const [crewCredential, setCrewCredential] = useState("");
+  const [crewCredentialOther, setCrewCredentialOther] = useState("");
+
+  const [ambulanceModel, setAmbulanceModel] = useState("");
+  const [ambulanceModelOther, setAmbulanceModelOther] = useState("");
+
+  const [ambulanceType, setAmbulanceType] = useState("");
+  const [ambulanceTypeOther, setAmbulanceTypeOther] = useState("");
+
+  const [patientStatus, setPatientStatus] = useState("");
+  const [patientStatusOther, setPatientStatusOther] = useState("");
+
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     "nurse" | "billing" | "ambulance" | null
@@ -102,20 +158,14 @@ export default function DispatchFormPage2() {
       <div className="border rounded-lg p-6 shadow-sm space-y-6">
         <div>
           <label className="block mb-2 font-medium">Type of Service</label>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {["Manpower", "Ambulance", "Combination", "Support Unit"].map(
-              (service) => (
-                <div key={service} className="flex items-center gap-2">
-                  <Checkbox id={service} />
-                  <label htmlFor={service} className="text-base font-medium">
-                    {service}
-                  </label>
-                </div>
-              )
-            )}
-            <div className="col-span-2 md:col-span-1">
-              <Input placeholder="Specify" className="h-10 text-base" />
-            </div>
+          <div className="flex flex-wrap gap-6">
+            <SelectWithOthers
+              options={["Manpower", "Ambulance", "Combination", "Support Unit"]}
+              value={typeOfService}
+              onChange={setTypeOfService}
+              otherValue={typeOfServiceOther}
+              onOtherChange={setTypeOfServiceOther}
+            />
           </div>
         </div>
 
@@ -133,14 +183,13 @@ export default function DispatchFormPage2() {
         <div>
           <label className="block mb-2 font-medium">Crew Credentials</label>
           <div className="flex flex-wrap gap-6">
-            {["EMT", "RN", "EMR", "COMBINATION"].map((role) => (
-              <div key={role} className="flex items-center gap-2">
-                <Checkbox id={role} />
-                <label htmlFor={role} className="text-base font-medium">
-                  {role}
-                </label>
-              </div>
-            ))}
+            <SelectWithOthers
+              options={["EMT", "RN", "EMR", "COMBINATION"]}
+              value={crewCredential}
+              onChange={setCrewCredential}
+              otherValue={crewCredentialOther}
+              onOtherChange={setCrewCredentialOther}
+            />
           </div>
         </div>
 
@@ -174,7 +223,9 @@ export default function DispatchFormPage2() {
           ))}
         </div>
         <div>
-          <label className="block mb-2 font-medium">Special Consideration</label>
+          <label className="block mb-2 font-medium">
+            Special Consideration
+          </label>
           <Textarea className="h-10 text-base mb-2"></Textarea>
         </div>
         <div className="border rounded-lg p-4 space-y-4">
@@ -208,29 +259,32 @@ export default function DispatchFormPage2() {
                 <Input placeholder="Rate" className="h-10 text-base w-20" />
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-base">{field}</span>
-              </div>
+              <span className="text-base">{field}</span>
 
-              <div className="flex items-center gap-2">
-                <Checkbox id={`${field}-Y`} className="w-6 h-6" />
-                <label htmlFor={`${field}-Y`} className="text-base">
-                  Y
-                </label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox id={`${field}-N`} className="w-6 h-6" />
-                <label htmlFor={`${field}-N`} className="text-base">
-                  N
-                </label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox id={`${field}-NA`} className="w-6 h-6" />
-                <label htmlFor={`${field}-NA`} className="text-base">
-                  N/A
-                </label>
+              <div className="col-span-3">
+                <select
+                  className="border border-gray-300 rounded-md px-3 py-2 w-full text-base"
+                  defaultValue=""
+                >
+                  <option
+                    value="Y"
+                    style={{ backgroundColor: "#0a0a0a", color: "white" }}
+                  >
+                    Y
+                  </option>{" "}
+                  <option
+                    value="N"
+                    style={{ backgroundColor: "#0a0a0a", color: "white" }}
+                  >
+                    N
+                  </option>
+                  <option
+                    value="NA"
+                    style={{ backgroundColor: "#0a0a0a", color: "white" }}
+                  >
+                    N/A
+                  </option>
+                </select>
               </div>
             </div>
           ))}
@@ -287,7 +341,7 @@ export default function DispatchFormPage2() {
                 {signatureLabel} ({label})
               </label>
               <div
-                className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig(key as typeof activeSig)}
               >
                 {sigData[key] ? (
