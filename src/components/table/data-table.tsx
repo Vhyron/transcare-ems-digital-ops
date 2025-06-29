@@ -19,17 +19,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination } from "./data-table-pagination";
-import { DataTableViewOptions } from "./data-table-view";
 import { useState } from "react";
+import { DataTableViewOptions } from "./data-table-view";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  actionComponent?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  actionComponent,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -46,8 +48,11 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="space-y-2">
-      <DataTableViewOptions table={table} />
+    <>
+      <div className="flex items-center">
+        {actionComponent}
+        <DataTableViewOptions table={table} />
+      </div>
 
       <div className="rounded-md border">
         <Table>
@@ -60,9 +65,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}
@@ -101,6 +106,6 @@ export function DataTable<TData, TValue>({
       </div>
 
       <DataTablePagination table={table} />
-    </div>
+    </>
   );
 }

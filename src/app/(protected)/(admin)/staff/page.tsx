@@ -4,6 +4,9 @@ import { columns } from "./columns";
 import { DataTable } from "../../../../components/table/data-table";
 import { useStaffs } from "../../../../hooks/use-user";
 import Loading from "../../../../components/Loading";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const StaffPage = () => {
   const { data = [], error, isLoading } = useStaffs();
@@ -24,7 +27,18 @@ const StaffPage = () => {
         </p>
       </div>
 
-      <DataTable columns={columns} data={data} />
+      <DataTable
+        columns={columns}
+        data={data}
+        actionComponent={
+          <Link href='/staff/new' className="w-fit">
+            <Button size='sm'>
+              <Plus />
+              Add New Staff
+            </Button>
+          </Link>
+        }
+      />
     </>
   );
 };
