@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/sidebar";
 import { logout } from "../../../actions/auth.action";
 import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
 interface Props {
   user: {
@@ -96,9 +97,11 @@ export function NavUser({ user, loading = false }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+              <DropdownMenuItem asChild>
+                <Link href='/admin-account'>
+                  <BadgeCheck />
+                  My Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />

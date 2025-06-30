@@ -89,6 +89,7 @@ export default function LoginForm({
                         type="email"
                         placeholder="example@email.com"
                         disabled={isLoading}
+                        autoFocus
                         {...field}
                       />
                     </FormControl>
