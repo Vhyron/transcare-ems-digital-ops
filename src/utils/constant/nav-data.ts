@@ -123,6 +123,30 @@ export const staffNavs: NavItem[] = [
           { label: "Hospital Trip Ticket", isPage: true },
         ],
       },
+      {
+        title: "Advance Directives",
+        url: "/operations/advance-directives",
+        breadcrumbs: [
+          { label: "Advance Directives" },
+          { label: "Advance Directives", isPage: true },
+        ],
+      },
+        {
+        title: "Conduction Refusal",
+        url: "/operations/conduction-refusal-form",
+        breadcrumbs: [
+          { label: "Conduction Refusal" },
+          { label: "Conduction Refusal", isPage: true },
+        ],
+      },
+         {
+        title: "Refusal Form",
+        url: "/operations/refusal-form",
+        breadcrumbs: [
+          { label: " Refusal Form" },
+          { label: " Refusal Form", isPage: true },
+        ],
+      },
     ],
   },
   // {
