@@ -98,7 +98,7 @@ export function NavUser({ user, loading = false }: Props) {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href='/admin-account'>
+                <Link href='/admin-profile'>
                   <BadgeCheck />
                   My Profile
                 </Link>

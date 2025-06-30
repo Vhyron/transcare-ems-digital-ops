@@ -41,6 +41,7 @@ export async function createUser(user: NewUser) {
 
 export async function updateUser(id: string, data: Partial<NewUser>) {
   const validated = UpdateUserSchema.safeParse(data);
+
   if (validated?.error) {
     return { error: validated.error };
   }
@@ -50,6 +51,7 @@ export async function updateUser(id: string, data: Partial<NewUser>) {
     .set(validated.data)
     .where(eq(usersTable.id, id))
     .returning();
+
   return { data: updatedUser };
 }
 
