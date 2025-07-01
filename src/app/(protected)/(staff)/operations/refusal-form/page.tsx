@@ -1,13 +1,114 @@
 "use client";
 
+import { useRef, useEffect, useState } from "react";
+import SignatureCanvas from "react-signature-canvas";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Button } from "@/components/ui/button";
+import { Plus, X } from "lucide-react";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
 
 export default function RefusalTreatmentTransportationForm() {
+  const patientGuardianSignature = useRef<SignatureCanvas | null>(null);
+  const eventsOrganizerSignature = useRef<SignatureCanvas | null>(null);
+  const witnessSignature = useRef<SignatureCanvas | null>(null);
+  const medicPersonnelSignature = useRef<SignatureCanvas | null>(null);
+
+  const [sigCanvasSize, setSigCanvasSize] = useState({
+    width: 950,
+    height: 750,
+  });
+
+  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
+  const [activeSig, setActiveSig] = useState<"patientGuardian" | "eventsOrganizer" | "witness" | "medicPersonnel" | null>(null);
+  const [sigData, setSigData] = useState<{
+    [key: string]: { image: string; name: string };
+  }>({});
+
+  const getRefByType = (type: string | null) => {
+    if (type === "patientGuardian") return patientGuardianSignature;
+    if (type === "eventsOrganizer") return eventsOrganizerSignature;
+    if (type === "witness") return witnessSignature;
+    if (type === "medicPersonnel") return medicPersonnelSignature;
+    return null;
+  };
+
+  const clearSig = () => {
+    const ref = getRefByType(activeSig);
+    ref?.current?.clear();
+  };
+
+  const uploadSig = () => {
+    const ref = getRefByType(activeSig);
+    if (ref?.current && !ref.current.isEmpty()) {
+      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
+
+      setSigData((prev) => ({
+        ...prev,
+        [activeSig!]: { 
+          image: dataUrl, 
+          name: prev[activeSig!]?.name || ""
+        },
+      }));
+
+      setActiveSig(null);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageData = reader.result as string;
+      const ref = getRefByType(activeSig);
+      if (ref?.current) {
+        const img = new Image();
+        img.onload = () => {
+          const ctx = ref.current!.getCanvas().getContext("2d");
+          ctx?.clearRect(
+            0,
+            0,
+            ref.current!.getCanvas().width,
+            ref.current!.getCanvas().height
+          );
+          ctx?.drawImage(
+            img,
+            0,
+            0,
+            ref.current!.getCanvas().width,
+            ref.current!.getCanvas().height
+          );
+        };
+        img.src = imageData;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  useEffect(() => {
+    const ref = getRefByType(activeSig);
+    const dataUrl = sigData[activeSig || ""];
+    if (ref?.current && dataUrl) {
+      ref.current.clear();
+      (ref.current as any).loadFromDataURL(dataUrl.image);
+    }
+  }, [activeSig, sigData]);
+
+  useEffect(() => {
+    if (modalCanvasRef.current) {
+      const width = modalCanvasRef.current.offsetWidth;
+      const height = 750;
+      setSigCanvasSize({ width, height });
+    }
+  }, [activeSig]);
+
   return (
     <div className="p-10 w-full">
-  <h1 className="text-xl font-bold mb-6">
-          Transcare Emergency Medical Services - Refusal Form
-        </h1>
+      <h1 className="text-xl font-bold mb-6">
+        Transcare Emergency Medical Services - Refusal Form
+      </h1>
+      
       {/* Event Information */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
@@ -167,7 +268,6 @@ export default function RefusalTreatmentTransportationForm() {
             is available at an emergency department 24 hours a day.
           </p>
         </div>
-        
       </div>
 
       {/* Acknowledgment and Signature Section */}
@@ -183,37 +283,169 @@ export default function RefusalTreatmentTransportationForm() {
 
         {/* Signature Grid */}
         <div className="grid grid-cols-2 gap-8 mb-6">
-          <div>
-            <div className="mb-4">
+          {/* Patient/Guardian Signature */}
+          <div className="space-y-4">
+            <div>
               <label className="block text-sm font-medium mb-2">Patient / Guardian</label>
-              <div className="border-b-2 border-gray-400 h-12 mb-2"></div>
+              <div
+                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+                onClick={() => setActiveSig("patientGuardian")}
+              >
+                {sigData["patientGuardian"]?.image ? (
+                  <img
+                    src={sigData["patientGuardian"].image}
+                    alt="Patient/Guardian signature"
+                    className="max-h-[60px]"
+                  />
+                ) : (
+                  <Plus className="h-6 w-6 text-gray-500" />
+                )}
+              </div>
               <label className="text-xs text-gray-600">Signature over printed Name</label>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <Input 
+                type="text" 
+                className="w-full" 
+                value={sigData["patientGuardian"]?.name || ""}
+                onChange={(e) => {
+                  setSigData(prev => ({
+                    ...prev,
+                    patientGuardian: {
+                      ...prev.patientGuardian,
+                      name: e.target.value,
+                      image: prev.patientGuardian?.image || ""
+                    }
+                  }));
+                }}
+              />
             </div>
           </div>
           
-          <div>
-            <div className="mb-4">
+          {/* Events Organizer Signature */}
+          <div className="space-y-4">
+            <div>
               <label className="block text-sm font-medium mb-2">Events Organizer</label>
-              <div className="border-b-2 border-gray-400 h-12 mb-2"></div>
+              <div
+                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+                onClick={() => setActiveSig("eventsOrganizer")}
+              >
+                {sigData["eventsOrganizer"]?.image ? (
+                  <img
+                    src={sigData["eventsOrganizer"].image}
+                    alt="Events Organizer signature"
+                    className="max-h-[60px]"
+                  />
+                ) : (
+                  <Plus className="h-6 w-6 text-gray-500" />
+                )}
+              </div>
               <label className="text-xs text-gray-600">Signature over printed Name</label>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <Input 
+                type="text" 
+                className="w-full" 
+                value={sigData["eventsOrganizer"]?.name || ""}
+                onChange={(e) => {
+                  setSigData(prev => ({
+                    ...prev,
+                    eventsOrganizer: {
+                      ...prev.eventsOrganizer,
+                      name: e.target.value,
+                      image: prev.eventsOrganizer?.image || ""
+                    }
+                  }));
+                }}
+              />
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-8 mb-6">
-          <div>
-            <div className="mb-4">
+          {/* Witness Signature */}
+          <div className="space-y-4">
+            <div>
               <label className="block text-sm font-medium mb-2">Witness</label>
-              <div className="border-b-2 border-gray-400 h-12 mb-2"></div>
+              <div
+                className=" bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+                onClick={() => setActiveSig("witness")}
+              >
+                {sigData["witness"]?.image ? (
+                  <img
+                    src={sigData["witness"].image}
+                    alt="Witness signature"
+                    className="max-h-[60px]"
+                  />
+                ) : (
+                  <Plus className="h-6 w-6 text-gray-500" />
+                )}
+              </div>
               <label className="text-xs text-gray-600">Signature over printed Name</label>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <Input 
+                type="text" 
+                className="w-full" 
+                value={sigData["witness"]?.name || ""}
+                onChange={(e) => {
+                  setSigData(prev => ({
+                    ...prev,
+                    witness: {
+                      ...prev.witness,
+                      name: e.target.value,
+                      image: prev.witness?.image || ""
+                    }
+                  }));
+                }}
+              />
             </div>
           </div>
           
-          <div>
-            <div className="mb-4">
+          {/* Medic Personnel Signature */}
+          <div className="space-y-4">
+            <div>
               <label className="block text-sm font-medium mb-2">Assign Medic Personnel</label>
-              <div className="border-b-2 border-gray-400 h-12 mb-2"></div>
+              <div
+                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+                onClick={() => setActiveSig("medicPersonnel")}
+              >
+                {sigData["medicPersonnel"]?.image ? (
+                  <img
+                    src={sigData["medicPersonnel"].image}
+                    alt="Medic Personnel signature"
+                    className="max-h-[60px]"
+                  />
+                ) : (
+                  <Plus className="h-6 w-6 text-gray-500" />
+                )}
+              </div>
               <label className="text-xs text-gray-600">Signature over printed Name</label>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <Input 
+                type="text" 
+                className="w-full" 
+                value={sigData["medicPersonnel"]?.name || ""}
+                onChange={(e) => {
+                  setSigData(prev => ({
+                    ...prev,
+                    medicPersonnel: {
+                      ...prev.medicPersonnel,
+                      name: e.target.value,
+                      image: prev.medicPersonnel?.image || ""
+                    }
+                  }));
+                }}
+              />
             </div>
           </div>
         </div>
@@ -234,6 +466,64 @@ export default function RefusalTreatmentTransportationForm() {
           </div>
         </div>
       </div>
+
+      {/* Signature Modal */}
+      <Dialog.Root
+        open={!!activeSig}
+        onOpenChange={(open) => !open && setActiveSig(null)}
+      >
+        <Dialog.Portal>
+          <Dialog.Title>
+            <VisuallyHidden>Signature Dialog</VisuallyHidden>
+          </Dialog.Title>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
+          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
+              <Dialog.Close asChild>
+                <button
+                  className="absolute right-6 text-gray-700 hover:text-black"
+                  onClick={() => setActiveSig(null)}
+                >
+                  <X className="w-10 h-10" />
+                </button>
+              </Dialog.Close>
+              
+              <div ref={modalCanvasRef} className="flex-1">
+                <SignatureCanvas
+                  ref={getRefByType(activeSig)}
+                  penColor="black"
+                  canvasProps={{
+                    width: sigCanvasSize.width,
+                    height: sigCanvasSize.height,
+                    className: "bg-gray-100 rounded shadow ",
+                  }}
+                />
+              </div>
+
+              <div className="absolute left-6 flex gap-2 items-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  id="sig-upload"
+                  onChange={handleFileUpload}
+                />
+                <label htmlFor="sig-upload">
+                  <Button size="sm" variant="secondary">
+                    Upload
+                  </Button>
+                </label>
+                <Button size="sm" variant="secondary" onClick={clearSig}>
+                  Clear
+                </Button>
+                <Button size="sm" onClick={uploadSig}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
