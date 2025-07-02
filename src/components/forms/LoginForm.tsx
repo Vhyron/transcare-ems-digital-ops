@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { GalleryVerticalEnd, Loader } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { GalleryVerticalEnd, Loader } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Form,
   FormControl,
@@ -14,10 +14,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { useState } from "react";
-import { login } from "../../actions/auth.action";
-import { toast } from "sonner";
+} from '@/components/ui/form';
+import { useState } from 'react';
+import { login } from '../../actions/auth.action';
+import { toast } from 'sonner';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -28,14 +28,14 @@ type LoginFormData = z.infer<typeof formSchema>;
 export default function LoginForm({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<'div'>) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -46,11 +46,11 @@ export default function LoginForm({
       const res = await login(data);
 
       if (res?.error) {
-        toast.error("Sign In Failed", {
+        toast.error('Sign In Failed', {
           description:
             res.error ||
-            "Unable to authenticate. Please check your credentials and try again.",
-          richColors: true
+            'Unable to authenticate. Please check your credentials and try again.',
+          richColors: true,
         });
         setIsLoading(false);
         return;
@@ -63,7 +63,7 @@ export default function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <div className="flex flex-col gap-6">
@@ -112,14 +112,14 @@ export default function LoginForm({
               />
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader className="size-4 animate-spin" />}
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? 'Logging in...' : 'Login'}
               </Button>
             </div>
           </div>
         </form>
       </Form>
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
+        By clicking continue, you agree to our <a href="#">Terms of Service</a>{' '}
         and <a href="#">Privacy Policy</a>.
       </div>
     </div>

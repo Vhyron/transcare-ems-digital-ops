@@ -11,7 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Loader } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 interface Props {
@@ -39,7 +46,7 @@ const ProfileInfoForm = ({ user, onSubmit, loading = false }: Props) => {
 
   const handleSubmit = (data: ProfileFormData) => {
     onSubmit(data);
-  }
+  };
 
   return (
     <Card>
@@ -49,7 +56,10 @@ const ProfileInfoForm = ({ user, onSubmit, loading = false }: Props) => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 flex flex-col">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4 flex flex-col"
+          >
             <div className="grid grid-cols-2 items-center gap-4">
               <FormField
                 control={form.control}
@@ -58,10 +68,7 @@ const ProfileInfoForm = ({ user, onSubmit, loading = false }: Props) => {
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        disabled={loading}
-                      />
+                      <Input {...field} disabled={loading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -75,10 +82,7 @@ const ProfileInfoForm = ({ user, onSubmit, loading = false }: Props) => {
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        disabled={loading}
-                      />
+                      <Input {...field} disabled={loading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -90,12 +94,11 @@ const ProfileInfoForm = ({ user, onSubmit, loading = false }: Props) => {
                 name="email"
                 render={({ field }) => (
                   <FormItem className="col-span-2">
-                    <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                    <FormLabel>
+                      Email <span className="text-red-500">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        disabled
-                        {...field}
-                      />
+                      <Input disabled {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -105,7 +108,9 @@ const ProfileInfoForm = ({ user, onSubmit, loading = false }: Props) => {
 
             <Button className="w-auto ml-auto" disabled={loading}>
               {loading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? 'Updating Personal Information...' : 'Update Personal Information'}
+              {loading
+                ? "Updating Personal Information..."
+                : "Update Personal Information"}
             </Button>
           </form>
         </Form>
