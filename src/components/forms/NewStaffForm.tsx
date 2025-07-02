@@ -54,22 +54,22 @@ export default function NewStaffForm() {
     addStaff.mutate(data, {
       onSuccess: (res) => {
         if (res.error) {
-          toast.error('Staff Registration Failed!', {
+          toast.error("Staff Registration Failed!", {
             description: res.error,
-            richColors: true
+            richColors: true,
           });
           return;
         }
 
-        toast.success('Staff Registered Successfully!', {
-          description: 'New staff has been added, let them know!'
+        toast.success("Staff Registered Successfully!", {
+          description: "New staff has been added, let them know!",
         });
         form.reset();
       },
       onError: (error) => {
-        toast.error('Staff Registration Failed!', {
-          description: error.message || 'An unexpected error occurred',
-          richColors: true
+        toast.error("Staff Registration Failed!", {
+          description: error.message || "An unexpected error occurred",
+          richColors: true,
         });
       },
     });
@@ -77,7 +77,6 @@ export default function NewStaffForm() {
 
   const handleCancel = () => {
     form.reset();
-
     router.back();
   };
 
@@ -227,8 +226,14 @@ export default function NewStaffForm() {
               >
                 Cancel
               </Button>
-              <Button type="submit" className="px-8" disabled={addStaff.isPending}>
-                {addStaff.isPending && <Loader className="size-4 animate-spin" />}
+              <Button
+                type="submit"
+                className="px-8"
+                disabled={addStaff.isPending}
+              >
+                {addStaff.isPending && (
+                  <Loader className="size-4 animate-spin" />
+                )}
                 {addStaff.isPending ? "Registering..." : " Register New Staff"}
               </Button>
             </div>
