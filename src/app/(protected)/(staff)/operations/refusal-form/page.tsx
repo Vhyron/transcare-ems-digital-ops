@@ -20,7 +20,9 @@ export default function RefusalTreatmentTransportationForm() {
   });
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
-  const [activeSig, setActiveSig] = useState<"patientGuardian" | "eventsOrganizer" | "witness" | "medicPersonnel" | null>(null);
+  const [activeSig, setActiveSig] = useState<
+    "patientGuardian" | "eventsOrganizer" | "witness" | "medicPersonnel" | null
+  >(null);
   const [sigData, setSigData] = useState<{
     [key: string]: { image: string; name: string };
   }>({});
@@ -45,9 +47,9 @@ export default function RefusalTreatmentTransportationForm() {
 
       setSigData((prev) => ({
         ...prev,
-        [activeSig!]: { 
-          image: dataUrl, 
-          name: prev[activeSig!]?.name || ""
+        [activeSig!]: {
+          image: dataUrl,
+          name: prev[activeSig!]?.name || "",
         },
       }));
 
@@ -108,12 +110,18 @@ export default function RefusalTreatmentTransportationForm() {
       <h1 className="text-xl font-bold mb-6">
         Transcare Emergency Medical Services - Refusal Form
       </h1>
-      
+
       {/* Event Information */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium mb-1">League /Event:</label>
-          <Input type="text" name="leagueEvent" className="w-full h-10 text-base" />
+          <label className="block text-sm font-medium mb-1">
+            League /Event:
+          </label>
+          <Input
+            type="text"
+            name="leagueEvent"
+            className="w-full h-10 text-base"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">TYPE:</label>
@@ -124,36 +132,55 @@ export default function RefusalTreatmentTransportationForm() {
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Location:</label>
-          <Input type="text" name="location" className="w-full h-10 text-base" />
+          <Input
+            type="text"
+            name="location"
+            className="w-full h-10 text-base"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Incident #:</label>
-          <Input type="text" name="incident" className="w-full h-10 text-base" />
+          <Input
+            type="text"
+            name="incident"
+            className="w-full h-10 text-base"
+          />
         </div>
       </div>
 
       {/* Patient Information */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="col-span-2">
-          <label className="block text-sm font-medium mb-1">Patient Name:</label>
-          <Input type="text" name="patientName" className="w-full h-10 text-base" />
+          <label className="block text-sm font-medium mb-1">
+            Patient Name:
+          </label>
+          <Input
+            type="text"
+            name="patientName"
+            className="w-full h-10 text-base"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">DOB:</label>
           <Input type="text" name="dob" className="w-full h-10 text-base" />
         </div>
-      </div>
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Age:</label>
-        <Input type="text" name="age" className="w-full h-10 text-base" />
+        <div className="">
+          <label className="block text-sm font-medium mb-1">Age:</label>
+          <Input type="text" name="age" className="w-full h-10 text-base" />
+        </div>
       </div>
 
       {/* Contact Details */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Contact Details - Landline:</label>
-          <Input type="text" name="landline" className="w-full h-10 text-base" />
+          <label className="block text-sm font-medium mb-1">
+            Contact Details - Landline:
+          </label>
+          <Input
+            type="text"
+            name="landline"
+            className="w-full h-10 text-base"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Cell:</label>
@@ -165,24 +192,35 @@ export default function RefusalTreatmentTransportationForm() {
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <label className="text-sm font-medium">GUARDIAN:</label>
-          <label className="flex items-center">
-            <input type="checkbox" className="mr-1" name="guardianYes" />
-            <span className="text-sm">YES</span>
-          </label>
-          <label className="flex items-center ml-4">
-            <input type="checkbox" className="mr-1" name="guardianNo" />
-            <span className="text-sm">NO</span>
-          </label>
+          <select
+            name="guardian"
+            className=" border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option className="text-gray-700" value="yes">
+              YES
+            </option>
+            <option className="text-gray-700" value="no">
+              NO
+            </option>
+          </select>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Landline:</label>
-            <Input type="text" name="guardianLandline" className="w-full h-10 text-base" />
+            <Input
+              type="text"
+              name="guardianLandline"
+              className="w-full h-10 text-base"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Cell:</label>
-            <Input type="text" name="guardianCell" className="w-full h-10 text-base" />
+            <Input
+              type="text"
+              name="guardianCell"
+              className="w-full h-10 text-base"
+            />
           </div>
         </div>
       </div>
@@ -191,21 +229,37 @@ export default function RefusalTreatmentTransportationForm() {
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Name:</label>
-          <Input type="text" name="guardianName" className="w-full h-10 text-base" />
+          <Input
+            type="text"
+            name="guardianName"
+            className="w-full h-10 text-base"
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Age:</label>
-          <Input type="text" name="guardianAge" className="w-full h-10 text-base" />
+          <Input
+            type="text"
+            name="guardianAge"
+            className="w-full h-10 text-base"
+          />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Relationship:</label>
-          <Input type="text" name="relationship" className="w-full h-10 text-base" />
+          <label className="block text-sm font-medium mb-1">
+            Relationship:
+          </label>
+          <Input
+            type="text"
+            name="relationship"
+            className="w-full h-10 text-base"
+          />
         </div>
       </div>
 
       {/* Situation of Injury/Illness */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Situation of Injury/Illness:</label>
+        <label className="block text-sm font-medium mb-2">
+          Situation of Injury/Illness:
+        </label>
         <textarea
           className="w-full border border-gray-300 rounded-md p-2 min-h-[80px]"
           name="situation"
@@ -215,35 +269,52 @@ export default function RefusalTreatmentTransportationForm() {
       {/* Check Applicable Refusal */}
       <div className="border rounded-lg p-6 shadow-sm mb-6">
         <h3 className="text-lg font-semibold mb-4">Check Applicable Refusal</h3>
-        
+
         <div className="space-y-3">
           <label className="flex items-start">
             <input type="checkbox" className="mr-3 mt-1" />
-            <span className="text-sm">Patient refuses treatment; transport is not necessary for the situation;</span>
+            <span className="text-sm">
+              Patient refuses treatment; transport is not necessary for the
+              situation;
+            </span>
           </label>
-          
+
           <label className="flex items-start">
             <input type="checkbox" className="mr-3 mt-1" />
-            <span className="text-sm">Patient refuses treatment and transport to a hospital against EMS advice;</span>
+            <span className="text-sm">
+              Patient refuses treatment and transport to a hospital against EMS
+              advice;
+            </span>
           </label>
-          
+
           <label className="flex items-start">
             <input type="checkbox" className="mr-3 mt-1" />
-            <span className="text-sm">Patient receives treatment does not desire transport to hospital by ambulance;</span>
+            <span className="text-sm">
+              Patient receives treatment does not desire transport to hospital
+              by ambulance;
+            </span>
           </label>
-          
+
           <label className="flex items-start">
             <input type="checkbox" className="mr-3 mt-1" />
-            <span className="text-sm">Patient / Guardian believes alternative transportation plan is reasonable;</span>
+            <span className="text-sm">
+              Patient / Guardian believes alternative transportation plan is
+              reasonable;
+            </span>
           </label>
-          
+
           <label className="flex items-start">
             <input type="checkbox" className="mr-3 mt-1" />
-            <span className="text-sm">Patient accepts transportation to hospital by EMS but refuses any or all treatment offered.</span>
+            <span className="text-sm">
+              Patient accepts transportation to hospital by EMS but refuses any
+              or all treatment offered.
+            </span>
           </label>
-          
+
           <div className="mt-4">
-            <label className="block text-sm font-medium mb-2">Specify treatment refused:</label>
+            <label className="block text-sm font-medium mb-2">
+              Specify treatment refused:
+            </label>
             <textarea
               className="w-full border border-gray-300 rounded-md p-2 min-h-[60px]"
               name="treatmentRefused"
@@ -256,16 +327,20 @@ export default function RefusalTreatmentTransportationForm() {
       <div className="border rounded-lg p-6 shadow-sm mb-6">
         <div className="text-sm space-y-4">
           <p>
-            This form is being provided to me because I have refused assessment, treatment and/or transport by EMS 
-            personnel myself or on behalf of this patient. I understand that EMS personnel are not physicians and are not 
-            qualified or authorized to make a diagnosis and that their care is not a substitute for that of a physician.
+            This form is being provided to me because I have refused assessment,
+            treatment and/or transport by EMS personnel myself or on behalf of
+            this patient. I understand that EMS personnel are not physicians and
+            are not qualified or authorized to make a diagnosis and that their
+            care is not a substitute for that of a physician.
           </p>
-          
+
           <p>
-            I recognize that there may be a serious injury or illness which could get worse without medical attention even 
-            though I (or the patient) may feel fine at the present time. I understand that I may change my mind and call 911 
-            or nearest community EMS available. If treatment or assistance is needed later, I also understand that treatment 
-            is available at an emergency department 24 hours a day.
+            I recognize that there may be a serious injury or illness which
+            could get worse without medical attention even though I (or the
+            patient) may feel fine at the present time. I understand that I may
+            change my mind and call 911 or nearest community EMS available. If
+            treatment or assistance is needed later, I also understand that
+            treatment is available at an emergency department 24 hours a day.
           </p>
         </div>
       </div>
@@ -274,10 +349,16 @@ export default function RefusalTreatmentTransportationForm() {
       <div className="border rounded-lg p-6 shadow-sm mb-6">
         <div className="text-sm mb-6">
           <p>
-            I acknowledge that this advice has been explained to me by the ambulance crew and upon affixing my signature 
-            for myself or on behalf of the patient signing this form, I am releasing Transcare Emergency Medical Services 
-            Management and employees and ________________________(Organizer) and 
-            its employees of any liability or medical claims resulting from my decision to refuse care against medical advice
+            I acknowledge that this advice has been explained to me by the
+            ambulance crew and upon affixing my signature for myself or on
+            behalf of the patient signing this form, I am releasing Transcare
+            Emergency Medical Services Management and employees and{" "}
+            <input
+              type="text"
+              className="border-b border-white outline-none px-1 w-48 inline-block"
+            />{" "}
+            and its employees of any liability or medical claims resulting from
+            my decision to refuse care against medical advice.
           </p>
         </div>
 
@@ -286,7 +367,9 @@ export default function RefusalTreatmentTransportationForm() {
           {/* Patient/Guardian Signature */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Patient / Guardian</label>
+              <label className="block text-sm font-medium mb-2">
+                Patient / Guardian
+              </label>
               <div
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig("patientGuardian")}
@@ -301,33 +384,37 @@ export default function RefusalTreatmentTransportationForm() {
                   <Plus className="h-6 w-6 text-gray-500" />
                 )}
               </div>
-              <label className="text-xs text-gray-600">Signature over printed Name</label>
+              <label className="text-xs text-gray-600">
+                Signature over printed Name
+              </label>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
-              <Input 
-                type="text" 
-                className="w-full" 
+              <Input
+                type="text"
+                className="w-full"
                 value={sigData["patientGuardian"]?.name || ""}
                 onChange={(e) => {
-                  setSigData(prev => ({
+                  setSigData((prev) => ({
                     ...prev,
                     patientGuardian: {
                       ...prev.patientGuardian,
                       name: e.target.value,
-                      image: prev.patientGuardian?.image || ""
-                    }
+                      image: prev.patientGuardian?.image || "",
+                    },
                   }));
                 }}
               />
             </div>
           </div>
-          
+
           {/* Events Organizer Signature */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Events Organizer</label>
+              <label className="block text-sm font-medium mb-2">
+                Events Organizer
+              </label>
               <div
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig("eventsOrganizer")}
@@ -342,23 +429,25 @@ export default function RefusalTreatmentTransportationForm() {
                   <Plus className="h-6 w-6 text-gray-500" />
                 )}
               </div>
-              <label className="text-xs text-gray-600">Signature over printed Name</label>
+              <label className="text-xs text-gray-600">
+                Signature over printed Name
+              </label>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
-              <Input 
-                type="text" 
-                className="w-full" 
+              <Input
+                type="text"
+                className="w-full"
                 value={sigData["eventsOrganizer"]?.name || ""}
                 onChange={(e) => {
-                  setSigData(prev => ({
+                  setSigData((prev) => ({
                     ...prev,
                     eventsOrganizer: {
                       ...prev.eventsOrganizer,
                       name: e.target.value,
-                      image: prev.eventsOrganizer?.image || ""
-                    }
+                      image: prev.eventsOrganizer?.image || "",
+                    },
                   }));
                 }}
               />
@@ -385,33 +474,37 @@ export default function RefusalTreatmentTransportationForm() {
                   <Plus className="h-6 w-6 text-gray-500" />
                 )}
               </div>
-              <label className="text-xs text-gray-600">Signature over printed Name</label>
+              <label className="text-xs text-gray-600">
+                Signature over printed Name
+              </label>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
-              <Input 
-                type="text" 
-                className="w-full" 
+              <Input
+                type="text"
+                className="w-full"
                 value={sigData["witness"]?.name || ""}
                 onChange={(e) => {
-                  setSigData(prev => ({
+                  setSigData((prev) => ({
                     ...prev,
                     witness: {
                       ...prev.witness,
                       name: e.target.value,
-                      image: prev.witness?.image || ""
-                    }
+                      image: prev.witness?.image || "",
+                    },
                   }));
                 }}
               />
             </div>
           </div>
-          
+
           {/* Medic Personnel Signature */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Assign Medic Personnel</label>
+              <label className="block text-sm font-medium mb-2">
+                Assign Medic Personnel
+              </label>
               <div
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig("medicPersonnel")}
@@ -426,23 +519,25 @@ export default function RefusalTreatmentTransportationForm() {
                   <Plus className="h-6 w-6 text-gray-500" />
                 )}
               </div>
-              <label className="text-xs text-gray-600">Signature over printed Name</label>
+              <label className="text-xs text-gray-600">
+                Signature over printed Name
+              </label>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
-              <Input 
-                type="text" 
-                className="w-full" 
+              <Input
+                type="text"
+                className="w-full"
                 value={sigData["medicPersonnel"]?.name || ""}
                 onChange={(e) => {
-                  setSigData(prev => ({
+                  setSigData((prev) => ({
                     ...prev,
                     medicPersonnel: {
                       ...prev.medicPersonnel,
                       name: e.target.value,
-                      image: prev.medicPersonnel?.image || ""
-                    }
+                      image: prev.medicPersonnel?.image || "",
+                    },
                   }));
                 }}
               />
@@ -487,7 +582,7 @@ export default function RefusalTreatmentTransportationForm() {
                   <X className="w-10 h-10" />
                 </button>
               </Dialog.Close>
-              
+
               <div ref={modalCanvasRef} className="flex-1">
                 <SignatureCanvas
                   ref={getRefByType(activeSig)}

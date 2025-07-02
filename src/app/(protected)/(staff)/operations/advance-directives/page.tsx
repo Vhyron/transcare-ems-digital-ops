@@ -103,110 +103,108 @@ export default function AdvanceDirectivesForm() {
 
   return (
     <div className="p-10 w-full">
-      {/* Title */}
       <h1 className="text-xl font-bold mb-6">
         ADVANCE DIRECTIVES ON LEVEL OF CARE
       </h1>
 
-      {/* Patient's General Information */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8 mb-6">
-        <h2 className="text-lg font-semibold mb-4">
-          PATIENTS GENERAL INFORMATION
-        </h2>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Last Name</label>
-            <Input
-              type="text"
-              name="lastName"
-              className="w-full h-10 text-base"
-            />
+      <div className="border rounded-lg p-6 shadow-sm space-y-8">
+        <h1 className="text-xl font-bold mb-6">
+          Transcare Emergency Medical Services - Advance Directives on Level of
+          Care
+        </h1>
+        <h3 className="font-bold text-lg mb-3p-1">
+          PATIENT GENERAL INFORMATION
+        </h3>
+
+        <div className="grid grid-cols-12 gap-2 mb-2">
+          <div className="col-span-4">
+            <label className=" font-medium">First</label>
+
+            <Input type="text" className="w-full" />
           </div>
-          <div>
-            <label className="block font-medium mb-1">First Name</label>
-            <Input
-              type="text"
-              name="firstName"
-              className="w-full h-10 text-base"
-            />
+          <div className="col-span-4">
+            <label className=" font-medium">Middle</label>
+
+            <Input type="text" className="w-full" />
           </div>
-          <div>
-            <label className="block font-medium mb-1">Middlename</label>
-            <Input
-              type="text"
-              name="middleName"
-              className="w-full h-10 text-base"
-            />
+          <div className="col-span-4">
+            <label className=" font-medium">Last</label>
+
+            <Input type="text" className="w-full" />
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mt-4">
-          <div>
-            <label className="block font-medium mb-1">AGE</label>
-            <Input name="age" type="text" className="w-full h-10 text-base" />
+        <div className="grid grid-cols-12 gap-2 mb-2">
+          <div className="col-span-2">
+            <label className=" font-medium">Age</label>
+            <Input type="text" className="w-full" />
           </div>
-          <div>
-            <label className="block font-medium mb-1">SEX</label>
-            <Input name="sex" type="text" className="w-full h-10 text-base" />
+          <div className="col-span-2">
+            <label className=" font-medium">Sex</label>
+            <Input type="text" className="w-full" />
           </div>
-          <div>
-            <label className="block font-medium mb-1">
-              BIRTHDAY (mm/dd/yyyy)
-            </label>
-            <Input
-              name="birthday"
-              type="text"
-              className="w-full h-10 text-base"
-            />
+          <div className="col-span-4">
+            <label className=" font-medium">Birthdate(mm/dd/yyyy):</label>
+            <Input type="date" className="w-full" />
           </div>
-          <div>
-            <label className="block font-medium mb-1">CITIZENSHIP</label>
-            <Input
-              name="citizenship"
-              type="text"
-              className="w-full h-10 text-base"
-            />
-          </div>
+          <div className="col-span-4">
+            <label className=" font-medium">Citizenship</label>
+            <Input type="text" className="w-full" />
+          </div>{" "}
         </div>
 
-        <div className="mt-4">
-          <label className="block font-medium mb-1">Address</label>
-          <Input type="text" name="address" className="w-full" />
-        </div>
-        <div className="mt-4">
-          <label className="block font-medium mb-1">Contact No.</label>
-          <Input type="text" name="contactNo" className="w-full" />
-        </div>
-      </div>
-
-      {/* Next of Kin / Legal Guardian */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8 mb-6">
-        <h2 className="text-lg font-semibold mb-4">
-          NEXT OF KIN / LEGAL GUARDIAN INFORMATION
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Name</label>
-            <Input type="text" name="kinName" className="w-full" />
+        <div className="grid grid-cols-8 gap-2 mb-2">
+          <div className="col-span-4">
+            <label className=" font-medium">Address</label>
+            <Input type="text" className="w-full" />
           </div>
-          <div>
-            <label className="block font-medium mb-1">Relation</label>
-            <Input type="text" name="kinRelation" className="w-full" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <label className="block font-medium mb-1">Contact No.</label>
-            <Input type="text" name="kinContact" className="w-full" />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Address</label>
-            <Input type="text" name="kinAddress" className="w-full" />
+          <div className="col-span-4">
+            <label className=" font-medium">Contact No.</label>
+            <Input type="text" className="w-full" />
           </div>
         </div>
       </div>
 
-      {/* Medical Record and Date */}
+      <div className="border rounded-lg p-6 shadow-sm space-y-4">
+        <h3 className="font-bold text-sm mb-3 p-1">
+          NEXT OF KIN/LEGAL GUARDIAN INFORMATION
+        </h3>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="font-medium">Name</label>
+              <Input type="text" className="w-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="font-medium">Relation</label>
+                <Input type="text" className="w-full" />
+              </div>
+              <div>
+                <label className="font-medium">Contact No.</label>
+                <Input type="text" className="w-full" />
+              </div>
+            </div>
+            <div>
+              <label className="font-medium">Address</label>
+              <Input type="text" className="w-full" />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="font-medium">Medical Record #.</label>
+              <Input type="text" className="w-full" />
+            </div>
+            <div>
+              <label className="font-medium">Date Accomplished</label>
+              <Input type="date" className="w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div>
           <label className="block font-medium mb-1">Medical Record #</label>
@@ -218,11 +216,9 @@ export default function AdvanceDirectivesForm() {
         </div>
       </div>
 
-      {/* Preferred Level of Care */}
       <div className="border rounded-lg p-6 shadow-sm space-y-8 mb-6">
         <h2 className="text-lg font-semibold mb-4">PREFERRED LEVEL OF CARE</h2>
 
-        {/* CPR */}
         <div className="mb-4">
           <h3 className="font-bold">CARDIOPULMONARY RESUSCITATION</h3>
           <label className="flex items-center mt-2">
@@ -235,7 +231,6 @@ export default function AdvanceDirectivesForm() {
           </p>
         </div>
 
-        {/* Medical Interventions */}
         <div>
           <h3 className="font-bold">MEDICAL INTERVENTION</h3>
           <label className="flex items-center mt-2">
@@ -281,7 +276,6 @@ export default function AdvanceDirectivesForm() {
         </div>
       </div>
 
-      {/* Additional Orders */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">ADDITIONAL ORDERS</h2>
         <textarea
@@ -290,7 +284,6 @@ export default function AdvanceDirectivesForm() {
         ></textarea>
       </div>
 
-      {/* Information Discussed With */}
       <div className="border rounded-lg p-6 shadow-sm space-y-8 mb-6">
         <h2 className="text-lg font-semibold mb-2">
           INFORMATION DISCUSSED WITH:
@@ -307,25 +300,26 @@ export default function AdvanceDirectivesForm() {
         </div>
       </div>
 
-      {/* Decision-Maker Verification */}
+  
       <div className="border rounded-lg p-6 shadow-sm space-y-8 mb-6">
         <h2 className="text-lg font-semibold mb-2">
           DECISION-MAKER VERIFICATION
         </h2>
-        <div className="space-y-4">
-          <div>
+
+        <div className="flex gap-6">
+          <div className="w-1/2 space-y-2">
             <label className="block text-sm font-medium mb-2">
               Decision Maker Signature
             </label>
             <div
-              className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+              className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[170px] hover:bg-gray-100 cursor-pointer"
               onClick={() => setActiveSig("decisionMaker")}
             >
               {sigData["decisionMaker"]?.image ? (
                 <img
                   src={sigData["decisionMaker"].image}
                   alt="Decision Maker signature"
-                  className="max-h-[60px]"
+                  className="max-h-[100px]"
                 />
               ) : (
                 <div className="flex flex-col items-center text-gray-500">
@@ -338,44 +332,45 @@ export default function AdvanceDirectivesForm() {
               Signature over printed Name
             </label>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Name</label>
-            <Input type="text" name="decisionMakerName" className="w-full" />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Relation</label>
-            <Input
-              type="text"
-              name="decisionMakerRelation"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Date Signed</label>
-            <Input type="date" name="decisionMakerDate" className="w-full" />
+
+          <div className="w-1/2 grid grid-cols-1 gap-4">
+            <div>
+              <label className="block font-medium mb-1">Name</label>
+              <Input type="text" name="decisionMakerName" className="w-full" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Relation</label>
+              <Input
+                type="text"
+                name="decisionMakerRelation"
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Date Signed</label>
+              <Input type="date" name="decisionMakerDate" className="w-full" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Physician Verification */}
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
         <h2 className="text-lg font-semibold mb-2">PHYSICIAN VERIFICATION</h2>
-        <div className="space-y-4">
-          <div>
+
+        <div className="flex gap-6">
+          <div className="w-1/2 space-y-2">
             <label className="block text-sm font-medium mb-2">
               Physician Signature
             </label>
             <div
-              className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+              className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[170px] hover:bg-gray-100 cursor-pointer"
               onClick={() => setActiveSig("physician")}
             >
               {sigData["physician"]?.image ? (
                 <img
                   src={sigData["physician"].image}
                   alt="Physician signature"
-                  className="max-h-[60px]"
+                  className="max-h-[100px]"
                 />
               ) : (
                 <div className="flex flex-col items-center text-gray-500">
@@ -388,24 +383,26 @@ export default function AdvanceDirectivesForm() {
               Signature over printed Name
             </label>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Name</label>
-            <Input type="text" name="physicianName" className="w-full" />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">PRC License Number</label>
-            <Input type="text" name="physicianLicense" className="w-full" />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Date Signed</label>
-            <Input type="date" name="physicianDate" className="w-full" />
+
+          <div className="w-1/2 grid grid-cols-1 gap-4">
+            <div>
+              <label className="block font-medium mb-1">Name</label>
+              <Input type="text" name="physicianName" className="w-full" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">
+                PRC License Number
+              </label>
+              <Input type="text" name="physicianLicense" className="w-full" />
+            </div>
+            <div>
+              <label className="block font-medium mb-1">Date Signed</label>
+              <Input type="date" name="physicianDate" className="w-full" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Signature Modal */}
       <Dialog.Root
         open={!!activeSig}
         onOpenChange={(open) => !open && setActiveSig(null)}

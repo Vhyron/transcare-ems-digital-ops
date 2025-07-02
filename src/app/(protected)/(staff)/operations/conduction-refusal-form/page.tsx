@@ -41,10 +41,10 @@ export default function ConductionRefusalForm() {
 
       setSigData((prev) => ({
         ...prev,
-        [activeSig!]: { 
-          image: dataUrl, 
-          name: witnessName, 
-          date: witnessDate 
+        [activeSig!]: {
+          image: dataUrl,
+          name: witnessName,
+          date: witnessDate,
         },
       }));
 
@@ -113,6 +113,9 @@ export default function ConductionRefusalForm() {
 
   return (
     <div className="p-10 w-full">
+      <h1 className="text-xl font-bold mb-6">
+        CONDUCTION REFUSAL FORM (RF-01)
+      </h1>
       {/* Header
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-4 mb-2">
@@ -190,117 +193,91 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Next of Kin/Legal Guardian Information */}
-      <div className="grid grid-cols-2 gap-4 mb-4 mt-4">
-        <div className="border rounded-lg p-6 shadow-sm space-y-8">
-          <h3 className="font-bold text-sm mb-3 p-1">
-            NEXT OF KIN/LEGAL GUARDIAN INFORMATION
-          </h3>
+      <div className="border rounded-lg p-6 shadow-sm space-y-4">
+        <h3 className="font-bold text-sm mb-3 p-1">
+          NEXT OF KIN/LEGAL GUARDIAN INFORMATION
+        </h3>
 
-          <div className="mb-2">
-            <label className=" font-medium">Name</label>
-            <Input type="text" className="w-full" />
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-4">
+            <div>
+              <label className="font-medium">Name</label>
+              <Input type="text" className="w-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="font-medium">Relation</label>
+                <Input type="text" className="w-full" />
+              </div>
+              <div>
+                <label className="font-medium">Contact No.</label>
+                <Input type="text" className="w-full" />
+              </div>
+            </div>
+            <div>
+              <label className="font-medium">Address</label>
+              <Input type="text" className="w-full" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 mb-2">
+          {/* Right Column */}
+          <div className="space-y-4">
             <div>
-              <label className=" font-medium">Relation</label>
+              <label className="font-medium">Medical Record #.</label>
               <Input type="text" className="w-full" />
             </div>
             <div>
-              <label className=" font-medium">Contact No.</label>
-              <Input type="text" className="w-full" />
+              <label className="font-medium">Date Accomplished</label>
+              <Input type="date" className="w-full" />
             </div>
           </div>
-
-          <div>
-            <label className=" font-medium">Address</label>
-            <Input type="text" className="w-full" />
-          </div>
-        </div>
-
-        <div className="border rounded-lg p-4">
-          <h3 className="font-bold text-sm mb-3 p-1">MEDICAL RECORD #</h3>
-          <Input type="text" className="w-full" />
-
-          <h3 className="font-bold text-sm mb-3 p-1">DATE ACCOMPLISHED</h3>
-          <Input type="text" className="w-full" />
         </div>
       </div>
 
-      {/* Assessment Questions */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8">
-        <div className="grid grid-cols-12 gap-1  mb-2">
-          <div className="col-span-2 text-center font-bold">BP:</div>
-          <div className="col-span-2 text-center font-bold">PULSE:</div>
-          <div className="col-span-2 text-center font-bold">RESP:</div>
-          <div className="col-span-2 text-center font-bold">SKIN:</div>
-          <div className="col-span-2 text-center font-bold">PUPILS:</div>
-          <div className="col-span-2 text-center font-bold">LOC:</div>
+      <div className="border rounded-lg p-6 shadow-sm space-y-6">
+        {/* VITAL SIGNS */}
+        <div className="grid grid-cols-6 gap-4">
+          {[
+            { label: "BP" },
+            { label: "PULSE" },
+            { label: "RESP." },
+            { label: "SKIN" },
+            { label: "PUPILS" },
+            { label: "LOC" },
+          ].map((field, index) => (
+            <div key={index} className="flex flex-col">
+              <label className="font-semibold text-sm mb-1 text-left">
+                {field.label}
+              </label>
+              <Input type="text" className="w-full" />
+            </div>
+          ))}
         </div>
 
-        <div className="grid grid-cols-12 gap-1 mb-4">
-          <div className="col-span-2 border-b h-6"></div>
-          <div className="col-span-2 border-b h-6"></div>
-          <div className="col-span-2 border-b h-6"></div>
-          <div className="col-span-2 border-b h-6"></div>
-          <div className="col-span-2 border-b h-6"></div>
-          <div className="col-span-2 border-b h-6"></div>
-        </div>
-
-        <div className=" space-y-1">
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-1">1.</div>
-            <div className="col-span-7">
-              Oriented to person, place and time?
+        <div className="space-y-3">
+          {[
+            "Oriented to person, place and time?",
+            "Coherent speech?",
+            "Auditory and/or visual hallucinations?",
+            "Suicidal and/or homicidal ideation?",
+            "Able to repeat understanding of their condition and consequences of treatment refusal?",
+          ].map((question, index) => (
+            <div className="grid grid-cols-12 gap-4 items-center" key={index}>
+              <div className="col-span-1 font-medium">{index + 1}.</div>
+              <div className="col-span-8">{question}</div>
+              <div className="col-span-3">
+                <select className="w-full border rounded-md px-2 py-1 ">
+                  <option className="text-gray-700" value="yes">
+                    Yes
+                  </option>
+                  <option className="text-gray-700" value="no">
+                    No
+                  </option>
+                </select>
+              </div>
             </div>
-            <div className="col-span-2 text-center">
-              <span className="inline-block w-8 border mr-2">YES</span>
-              <span className="inline-block w-8 border">NO</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-1">2.</div>
-            <div className="col-span-7">Coherent speech?</div>
-            <div className="col-span-2 text-center">
-              <span className="inline-block w-8 border mr-2">YES</span>
-              <span className="inline-block w-8 border">NO</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-1">3.</div>
-            <div className="col-span-7">
-              Auditory and/or visual hallucinations?
-            </div>
-            <div className="col-span-2 text-center">
-              <span className="inline-block w-8 border mr-2">YES</span>
-              <span className="inline-block w-8 border">NO</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-1">4.</div>
-            <div className="col-span-7">
-              Suicidal and/or homicidal ideation?
-            </div>
-            <div className="col-span-2 text-center">
-              <span className="inline-block w-8 border mr-2">YES</span>
-              <span className="inline-block w-8 border">NO</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-12 gap-2">
-            <div className="col-span-1">5.</div>
-            <div className="col-span-7">
-              Able to repeat understanding of their condition and consequences
-              of treatment refusal?
-            </div>
-            <div className="col-span-2 text-center">
-              <span className="inline-block w-8 border mr-2">YES</span>
-              <span className="inline-block w-8 border">NO</span>
-            </div>
-          </div>
+          ))}
         </div>
 
         <div className="mt-4">
@@ -368,13 +345,14 @@ export default function ConductionRefusalForm() {
           </p>
         </div>
 
-        <div className="grid grid-cols gap-8 ">
-          {/* Witness Signature Section */}
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-1 font-medium">Witness Signature</label>
+        <div className="grid grid-cols gap-8 items-start">
+          <div className="flex gap-6 mb-6">
+            <div className="w-1/2">
+              <label className="block mb-1 font-medium">
+                Witness Signature
+              </label>
               <div
-                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer"
+                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[156px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig("witness")}
               >
                 {sigData["witness"]?.image ? (
@@ -388,43 +366,44 @@ export default function ConductionRefusalForm() {
                 )}
               </div>
             </div>
-            
-            {/* Name and Date inputs below signature */}
-            <div className="space-y-2">
+
+            <div className="w-1/2 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <Input 
-                  type="text" 
-                  className="w-full" 
+                <label className="block text-sm font-medium mb-1">
+                  Witness Name
+                </label>
+                <Input
+                  type="text"
+                  className="w-full"
                   value={sigData["witness"]?.name || ""}
                   onChange={(e) => {
-                    setSigData(prev => ({
+                    setSigData((prev) => ({
                       ...prev,
                       witness: {
                         ...prev.witness,
                         name: e.target.value,
                         image: prev.witness?.image || "",
-                        date: prev.witness?.date || ""
-                      }
+                        date: prev.witness?.date || "",
+                      },
                     }));
                   }}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Date</label>
-                <Input 
-                  type="date" 
-                  className="w-full" 
+                <Input
+                  type="date"
+                  className="w-full"
                   value={sigData["witness"]?.date || ""}
                   onChange={(e) => {
-                    setSigData(prev => ({
+                    setSigData((prev) => ({
                       ...prev,
                       witness: {
                         ...prev.witness,
                         date: e.target.value,
                         image: prev.witness?.image || "",
-                        name: prev.witness?.name || ""
-                      }
+                        name: prev.witness?.name || "",
+                      },
                     }));
                   }}
                 />
@@ -432,7 +411,6 @@ export default function ConductionRefusalForm() {
             </div>
           </div>
 
-          {/* Signature Modal */}
           <Dialog.Root
             open={!!activeSig}
             onOpenChange={(open) => !open && setActiveSig(null)}
@@ -452,7 +430,7 @@ export default function ConductionRefusalForm() {
                       <X className="w-10 h-10" />
                     </button>
                   </Dialog.Close>
-                  
+
                   <div ref={modalCanvasRef} className="flex-1">
                     <SignatureCanvas
                       ref={getRefByType(activeSig)}
