@@ -7,21 +7,31 @@
 // then after the trip_tickets table we will create a new entry in this table
 // the form type will be trip_tickets, reference_id will be the id from the created trip_tickets data
 
-import { pgEnum, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { usersTable } from "./users.schema";
+import { pgEnum, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
+import { usersTable } from './users.schema';
 
-const formTypeEnum = pgEnum("form_type", ["dispatch", "trip_tickets", 'census']);
-const formStatusEnum = pgEnum("status", ["pending", "approved", "rejected"]);
+export const formTypeEnum = pgEnum('form_type', [
+  'dispatch',
+  'trip_tickets',
+  'census',
+]);
+export const formStatusEnum = pgEnum('status', [
+  'pending',
+  'approved',
+  'rejected',
+]);
 
-export const formSubmissions = pgTable("form_submissions", {
+export const formSubmissions = pgTable('form_submissions', {
   id: uuid().primaryKey().defaultRandom(),
 
   form_type: formTypeEnum().notNull(), // form type (dispatch, trip_tickets, census, etc.)
   reference_id: uuid().notNull(), // point to the id of the associated form type
   status: formStatusEnum().notNull().default('pending'), // status for the form submission
 
-  submitted_by: uuid().references(() => usersTable.id, { onDelete: 'set null' }), // user who submitted the form (staff)
+  submitted_by: uuid().references(() => usersTable.id, {
+    onDelete: 'set null',
+  }), // user who submitted the form (staff)
   reviewed_by: uuid().references(() => usersTable.id, { onDelete: 'set null' }), // user who review it (admin)
 
   created_at: timestamp().notNull().defaultNow(),
