@@ -1,5 +1,5 @@
 # Development Notes
 
-- Authentication & Authorization (Not Initiated)
-- Phase 1: Digitalized Forms (Not Initiated)
+- Authentication & Authorization (Done)
+- Phase 1: Digitalized Forms (Ongoing)
 - Phase 2: Caller Logs (Not Initiated)
