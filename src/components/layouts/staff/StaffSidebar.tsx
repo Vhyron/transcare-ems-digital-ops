@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 
-import { NavMain } from "@/components/layouts/sidebar-components/nav-main";
-import { NavUser } from "@/components/layouts/sidebar-components/nav-user";
+import { NavMain } from '@/components/layouts/sidebar-components/nav-main';
+import { NavUser } from '@/components/layouts/sidebar-components/nav-user';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar";
-import NavHeader from "../sidebar-components/nav-header";
-import { staffNavs } from "../../../utils/constant/nav-data";
-import { useAuth } from "../../provider/auth-provider";
+} from '@/components/ui/sidebar';
+import NavHeader from '../sidebar-components/nav-header';
+import { staffNavs } from '../../../utils/constant/nav-data';
+import { useAuth } from '../../provider/auth-provider';
 
 export function StaffSidebar({
   ...props
@@ -31,10 +31,12 @@ export function StaffSidebar({
       <SidebarFooter>
         <NavUser
           user={{
-            email: user?.email || "",
-            name: `${user?.user_metadata?.firstName || ""} ${user?.user_metadata?.lastName || ""
-              }`,
-            avatar: "https://github.com/shadcn.png",
+            email: user?.email || '',
+            name: `${user?.user_metadata?.firstName || ''} ${
+              user?.user_metadata?.lastName || ''
+            }`,
+            avatar: 'https://github.com/shadcn.png',
+            user_role: user?.user_metadata?.user_role || '',
           }}
           loading={loading}
         />

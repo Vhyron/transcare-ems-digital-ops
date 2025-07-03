@@ -14,7 +14,7 @@ import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-const AdminProfile = () => {
+const StaffProfile = () => {
   const { user, loading } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +101,7 @@ const AdminProfile = () => {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Admin Profile Settings
+          Staff Profile Settings
         </h1>
         <p className="text-muted-foreground">Manage your account preferences</p>
       </div>
@@ -134,4 +134,4 @@ const AdminProfile = () => {
   );
 };
 
-export default AdminProfile;
+export default StaffProfile;
