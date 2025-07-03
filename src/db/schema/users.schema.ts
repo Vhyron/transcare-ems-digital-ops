@@ -1,16 +1,16 @@
-import { pgEnum, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+import { pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const userRoleEnum = pgEnum("user_role", ["admin", "staff"]);
+export const userRoleEnum = pgEnum('user_role', ['admin', 'staff']);
 
-export const usersTable = pgTable("users", {
+export const usersTable = pgTable('users', {
   id: uuid().primaryKey().defaultRandom(),
 
   first_name: varchar({ length: 50 }),
   last_name: varchar({ length: 50 }),
   email: varchar({ length: 255 }).notNull().unique(),
   // default role only for db trigger function, implementation should always set this
-  user_role: userRoleEnum().notNull().default("staff"),
+  user_role: userRoleEnum().notNull().default('staff'),
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
 }).enableRLS();
