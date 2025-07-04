@@ -11,6 +11,7 @@ import { pgEnum, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 import { usersTable } from './users.schema';
 
+// form_type is the referenced form table name (edit as needed) NOTE: after adding a form type you have to generate and migrate the schema again
 export const formTypeEnum = pgEnum('form_type', [
   'dispatch',
   'trip_tickets',
@@ -22,7 +23,7 @@ export const formStatusEnum = pgEnum('status', [
   'rejected',
 ]);
 
-export const formSubmissions = pgTable('form_submissions', {
+export const formSubmissionsTable = pgTable('form_submissions', {
   id: uuid().primaryKey().defaultRandom(),
 
   form_type: formTypeEnum().notNull(), // form type (dispatch, trip_tickets, census, etc.)
@@ -39,9 +40,10 @@ export const formSubmissions = pgTable('form_submissions', {
 }).enableRLS();
 
 // use this for type inference for arguments
-export type FormSubmission = typeof formSubmissions.$inferSelect;
-export type NewFormSubmission = typeof formSubmissions.$inferInsert;
+export type FormSubmission = typeof formSubmissionsTable.$inferSelect;
+export type NewFormSubmission = typeof formSubmissionsTable.$inferInsert;
 
 // use this for validating data in the server
-export const NewFormSubmissionSchema = createInsertSchema(formSubmissions);
-export const UpdateFormSubmissionSchema = createUpdateSchema(formSubmissions);
+export const NewFormSubmissionSchema = createInsertSchema(formSubmissionsTable);
+export const UpdateFormSubmissionSchema =
+  createUpdateSchema(formSubmissionsTable);
