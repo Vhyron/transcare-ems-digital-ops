@@ -10,12 +10,14 @@ import ProfileInfoForm, {
 import Loading from '@/components/Loading';
 import { useAuth } from '@/components/provider/auth-provider';
 import { createClient } from '@/lib/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 const StaffProfile = () => {
   const { user, loading } = useAuth();
+  const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,6 +48,8 @@ const StaffProfile = () => {
           description: error.message,
         });
       }
+
+      queryClient.invalidateQueries({ queryKey: ['staffs'] }); // to reset the cache for staff
 
       toast.success('Profile information updated successfully');
     } catch (error) {
