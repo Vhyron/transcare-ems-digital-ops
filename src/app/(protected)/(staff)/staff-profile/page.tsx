@@ -14,6 +14,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import SignatureForm, {
+  SignatureData,
+} from '../../../../components/forms/SignatureForm';
 
 const StaffProfile = () => {
   const { user, loading } = useAuth();
@@ -101,6 +104,10 @@ const StaffProfile = () => {
     }
   };
 
+  const handleUpdateSignature = (data: SignatureData) => {
+    console.log(data.signature);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -122,17 +129,7 @@ const StaffProfile = () => {
           loading={isLoading}
         />
 
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Delete Account</CardTitle>
-            <CardDescription>
-              Permanently delete your account and all data
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="destructive">Delete Account</Button>
-          </CardContent>
-        </Card> */}
+        <SignatureForm onSubmit={handleUpdateSignature} defaultSignature="" />
       </div>
     </div>
   );
