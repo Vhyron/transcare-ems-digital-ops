@@ -6,9 +6,24 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { DispatchFormData } from "@/hooks/dispatch-form";
+import { dispatchApi } from "@/lib/dispatchApi";
+interface DispatchFormPage3Props {
+  formId?: string;
+  onFormSaved?: (formId: string) => void;
+  onDataChange?: (data: Partial<DispatchFormData>) => void;
+  formData: DispatchFormData;
+  updateFormData: (updates: Partial<DispatchFormData>) => void;
+  isLoading: boolean;
+}
 
-
-export default function DispatchFormPage3() {
+export default function DispatchFormPage3({
+  formId,
+  onFormSaved,
+  onDataChange,
+}: DispatchFormPage3Props) {
+  const [formData, setFormData] = useState<Partial<DispatchFormData>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
   const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
   const emsSupervisorSigRef = useRef<SignatureCanvas | null>(null);
@@ -21,14 +36,14 @@ export default function DispatchFormPage3() {
     "nurse" | "billing" | "ambulance" | null
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
-  
+
   // New state for managing rows
   const [numberOfRows, setNumberOfRows] = useState(10);
   const maxRows = 20;
 
   const addRow = () => {
     if (numberOfRows < maxRows) {
-      setNumberOfRows(prev => prev + 1);
+      setNumberOfRows((prev) => prev + 1);
     }
   };
 
@@ -122,8 +137,8 @@ export default function DispatchFormPage3() {
         <div className="text-sm text-gray-600">
           Rows: {numberOfRows} / {maxRows}
         </div>
-        <Button 
-          onClick={addRow} 
+        <Button
+          onClick={addRow}
           disabled={numberOfRows >= maxRows}
           size="sm"
           variant="outline"
@@ -133,17 +148,27 @@ export default function DispatchFormPage3() {
         </Button>
       </div>
 
-      <div className={`w-full border ${numberOfRows > 20 ? 'max-h-96 overflow-y-auto' : ''}`}>
+      <div
+        className={`w-full border ${
+          numberOfRows > 20 ? "max-h-96 overflow-y-auto" : ""
+        }`}
+      >
         <table className="w-full text-sm">
           <thead className="sticky top-0">
             <tr className="text-left">
-              {["No.", "Name", "Title", "Position", "IN", "OUT", "Signature"].map(
-                (head, idx) => (
-                  <th key={idx} className="p-2 border">
-                    {head}
-                  </th>
-                )
-              )}
+              {[
+                "No.",
+                "Name",
+                "Title",
+                "Position",
+                "IN",
+                "OUT",
+                "Signature",
+              ].map((head, idx) => (
+                <th key={idx} className="p-2 border">
+                  {head}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>

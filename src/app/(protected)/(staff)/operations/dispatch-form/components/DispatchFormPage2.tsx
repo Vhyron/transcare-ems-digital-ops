@@ -2,13 +2,24 @@
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
+import { toast } from "sonner";
 import { useRef, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { DispatchFormData } from "@/hooks/dispatch-form";
+import { dispatchApi } from "@/lib/dispatchApi";
+
+interface DispatchFormPage2Props {
+  formId?: string;
+  onFormSaved?: (formId: string) => void;
+  onDataChange?: (data: Partial<DispatchFormData>) => void;
+  formData: DispatchFormData;
+  updateFormData: (updates: Partial<DispatchFormData>) => void;
+  isLoading: boolean;
+}
 
 function SelectWithOthers({
   options,
@@ -50,7 +61,13 @@ function SelectWithOthers({
   );
 }
 
-export default function DispatchFormPage2() {
+export default function DispatchFormPage2({
+  formId,
+  onFormSaved,
+  onDataChange,
+}: DispatchFormPage2Props) {
+  const [formData, setFormData] = useState<Partial<DispatchFormData>>({});
+  const [isSaving, setIsSaving] = useState(false);
   const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
   const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
   const emsSupervisorSigRef = useRef<SignatureCanvas | null>(null);
@@ -65,12 +82,41 @@ export default function DispatchFormPage2() {
   const [crewCredential, setCrewCredential] = useState("");
   const [crewCredentialOther, setCrewCredentialOther] = useState("");
 
-
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     "nurse" | "billing" | "ambulance" | null
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+
+  const handleInputChange = (field: keyof DispatchFormData, value: string) => {
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    onDataChange?.(newData);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      let result;
+      if (formId) {
+        result = await dispatchApi.updateDispatchForm(formId, formData);
+      } else {
+        result = await dispatchApi.createDispatchForm(formData);
+      }
+
+      if (result.success) {
+        toast.success("Form saved successfully!");
+        onFormSaved?.(result.data.id);
+      } else {
+        toast.error("Failed to save form");
+      }
+    } catch (error) {
+      console.error("Error saving form:", error);
+      toast.error("Error saving form");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const getRefByType = (type: string | null) => {
     if (type === "nurse") return teamLeaderSigRef;
@@ -152,7 +198,7 @@ export default function DispatchFormPage2() {
           <div className="flex flex-wrap gap-6">
             <SelectWithOthers
               options={["Manpower", "Ambulance", "Combination", "Support Unit"]}
-              value={typeOfService}
+              value={formData.type_of_service || ""}
               onChange={setTypeOfService}
               otherValue={typeOfServiceOther}
               onOtherChange={setTypeOfServiceOther}
@@ -176,7 +222,7 @@ export default function DispatchFormPage2() {
           <div className="flex flex-wrap gap-6">
             <SelectWithOthers
               options={["EMT", "RN", "EMR", "COMBINATION"]}
-              value={crewCredential}
+              value={formData.crew_credential || ""}
               onChange={setCrewCredential}
               otherValue={crewCredentialOther}
               onOtherChange={setCrewCredentialOther}
@@ -187,7 +233,7 @@ export default function DispatchFormPage2() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block mb-2 font-medium">Number of Crew</label>
-            <Input className="h-10 text-base" />
+            <Input className="h-10 text-base" value={formData.number_of_crew} />
           </div>
           <div>
             <label className="block mb-2 font-medium">
@@ -198,6 +244,7 @@ export default function DispatchFormPage2() {
                 key={i}
                 placeholder={`Line ${i + 1}`}
                 className="h-10 text-base mb-2"
+                value={formData.md_names?.[i] || ""}
               />
             ))}
           </div>
@@ -210,6 +257,7 @@ export default function DispatchFormPage2() {
               key={i}
               placeholder={`${i})`}
               className="h-10 text-base mb-2"
+              value={formData.point_of_destinations?.[i] || ""}
             />
           ))}
         </div>
@@ -217,7 +265,10 @@ export default function DispatchFormPage2() {
           <label className="block mb-2 font-medium">
             Special Consideration
           </label>
-          <Textarea className="h-10 text-base mb-2"></Textarea>
+          <Textarea
+            className="h-10 text-base mb-2"
+            value={formData.special_consideration}
+          ></Textarea>
         </div>
         <div className="border rounded-lg p-4 space-y-4">
           <h2 className="text-lg font-semibold border-b pb-2">
@@ -236,18 +287,34 @@ export default function DispatchFormPage2() {
 
               <div className="flex items-center gap-2">
                 <label className="text-base">Trauma</label>
-                <Input placeholder="#" className="h-10 text-base w-20" />
+                <Input
+                  placeholder="#"
+                  className="h-10 text-base w-20"
+                  value={formData.treated_trauma || formData.refused_trauma}
+                />
               </div>
 
               <div className="flex items-center gap-2">
                 <label className="text-base">Medical</label>
-                <Input placeholder="#" className="h-10 text-base w-20" />
+                <Input
+                  placeholder="#"
+                  className="h-10 text-base w-20"
+                  value={formData.treated_medical || formData.refused_medical}
+                />
               </div>
 
               <div className="flex items-center gap-2">
-                <Input placeholder="Rate" className="h-10 text-base w-20" />
+                <Input
+                  placeholder="Rate"
+                  className="h-10 text-base w-20"
+                  value={formData.refused_rate_1}
+                />
                 <span className="text-base">/</span>
-                <Input placeholder="Rate" className="h-10 text-base w-20" />
+                <Input
+                  placeholder="Rate"
+                  className="h-10 text-base w-20"
+                  value={formData.refused_rate_2}
+                />
               </div>
 
               <span className="text-base">{field}</span>
@@ -256,6 +323,7 @@ export default function DispatchFormPage2() {
                 <select
                   className="border border-gray-300 rounded-md px-3 py-2 w-full text-base"
                   defaultValue=""
+                  value={formData.refused_pre_med_check || ""}
                 >
                   <option
                     value="Y"

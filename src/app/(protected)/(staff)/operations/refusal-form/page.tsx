@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
+import { refusalFormAPI } from "@/lib/refusalApi";
 
 export default function RefusalTreatmentTransportationForm() {
   const patientGuardianSignature = useRef<SignatureCanvas | null>(null);
@@ -26,6 +27,39 @@ export default function RefusalTreatmentTransportationForm() {
   const [sigData, setSigData] = useState<{
     [key: string]: { image: string; name: string };
   }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  const [formData, setFormData] = useState({
+    leagueEvent: "",
+    type: "",
+    location: "",
+    incident: "",
+    patientName: "",
+    dob: "",
+    age: "",
+    landline: "",
+    cell: "",
+    guardian: "yes",
+    guardianLandline: "",
+    guardianCell: "",
+    guardianName: "",
+    guardianAge: "",
+    relationship: "",
+    situation: "",
+    treatmentRefused: "",
+    pcr: "",
+    date: "",
+    time: "",
+    refusalReasons: {
+      treatmentNotNecessary: false,
+      refusesTransportAgainstAdvice: false,
+      treatmentReceivedNoTransport: false,
+      alternativeTransportation: false,
+      acceptsTransportRefusesTreatment: false,
+    },
+    company: "",
+  });
 
   const getRefByType = (type: string | null) => {
     if (type === "patientGuardian") return patientGuardianSignature;
@@ -88,6 +122,119 @@ export default function RefusalTreatmentTransportationForm() {
     reader.readAsDataURL(file);
   };
 
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      const checkbox = e.target as HTMLInputElement;
+      setFormData((prev) => ({
+        ...prev,
+        refusalReasons: {
+          ...prev.refusalReasons,
+          [name]: checkbox.checked,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      leagueEvent: "",
+      type: "",
+      location: "",
+      incident: "",
+      patientName: "",
+      dob: "",
+      age: "",
+      landline: "",
+      cell: "",
+      guardian: "yes",
+      guardianLandline: "",
+      guardianCell: "",
+      guardianName: "",
+      guardianAge: "",
+      relationship: "",
+      situation: "",
+      treatmentRefused: "",
+      pcr: "",
+      date: "",
+      time: "",
+      refusalReasons: {
+        treatmentNotNecessary: false,
+        refusesTransportAgainstAdvice: false,
+        treatmentReceivedNoTransport: false,
+        alternativeTransportation: false,
+        acceptsTransportRefusesTreatment: false,
+      },
+      company: "",
+    });
+    setSigData({});
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      const submitData = {
+        ...formData,
+        signatures: {
+          patientGuardian: sigData.patientGuardian || null,
+          eventsOrganizer: sigData.eventsOrganizer || null,
+          witness: sigData.witness || null,
+          medicPersonnel: sigData.medicPersonnel || null,
+        },
+      };
+
+      await refusalFormAPI.saveDraft(submitData);
+      alert("Draft saved successfully!");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      alert(
+        `Failed to save draft: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const submitData = {
+        ...formData,
+        signatures: {
+          patientGuardian: sigData.patientGuardian || null,
+          eventsOrganizer: sigData.eventsOrganizer || null,
+          witness: sigData.witness || null,
+          medicPersonnel: sigData.medicPersonnel || null,
+        },
+      };
+
+      await refusalFormAPI.submitForm(submitData);
+      alert("Form submitted successfully!");
+      resetForm();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert(
+        `Failed to submit form: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
     const ref = getRefByType(activeSig);
     const dataUrl = sigData[activeSig || ""];
@@ -120,12 +267,20 @@ export default function RefusalTreatmentTransportationForm() {
           <Input
             type="text"
             name="leagueEvent"
+            value={formData.leagueEvent}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">TYPE:</label>
-          <Input type="text" name="type" className="w-full h-10 text-base" />
+          <Input
+            type="text"
+            name="type"
+            value={formData.type}
+            onChange={handleInputChange}
+            className="w-full h-10 text-base"
+          />
         </div>
       </div>
 
@@ -135,14 +290,18 @@ export default function RefusalTreatmentTransportationForm() {
           <Input
             type="text"
             name="location"
+            value={formData.location}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Incident #:</label>
+          <label className="block text-sm font-medium mb-1">Incident:</label>
           <Input
             type="text"
             name="incident"
+            value={formData.incident}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
@@ -157,16 +316,30 @@ export default function RefusalTreatmentTransportationForm() {
           <Input
             type="text"
             name="patientName"
+            value={formData.patientName}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">DOB:</label>
-          <Input type="text" name="dob" className="w-full h-10 text-base" />
+          <Input
+            type="date"
+            name="dob"
+            value={formData.dob}
+            onChange={handleInputChange}
+            className="w-full h-10 text-base"
+          />
         </div>
         <div className="">
           <label className="block text-sm font-medium mb-1">Age:</label>
-          <Input type="text" name="age" className="w-full h-10 text-base" />
+          <Input
+            type="number"
+            name="age"
+            value={formData.age}
+            onChange={handleInputChange}
+            className="w-full h-10 text-base"
+          />
         </div>
       </div>
 
@@ -177,14 +350,22 @@ export default function RefusalTreatmentTransportationForm() {
             Contact Details - Landline:
           </label>
           <Input
-            type="text"
+            type="tel"
             name="landline"
+            value={formData.landline}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Cell:</label>
-          <Input type="text" name="cell" className="w-full h-10 text-base" />
+          <Input
+            type="tel"
+            name="cell"
+            value={formData.cell}
+            onChange={handleInputChange}
+            className="w-full h-10 text-base"
+          />
         </div>
       </div>
 
@@ -194,14 +375,12 @@ export default function RefusalTreatmentTransportationForm() {
           <label className="text-sm font-medium">GUARDIAN:</label>
           <select
             name="guardian"
-            className=" border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formData.guardian}
+            onChange={handleInputChange}
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option className="text-gray-700" value="yes">
-              YES
-            </option>
-            <option className="text-gray-700" value="no">
-              NO
-            </option>
+            <option value="yes">YES</option>
+            <option value="no">NO</option>
           </select>
         </div>
 
@@ -209,16 +388,20 @@ export default function RefusalTreatmentTransportationForm() {
           <div>
             <label className="block text-sm font-medium mb-1">Landline:</label>
             <Input
-              type="text"
+              type="tel"
               name="guardianLandline"
+              value={formData.guardianLandline}
+              onChange={handleInputChange}
               className="w-full h-10 text-base"
             />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Cell:</label>
             <Input
-              type="text"
+              type="tel"
               name="guardianCell"
+              value={formData.guardianCell}
+              onChange={handleInputChange}
               className="w-full h-10 text-base"
             />
           </div>
@@ -232,14 +415,18 @@ export default function RefusalTreatmentTransportationForm() {
           <Input
             type="text"
             name="guardianName"
+            value={formData.guardianName}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Age:</label>
           <Input
-            type="text"
+            type="number"
             name="guardianAge"
+            value={formData.guardianAge}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
@@ -250,6 +437,8 @@ export default function RefusalTreatmentTransportationForm() {
           <Input
             type="text"
             name="relationship"
+            value={formData.relationship}
+            onChange={handleInputChange}
             className="w-full h-10 text-base"
           />
         </div>
@@ -263,7 +452,9 @@ export default function RefusalTreatmentTransportationForm() {
         <textarea
           className="w-full border border-gray-300 rounded-md p-2 min-h-[80px]"
           name="situation"
-        ></textarea>
+          value={formData.situation}
+          onChange={handleInputChange}
+        />
       </div>
 
       {/* Check Applicable Refusal */}
@@ -272,7 +463,13 @@ export default function RefusalTreatmentTransportationForm() {
 
         <div className="space-y-3">
           <label className="flex items-start">
-            <input type="checkbox" className="mr-3 mt-1" />
+            <input
+              type="checkbox"
+              name="treatmentNotNecessary"
+              checked={formData.refusalReasons.treatmentNotNecessary}
+              onChange={handleInputChange}
+              className="mr-3 mt-1"
+            />
             <span className="text-sm">
               Patient refuses treatment; transport is not necessary for the
               situation;
@@ -280,7 +477,13 @@ export default function RefusalTreatmentTransportationForm() {
           </label>
 
           <label className="flex items-start">
-            <input type="checkbox" className="mr-3 mt-1" />
+            <input
+              type="checkbox"
+              name="refusesTransportAgainstAdvice"
+              checked={formData.refusalReasons.refusesTransportAgainstAdvice}
+              onChange={handleInputChange}
+              className="mr-3 mt-1"
+            />
             <span className="text-sm">
               Patient refuses treatment and transport to a hospital against EMS
               advice;
@@ -288,7 +491,13 @@ export default function RefusalTreatmentTransportationForm() {
           </label>
 
           <label className="flex items-start">
-            <input type="checkbox" className="mr-3 mt-1" />
+            <input
+              type="checkbox"
+              name="treatmentReceivedNoTransport"
+              checked={formData.refusalReasons.treatmentReceivedNoTransport}
+              onChange={handleInputChange}
+              className="mr-3 mt-1"
+            />
             <span className="text-sm">
               Patient receives treatment does not desire transport to hospital
               by ambulance;
@@ -296,7 +505,13 @@ export default function RefusalTreatmentTransportationForm() {
           </label>
 
           <label className="flex items-start">
-            <input type="checkbox" className="mr-3 mt-1" />
+            <input
+              type="checkbox"
+              name="alternativeTransportation"
+              checked={formData.refusalReasons.alternativeTransportation}
+              onChange={handleInputChange}
+              className="mr-3 mt-1"
+            />
             <span className="text-sm">
               Patient / Guardian believes alternative transportation plan is
               reasonable;
@@ -304,7 +519,13 @@ export default function RefusalTreatmentTransportationForm() {
           </label>
 
           <label className="flex items-start">
-            <input type="checkbox" className="mr-3 mt-1" />
+            <input
+              type="checkbox"
+              name="acceptsTransportRefusesTreatment"
+              checked={formData.refusalReasons.acceptsTransportRefusesTreatment}
+              onChange={handleInputChange}
+              className="mr-3 mt-1"
+            />
             <span className="text-sm">
               Patient accepts transportation to hospital by EMS but refuses any
               or all treatment offered.
@@ -318,7 +539,9 @@ export default function RefusalTreatmentTransportationForm() {
             <textarea
               className="w-full border border-gray-300 rounded-md p-2 min-h-[60px]"
               name="treatmentRefused"
-            ></textarea>
+              value={formData.treatmentRefused}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
       </div>
@@ -355,7 +578,11 @@ export default function RefusalTreatmentTransportationForm() {
             Emergency Medical Services Management and employees and{" "}
             <input
               type="text"
-              className="border-b border-white outline-none px-1 w-48 inline-block"
+              name="company"
+              value={formData.company}
+              onChange={handleInputChange}
+              className="border-b border-gray-400 outline-none px-1 w-48 inline-block"
+              placeholder="Company Name"
             />{" "}
             and its employees of any liability or medical claims resulting from
             my decision to refuse care against medical advice.
@@ -461,7 +688,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-2">Witness</label>
               <div
-                className=" bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig("witness")}
               >
                 {sigData["witness"]?.image ? (
@@ -549,15 +776,33 @@ export default function RefusalTreatmentTransportationForm() {
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">PCR:</label>
-            <Input type="text" name="pcr" className="w-full h-10 text-base" />
+            <Input
+              type="text"
+              name="pcr"
+              value={formData.pcr}
+              onChange={handleInputChange}
+              className="w-full h-10 text-base"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">DATE:</label>
-            <Input type="date" name="date" className="w-full h-10 text-base" />
+            <Input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleInputChange}
+              className="w-full h-10 text-base"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">TIME:</label>
-            <Input type="time" name="time" className="w-full h-10 text-base" />
+            <Input
+              type="time"
+              name="time"
+              value={formData.time}
+              onChange={handleInputChange}
+              className="w-full h-10 text-base"
+            />
           </div>
         </div>
       </div>
@@ -590,7 +835,7 @@ export default function RefusalTreatmentTransportationForm() {
                   canvasProps={{
                     width: sigCanvasSize.width,
                     height: sigCanvasSize.height,
-                    className: "bg-gray-100 rounded shadow ",
+                    className: "bg-gray-100 rounded shadow",
                   }}
                 />
               </div>
@@ -619,6 +864,20 @@ export default function RefusalTreatmentTransportationForm() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4 mt-6">
+        <Button
+          variant="outline"
+          onClick={handleSaveDraft}
+          disabled={isSavingDraft}
+        >
+          {isSavingDraft ? "Saving Draft..." : "Save Draft"}
+        </Button>
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit Form"}
+        </Button>
+      </div>
     </div>
   );
 }

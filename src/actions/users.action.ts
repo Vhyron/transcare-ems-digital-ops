@@ -7,6 +7,7 @@ import {
   usersTable,
 } from "@/db/schema/users.schema";
 import { eq } from "drizzle-orm";
+import { supabaseAdmin } from "../lib/supabase/admin_client";
 
 export async function getUserById(id: string) {
   const [user] = await db
@@ -24,6 +25,13 @@ export async function getUserByEmail(email: string) {
     .where(eq(usersTable.email, email))
     .limit(1);
   return user;
+}
+
+export async function listAllStaff() {
+  return await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.user_role, "staff"));
 }
 
 export async function createUser(user: NewUser) {
@@ -51,4 +59,13 @@ export async function deleteUser(id: string) {
     .where(eq(usersTable.id, id))
     .returning();
   return deletedUser;
+}
+
+export async function removeUser(id: string) {
+  const res = await supabaseAdmin.auth.admin.deleteUser(id);
+  if (res.error) {
+    return { error: res.error, data: null };
+  }
+
+  return { data: res.data, error: null };
 }

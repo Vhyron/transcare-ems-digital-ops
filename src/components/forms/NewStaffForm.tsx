@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,9 +16,9 @@ import {
   FormMessage,
 } from "../ui/form";
 import { useRouter } from "next/navigation";
-import { registerStaff } from "../../actions/auth.action";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
+import { useAddStaff } from "@/hooks/use-user";
 
 const formSchema = z
   .object({
@@ -36,8 +35,9 @@ const formSchema = z
 export type NewStaffFormData = z.infer<typeof formSchema>;
 
 export default function NewStaffForm() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const addStaff = useAddStaff();
 
   const form = useForm<NewStaffFormData>({
     resolver: zodResolver(formSchema),
@@ -51,28 +51,28 @@ export default function NewStaffForm() {
   });
 
   const handleSubmit = async (data: NewStaffFormData) => {
-    setIsLoading(true);
+    addStaff.mutate(data, {
+      onSuccess: (res) => {
+        if (res.error) {
+          toast.error('Staff Registration Failed!', {
+            description: res.error,
+            richColors: true
+          });
+          return;
+        }
 
-    try {
-      const res = await registerStaff(data);
-
-      if (res?.error) {
-        toast.error("Error registering new staff", {
-          description: res.error,
+        toast.success('Staff Registered Successfully!', {
+          description: 'New staff has been added, let them know!'
         });
-        return;
-      }
-
-      toast.success("New staff registered successfully!", {
-        description: "Email confirmation was sent to their email!",
-      });
-
-      form.reset();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+        form.reset();
+      },
+      onError: (error) => {
+        toast.error('Staff Registration Failed!', {
+          description: error.message || 'An unexpected error occurred',
+          richColors: true
+        });
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -109,7 +109,7 @@ export default function NewStaffForm() {
                         <Input
                           type="text"
                           placeholder="Enter first name"
-                          disabled={isLoading}
+                          disabled={addStaff.isPending}
                           {...field}
                         />
                       </FormControl>
@@ -133,7 +133,7 @@ export default function NewStaffForm() {
                         <Input
                           type="text"
                           placeholder="Enter last name"
-                          disabled={isLoading}
+                          disabled={addStaff.isPending}
                           {...field}
                         />
                       </FormControl>
@@ -162,7 +162,7 @@ export default function NewStaffForm() {
                       <Input
                         type="email"
                         placeholder="Enter email address"
-                        disabled={isLoading}
+                        disabled={addStaff.isPending}
                         {...field}
                       />
                     </FormControl>
@@ -184,7 +184,7 @@ export default function NewStaffForm() {
                         <Input
                           type="password"
                           placeholder="Enter password"
-                          disabled={isLoading}
+                          disabled={addStaff.isPending}
                           {...field}
                         />
                       </FormControl>
@@ -205,7 +205,7 @@ export default function NewStaffForm() {
                         <Input
                           type="password"
                           placeholder="Enter confirm password"
-                          disabled={isLoading}
+                          disabled={addStaff.isPending}
                           {...field}
                         />
                       </FormControl>
@@ -223,13 +223,13 @@ export default function NewStaffForm() {
                 type="button"
                 onClick={handleCancel}
                 variant="outline"
-                disabled={isLoading}
+                disabled={addStaff.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="px-8" disabled={isLoading}>
-                {isLoading && <Loader className="size-4 animate-spin" />}
-                {isLoading ? "Registering..." : " Register New Staff"}
+              <Button type="submit" className="px-8" disabled={addStaff.isPending}>
+                {addStaff.isPending && <Loader className="size-4 animate-spin" />}
+                {addStaff.isPending ? "Registering..." : " Register New Staff"}
               </Button>
             </div>
           </form>

@@ -224,7 +224,7 @@ export default function ConductionRefusalForm() {
           {/* Right Column */}
           <div className="space-y-4">
             <div>
-              <label className="font-medium">Medical Record #.</label>
+              <label className="font-medium">Medical Record</label>
               <Input type="text" className="w-full" />
             </div>
             <div>

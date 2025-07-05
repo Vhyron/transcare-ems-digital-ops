@@ -50,6 +50,7 @@ export default function LoginForm({
           description:
             res.error ||
             "Unable to authenticate. Please check your credentials and try again.",
+          richColors: true
         });
         setIsLoading(false);
         return;

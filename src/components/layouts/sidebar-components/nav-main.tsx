@@ -21,12 +21,12 @@ import {
 import { NavItem } from "../../../utils/constant/nav-data";
 import Link from "next/link";
 
-export function NavMain({ items }: { items: NavItem[] }) {
+export function NavMain({ items, label = "Dashboard" }: { items: NavItem[], label?: string }) {
   const pathname = usePathname();
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           if (item.items) {
