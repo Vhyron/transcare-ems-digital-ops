@@ -8,6 +8,13 @@
       "when": 1751547450334,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751736814156,
+      "tag": "0001_cloudy_cerebro",
+      "breakpoints": true
     }
   ]
 }
