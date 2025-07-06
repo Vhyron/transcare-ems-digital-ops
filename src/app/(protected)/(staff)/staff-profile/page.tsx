@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import SignatureForm, {
   SignatureData,
 } from '../../../../components/forms/SignatureForm';
+import { uploadFile } from '../../../../lib/supabase/storage';
 
 const StaffProfile = () => {
   const { user, loading } = useAuth();
@@ -104,8 +105,55 @@ const StaffProfile = () => {
     }
   };
 
-  const handleUpdateSignature = (data: SignatureData) => {
-    console.log(data.signature);
+  const handleUpdateSignature = async (data: SignatureData) => {
+    setIsLoading(true);
+    const supabase = createClient();
+
+    try {
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: `staff/signature_${user.id}.png`, // we'll save the signature to the path(folder) of staff/ + signature_id
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload e-signature', {
+          description: 'An error occurred while uploading the e-signature.',
+          closeButton: true,
+        });
+        return;
+      }
+
+      const res = await updateUser(user.id, {
+        signature: upload.path,
+        updated_at: new Date(),
+      });
+
+      if (!res) {
+        toast.error('Failed to update e-signature', {
+          description: 'An error occurred while updating the e-signature.',
+        });
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        data: { signature: upload.path },
+      });
+
+      if (error) {
+        toast.error('Failed to update e-signature', {
+          description: error.message,
+        });
+      }
+
+      toast.success('E-signature updated successfully');
+    } catch (error) {
+      console.error(error);
+      toast.success('Failed to update e-signature', {
+        description: `An unexpected error occurred, Try again later.`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -129,7 +177,11 @@ const StaffProfile = () => {
           loading={isLoading}
         />
 
-        <SignatureForm onSubmit={handleUpdateSignature} defaultSignature="" />
+        <SignatureForm
+          onSubmit={handleUpdateSignature}
+          defaultSignature={user.user_metadata.signature}
+          loading={isLoading}
+        />
       </div>
     </div>
   );
