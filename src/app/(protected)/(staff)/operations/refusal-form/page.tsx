@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
-import { refusalFormAPI } from "@/lib/refusalApi";
 
 export default function RefusalTreatmentTransportationForm() {
   const patientGuardianSignature = useRef<SignatureCanvas | null>(null);
@@ -28,7 +27,6 @@ export default function RefusalTreatmentTransportationForm() {
     [key: string]: { image: string; name: string };
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const [formData, setFormData] = useState({
     leagueEvent: "",
@@ -180,56 +178,46 @@ export default function RefusalTreatmentTransportationForm() {
     setSigData({});
   };
 
-  const handleSaveDraft = async () => {
-    setIsSavingDraft(true);
-    try {
-      const submitData = {
-        ...formData,
-        signatures: {
-          patientGuardian: sigData.patientGuardian || null,
-          eventsOrganizer: sigData.eventsOrganizer || null,
-          witness: sigData.witness || null,
-          medicPersonnel: sigData.medicPersonnel || null,
-        },
-      };
-
-      await refusalFormAPI.saveDraft(submitData);
-      alert("Draft saved successfully!");
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      alert(
-        `Failed to save draft: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
-    } finally {
-      setIsSavingDraft(false);
-    }
-  };
-
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
       const submitData = {
         ...formData,
-        signatures: {
-          patientGuardian: sigData.patientGuardian || null,
-          eventsOrganizer: sigData.eventsOrganizer || null,
-          witness: sigData.witness || null,
-          medicPersonnel: sigData.medicPersonnel || null,
-        },
+        patientGuardian: sigData.patientGuardian || null,
+        eventsOrganizer: sigData.eventsOrganizer || null,
+        witness: sigData.witness || null,
+        medicPersonnel: sigData.medicPersonnel || null,
       };
 
-      await refusalFormAPI.submitForm(submitData);
-      alert("Form submitted successfully!");
+      const baseUrl =
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000"
+          : window.location.origin;
+
+      const response = await fetch(`${baseUrl}/api/refusal-form`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ formData: submitData }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `HTTP ${response.status}: ${
+            errorData.error || "Failed to submit form"
+          }`
+        );
+      }
+
+      alert("Saved successfully!");
+
       resetForm();
+      setSigData({});
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert(
-        `Failed to submit form: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      console.error("Error saving:", error);
+      alert(`Failed to save`);
     } finally {
       setIsSubmitting(false);
     }
@@ -379,8 +367,12 @@ export default function RefusalTreatmentTransportationForm() {
             onChange={handleInputChange}
             className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="yes">YES</option>
-            <option value="no">NO</option>
+            <option value="yes" className="text-gray-700">
+              YES
+            </option>
+            <option value="no" className="text-gray-700">
+              NO
+            </option>
           </select>
         </div>
 
@@ -867,13 +859,6 @@ export default function RefusalTreatmentTransportationForm() {
 
       {/* Action Buttons */}
       <div className="flex gap-4 mt-6">
-        <Button
-          variant="outline"
-          onClick={handleSaveDraft}
-          disabled={isSavingDraft}
-        >
-          {isSavingDraft ? "Saving Draft..." : "Save Draft"}
-        </Button>
         <Button onClick={handleSubmit} disabled={isSubmitting}>
           {isSubmitting ? "Submitting..." : "Submit Form"}
         </Button>

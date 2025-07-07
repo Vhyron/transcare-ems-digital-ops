@@ -1,7 +1,4 @@
-// lib/api/refusal-form.ts
-
 import {
-  RefusalFormData,
   RefusalFormResponse,
   RefusalFormListResponse,
   CreateRefusalFormRequest,
@@ -40,7 +37,6 @@ class RefusalFormAPI {
     return response.json();
   }
 
-  // Create a new refusal form
   async createForm(
     data: CreateRefusalFormRequest
   ): Promise<RefusalFormResponse> {
@@ -50,7 +46,6 @@ class RefusalFormAPI {
     });
   }
 
-  // Get all refusal forms with optional filters
   async getForms(
     filters: RefusalFormFilters = {}
   ): Promise<RefusalFormListResponse> {
@@ -68,12 +63,10 @@ class RefusalFormAPI {
     return this.request<RefusalFormListResponse>(endpoint);
   }
 
-  // Get a specific refusal form by ID
   async getForm(id: string): Promise<RefusalFormResponse> {
     return this.request<RefusalFormResponse>(`/refusal-forms/${id}`);
   }
 
-  // Update a refusal form
   async updateForm(
     data: UpdateRefusalFormRequest
   ): Promise<RefusalFormResponse> {
@@ -83,14 +76,12 @@ class RefusalFormAPI {
     });
   }
 
-  // Delete a refusal form
   async deleteForm(id: string): Promise<RefusalFormResponse> {
     return this.request<RefusalFormResponse>(`/refusal-forms/${id}`, {
       method: "DELETE",
     });
   }
 
-  // Save form as draft
   async saveDraft(data: any): Promise<RefusalFormResponse> {
     const requestData = {
       formData: {
@@ -121,7 +112,6 @@ class RefusalFormAPI {
     }
   }
 
-  // Export form data (for PDF generation, etc.)
   async exportForm(id: string, format: "pdf" | "json" = "pdf"): Promise<Blob> {
     const response = await fetch(
       `${BASE_URL}/refusal-forms/${id}/export?format=${format}`,

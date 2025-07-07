@@ -1,5 +1,4 @@
 "use client";
-import { createClient } from "@supabase/supabase-js";
 
 import { useRef, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
@@ -10,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// const supabase = createClient(
+//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// );
 
 export default function HospitalTripForm() {
   const nurseSigRef = useRef<SignatureCanvas | null>(null);
@@ -156,7 +155,6 @@ export default function HospitalTripForm() {
         );
       }
 
-      const result = await response.json();
       alert("Saved successfully!");
 
       setFormData({

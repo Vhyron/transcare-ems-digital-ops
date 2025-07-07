@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DispatchFormData } from "@/hooks/dispatch-form";
-import { dispatchApi } from "@/lib/dispatchApi";
 interface DispatchFormPage3Props {
   formId?: string;
   onFormSaved?: (formId: string) => void;
@@ -17,13 +16,7 @@ interface DispatchFormPage3Props {
   isLoading: boolean;
 }
 
-export default function DispatchFormPage3({
-  formId,
-  onFormSaved,
-  onDataChange,
-}: DispatchFormPage3Props) {
-  const [formData, setFormData] = useState<Partial<DispatchFormData>>({});
-  const [isSaving, setIsSaving] = useState(false);
+export default function DispatchFormPage3({}: DispatchFormPage3Props) {
   const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
   const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
   const emsSupervisorSigRef = useRef<SignatureCanvas | null>(null);

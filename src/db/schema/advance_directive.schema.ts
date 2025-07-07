@@ -56,13 +56,13 @@ export const advanceDirectives = pgTable("advance_directives", {
   decision_maker_name: varchar({ length: 100 }),
   decision_maker_relation: varchar({ length: 50 }),
   decision_maker_date_signed: date(),
-  decision_maker_signature: varchar({ length: 10000 }), // base64 encoded
+  decision_maker_signature: varchar({ length: 255 }), // base64 encoded
 
   // Physician
   physician_name: varchar({ length: 100 }),
   physician_prc_license_number: varchar({ length: 50 }),
   physician_date_signed: date(),
-  physician_signature: varchar({ length: 10000 }), // base64 encoded
+  physician_signature: varchar({ length: 255 }), // base64 encoded
 
   // Metadata
   created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),

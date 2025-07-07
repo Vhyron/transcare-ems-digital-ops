@@ -67,7 +67,7 @@ export default function DispatchFormPage2({
   onDataChange,
 }: DispatchFormPage2Props) {
   const [formData, setFormData] = useState<Partial<DispatchFormData>>({});
-  const [isSaving, setIsSaving] = useState(false);
+  // const [isSaving, setIsSaving] = useState(false);
   const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
   const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
   const emsSupervisorSigRef = useRef<SignatureCanvas | null>(null);
@@ -75,11 +75,10 @@ export default function DispatchFormPage2({
     width: 950,
     height: 750,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [typeOfService, setTypeOfService] = useState("");
   const [typeOfServiceOther, setTypeOfServiceOther] = useState("");
 
-  const [crewCredential, setCrewCredential] = useState("");
   const [crewCredentialOther, setCrewCredentialOther] = useState("");
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
@@ -95,7 +94,7 @@ export default function DispatchFormPage2({
   };
 
   const handleSave = async () => {
-    setIsSaving(true);
+    setIsSubmitting(true);
     try {
       let result;
       if (formId) {
@@ -114,7 +113,7 @@ export default function DispatchFormPage2({
       console.error("Error saving form:", error);
       toast.error("Error saving form");
     } finally {
-      setIsSaving(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -199,7 +198,7 @@ export default function DispatchFormPage2({
             <SelectWithOthers
               options={["Manpower", "Ambulance", "Combination", "Support Unit"]}
               value={formData.type_of_service || ""}
-              onChange={setTypeOfService}
+              onChange={(val) => handleInputChange("type_of_service", val)}
               otherValue={typeOfServiceOther}
               onOtherChange={setTypeOfServiceOther}
             />
@@ -223,7 +222,7 @@ export default function DispatchFormPage2({
             <SelectWithOthers
               options={["EMT", "RN", "EMR", "COMBINATION"]}
               value={formData.crew_credential || ""}
-              onChange={setCrewCredential}
+              onChange={(val) => handleInputChange("crew_credential", val)}
               otherValue={crewCredentialOther}
               onOtherChange={setCrewCredentialOther}
             />
@@ -291,6 +290,9 @@ export default function DispatchFormPage2({
                   placeholder="#"
                   className="h-10 text-base w-20"
                   value={formData.treated_trauma || formData.refused_trauma}
+                  onChange={(e) =>
+                    handleInputChange("treated_trauma", e.target.value)
+                  }
                 />
               </div>
 
@@ -471,6 +473,15 @@ export default function DispatchFormPage2({
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
+        </div>
+        <div className="mt-6">
+          <Button
+            onClick={handleSave}
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            {isSubmitting ? "Submitting..." : "Submit Form"}
+          </Button>
         </div>
       </div>
     </div>

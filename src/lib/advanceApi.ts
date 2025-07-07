@@ -1,7 +1,5 @@
-// lib/api/AdvanceDirective-form.ts
 
 import {
-  AdvanceDirectiveFormData,
   CreateAdvanceDirectiveFormRequest,
   AdvanceDirectiveFormResponse,
   UpdateAdvanceDirectiveFormRequest,

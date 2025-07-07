@@ -61,7 +61,7 @@ export default function DispatchForm() {
     try {
       await saveForm();
       showNotificationMessage("Form saved successfully!", "success");
-    } catch (err) {
+    } catch {
       showNotificationMessage("Failed to save form", "error");
     }
   };
@@ -70,7 +70,7 @@ export default function DispatchForm() {
     try {
       await submitForm();
       showNotificationMessage("Form submitted successfully!", "success");
-    } catch (err) {
+    } catch  {
       showNotificationMessage("Failed to submit form", "error");
     }
   };
@@ -86,7 +86,7 @@ export default function DispatchForm() {
       try {
         await deleteForm();
         showNotificationMessage("Form deleted successfully!", "success");
-      } catch (err) {
+      } catch {
         showNotificationMessage("Failed to delete form", "error");
       }
     }

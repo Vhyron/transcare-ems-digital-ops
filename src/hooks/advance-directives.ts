@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 
 export interface AdvanceDirectivesFormData {
   id?: string;

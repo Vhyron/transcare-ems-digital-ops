@@ -8,163 +8,7 @@ import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
 
-// Updated form data structure to match the advance directive form
-interface AdvanceDirectivesFormData {
-  patient: {
-    firstName: string;
-    middleName: string;
-    lastName: string;
-    age: string;
-    sex: string;
-    birthdate: string;
-    citizenship: string;
-    address: string;
-    contactNo: string;
-  };
-  nextOfKin: {
-    name: string;
-    relation: string;
-    contactNo: string;
-    address: string;
-  };
-  medicalRecord: {
-    recordNumber: string;
-    dateAccomplished: string;
-  };
-  carePreferences: {
-    attemptCPR: boolean;
-    comfortOnly: boolean;
-    limitedIntervention: boolean;
-    limitedInterventionOptions: {
-      ivFluid: boolean;
-      ngTube: boolean;
-      o2Therapy: boolean;
-      cpapBipap: boolean;
-      antibiotics: boolean;
-      diagnostics: boolean;
-    };
-    fullTreatment: boolean;
-  };
-  additionalOrders: string;
-  discussedWith: {
-    withPatient: boolean;
-    withKin: boolean;
-  };
-  decisionMaker: {
-    name: string;
-    relation: string;
-    dateSigned: string;
-    signature: string | null;
-  };
-  physician: {
-    name: string;
-    prcLicenseNumber: string;
-    dateSigned: string;
-    signature: string | null;
-  };
-}
-
-const initialFormState: AdvanceDirectivesFormData = {
-  patient: {
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    age: "",
-    sex: "",
-    birthdate: "",
-    citizenship: "",
-    address: "",
-    contactNo: "",
-  },
-  nextOfKin: {
-    name: "",
-    relation: "",
-    contactNo: "",
-    address: "",
-  },
-  medicalRecord: {
-    recordNumber: "",
-    dateAccomplished: "",
-  },
-  carePreferences: {
-    attemptCPR: false,
-    comfortOnly: false,
-    limitedIntervention: false,
-    limitedInterventionOptions: {
-      ivFluid: false,
-      ngTube: false,
-      o2Therapy: false,
-      cpapBipap: false,
-      antibiotics: false,
-      diagnostics: false,
-    },
-    fullTreatment: false,
-  },
-  additionalOrders: "",
-  discussedWith: {
-    withPatient: false,
-    withKin: false,
-  },
-  decisionMaker: {
-    name: "",
-    relation: "",
-    dateSigned: "",
-    signature: null,
-  },
-  physician: {
-    name: "",
-    prcLicenseNumber: "",
-    dateSigned: "",
-    signature: null,
-  },
-};
-
-const advanceDirectiveFormAPI = {
-  async submitForm(formData: AdvanceDirectivesFormData) {
-    try {
-      console.log("Submitting form data:", formData);
-
-      const response = await fetch("/api/advance-directives", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        console.error("API Response Error:", {
-          status: response.status,
-          statusText: response.statusText,
-          data: responseData,
-        });
-
-        throw new Error(
-          responseData.message || responseData.error || "Failed to submit form"
-        );
-      }
-
-      console.log("Form submitted successfully:", responseData);
-      return responseData;
-    } catch (error) {
-      console.error("API Error:", error);
-
-      // Re-throw with more context
-      if (error instanceof Error) {
-        throw new Error(`Form submission failed: ${error.message}`);
-      } else {
-        throw new Error("Form submission failed: Unknown error");
-      }
-    }
-  },
-};
-
 export default function AdvanceDirectivesForm() {
-  const [formData, setFormData] =
-    useState<AdvanceDirectivesFormData>(initialFormState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const decisionMakerSignature = useRef<SignatureCanvas | null>(null);
   const physicianSignature = useRef<SignatureCanvas | null>(null);
 
@@ -178,27 +22,65 @@ export default function AdvanceDirectivesForm() {
     "decisionMaker" | "physician" | null
   >(null);
 
-  const updateFormData = (updates: Partial<AdvanceDirectivesFormData>) => {
-    setFormData((prev) => ({
-      ...prev,
-      ...updates,
-    }));
-  };
+  const [sigData, setSigData] = useState<{
+    [key: string]: { image: string; name: string };
+  }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const updateNestedFormData = <T extends keyof AdvanceDirectivesFormData>(
-    section: T,
-    updates: Partial<AdvanceDirectivesFormData[T]>
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [section]: {
-        ...(typeof prev[section] === "object" && prev[section] !== null
-          ? prev[section]
-          : {}),
-        ...updates,
+  const [formData, setFormData] = useState({
+    patient: {
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      age: "",
+      sex: "",
+      birthdate: "",
+      citizenship: "",
+      address: "",
+      contactNo: "",
+    },
+    nextOfKin: {
+      name: "",
+      relation: "",
+      contactNo: "",
+      address: "",
+    },
+    medicalRecord: {
+      recordNumber: "",
+      dateAccomplished: "",
+    },
+    carePreferences: {
+      attemptCPR: false,
+      comfortOnly: false,
+      limitedIntervention: false,
+      limitedInterventionOptions: {
+        ivFluid: false,
+        ngTube: false,
+        o2Therapy: false,
+        cpapBipap: false,
+        antibiotics: false,
+        diagnostics: false,
       },
-    }));
-  };
+      fullTreatment: false,
+    },
+    additionalOrders: "",
+    discussedWith: {
+      withPatient: false,
+      withKin: false,
+    },
+    decisionMaker: {
+      name: "",
+      relation: "",
+      dateSigned: "",
+      signature: null as string | null,
+    },
+    physician: {
+      name: "",
+      prcLicenseNumber: "",
+      dateSigned: "",
+      signature: null as string | null,
+    },
+  });
 
   const getRefByType = (type: string | null) => {
     if (type === "decisionMaker") return decisionMakerSignature;
@@ -216,11 +98,21 @@ export default function AdvanceDirectivesForm() {
     if (ref?.current && !ref.current.isEmpty()) {
       const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
 
-      if (activeSig === "decisionMaker") {
-        updateNestedFormData("decisionMaker", { signature: dataUrl });
-      } else if (activeSig === "physician") {
-        updateNestedFormData("physician", { signature: dataUrl });
-      }
+      setFormData((prev) => ({
+        ...prev,
+        [activeSig!]: {
+          ...((prev[activeSig! as keyof typeof prev] || {}) as object),
+          signature: dataUrl,
+        },
+      }));
+
+      setSigData((prev) => ({
+        ...prev,
+        [activeSig!]: {
+          image: dataUrl,
+          name: prev[activeSig!]?.name || "",
+        },
+      }));
 
       setActiveSig(null);
     }
@@ -257,7 +149,15 @@ export default function AdvanceDirectivesForm() {
     };
     reader.readAsDataURL(file);
   };
-
+  useEffect(() => {
+    const ref = getRefByType(activeSig);
+    const dataUrl = sigData[activeSig || ""];
+    if (ref?.current && dataUrl) {
+      ref.current.clear();
+      (ref.current as any).loadFromDataURL(dataUrl);
+    }
+  }, [activeSig, sigData]);
+  
   useEffect(() => {
     if (modalCanvasRef.current) {
       const width = modalCanvasRef.current.offsetWidth;
@@ -266,8 +166,9 @@ export default function AdvanceDirectivesForm() {
     }
   }, [activeSig]);
 
+  // Fixed type definition
   type LimitedInterventionKey =
-    keyof AdvanceDirectivesFormData["carePreferences"]["limitedInterventionOptions"];
+    keyof typeof formData.carePreferences.limitedInterventionOptions;
 
   const limitedOptions: { key: LimitedInterventionKey; label: string }[] = [
     { key: "ivFluid", label: "IV Fluid therapy" },
@@ -278,35 +179,150 @@ export default function AdvanceDirectivesForm() {
     { key: "diagnostics", label: "Diagnostics work up" },
   ];
 
-  const resetForm = () => {
-    setFormData(initialFormState);
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      const checkbox = e.target as HTMLInputElement;
+      const checked = checkbox.checked;
+
+      // Handle nested object updates
+      if (name.includes(".")) {
+        const keys = name.split(".");
+        setFormData((prev) => {
+          const newData = { ...prev };
+          let current: any = newData;
+
+          for (let i = 0; i < keys.length - 1; i++) {
+            current = current[keys[i]];
+          }
+
+          current[keys[keys.length - 1]] = checked;
+          return newData;
+        });
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: checked,
+        }));
+      }
+    } else {
+      // Handle nested object updates for regular inputs
+      if (name.includes(".")) {
+        const keys = name.split(".");
+        setFormData((prev) => {
+          const newData = { ...prev };
+          let current: any = newData;
+
+          for (let i = 0; i < keys.length - 1; i++) {
+            current = current[keys[i]];
+          }
+
+          current[keys[keys.length - 1]] = value;
+          return newData;
+        });
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
+    }
   };
 
-  // Updated handleSubmit function with better error handling
+  const resetForm = () => {
+    setFormData({
+      patient: {
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        age: "",
+        sex: "",
+        birthdate: "",
+        citizenship: "",
+        address: "",
+        contactNo: "",
+      },
+      nextOfKin: {
+        name: "",
+        relation: "",
+        contactNo: "",
+        address: "",
+      },
+      medicalRecord: {
+        recordNumber: "",
+        dateAccomplished: "",
+      },
+      carePreferences: {
+        attemptCPR: false,
+        comfortOnly: false,
+        limitedIntervention: false,
+        limitedInterventionOptions: {
+          ivFluid: false,
+          ngTube: false,
+          o2Therapy: false,
+          cpapBipap: false,
+          antibiotics: false,
+          diagnostics: false,
+        },
+        fullTreatment: false,
+      },
+      additionalOrders: "",
+      discussedWith: {
+        withPatient: false,
+        withKin: false,
+      },
+      decisionMaker: {
+        name: "",
+        relation: "",
+        dateSigned: "",
+        signature: null,
+      },
+      physician: {
+        name: "",
+        prcLicenseNumber: "",
+        dateSigned: "",
+        signature: null,
+      },
+    });
+    setSigData({});
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Basic validation
-      if (!formData.patient.firstName || !formData.patient.lastName) {
-        throw new Error("Patient first name and last name are required");
+      const response = await fetch("/api/advance-directives", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ formData }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `HTTP ${response.status}: ${
+            errorData.error || "Failed to submit form"
+          }`
+        );
       }
 
-      console.log("Form data before submission:", formData);
+      alert("Saved successfully!");
 
-      const result = await advanceDirectiveFormAPI.submitForm(formData);
-
-      console.log("Submission result:", result);
-      alert("Form submitted successfully!");
       resetForm();
+      setSigData({});
     } catch (error) {
-      console.error("Error submitting form:", error);
-
-      let errorMessage = "Failed to submit form";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-
-      alert(`Error: ${errorMessage}`);
+      console.error("Error saving:", error);
+      alert(
+        `Failed to save: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -332,33 +348,30 @@ export default function AdvanceDirectivesForm() {
             <label className="font-medium">First</label>
             <Input
               type="text"
+              name="patient.firstName"
               className="w-full"
               value={formData.patient.firstName}
-              onChange={(e) =>
-                updateNestedFormData("patient", { firstName: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
           <div className="col-span-4">
             <label className="font-medium">Middle</label>
             <Input
               type="text"
+              name="patient.middleName"
               className="w-full"
               value={formData.patient.middleName}
-              onChange={(e) =>
-                updateNestedFormData("patient", { middleName: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
           <div className="col-span-4">
             <label className="font-medium">Last</label>
             <Input
               type="text"
+              name="patient.lastName"
               className="w-full"
               value={formData.patient.lastName}
-              onChange={(e) =>
-                updateNestedFormData("patient", { lastName: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
         </div>
@@ -368,44 +381,40 @@ export default function AdvanceDirectivesForm() {
             <label className="font-medium">Age</label>
             <Input
               type="text"
+              name="patient.age"
               className="w-full"
               value={formData.patient.age}
-              onChange={(e) =>
-                updateNestedFormData("patient", { age: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
           <div className="col-span-2">
             <label className="font-medium">Sex</label>
             <Input
               type="text"
+              name="patient.sex"
               className="w-full"
               value={formData.patient.sex}
-              onChange={(e) =>
-                updateNestedFormData("patient", { sex: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
           <div className="col-span-4">
             <label className="font-medium">Birthdate(mm/dd/yyyy):</label>
             <Input
               type="date"
+              name="patient.birthdate"
               className="w-full"
               value={formData.patient.birthdate}
-              onChange={(e) =>
-                updateNestedFormData("patient", { birthdate: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
           <div className="col-span-4">
             <label className="font-medium">Citizenship</label>
             <Input
               type="text"
+              name="patient.citizenship"
               className="w-full"
               value={formData.patient.citizenship}
-              onChange={(e) =>
-                updateNestedFormData("patient", { citizenship: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
         </div>
@@ -415,22 +424,20 @@ export default function AdvanceDirectivesForm() {
             <label className="font-medium">Address</label>
             <Input
               type="text"
+              name="patient.address"
               className="w-full"
               value={formData.patient.address}
-              onChange={(e) =>
-                updateNestedFormData("patient", { address: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
           <div className="col-span-4">
             <label className="font-medium">Contact No.</label>
             <Input
               type="text"
+              name="patient.contactNo"
               className="w-full"
               value={formData.patient.contactNo}
-              onChange={(e) =>
-                updateNestedFormData("patient", { contactNo: e.target.value })
-              }
+              onChange={handleInputChange}
             />
           </div>
         </div>
@@ -447,11 +454,10 @@ export default function AdvanceDirectivesForm() {
               <label className="font-medium">Name</label>
               <Input
                 type="text"
+                name="nextOfKin.name"
                 className="w-full"
                 value={formData.nextOfKin.name}
-                onChange={(e) =>
-                  updateNestedFormData("nextOfKin", { name: e.target.value })
-                }
+                onChange={handleInputChange}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -459,26 +465,20 @@ export default function AdvanceDirectivesForm() {
                 <label className="font-medium">Relation</label>
                 <Input
                   type="text"
+                  name="nextOfKin.relation"
                   className="w-full"
                   value={formData.nextOfKin.relation}
-                  onChange={(e) =>
-                    updateNestedFormData("nextOfKin", {
-                      relation: e.target.value,
-                    })
-                  }
+                  onChange={handleInputChange}
                 />
               </div>
               <div>
                 <label className="font-medium">Contact No.</label>
                 <Input
                   type="text"
+                  name="nextOfKin.contactNo"
                   className="w-full"
                   value={formData.nextOfKin.contactNo}
-                  onChange={(e) =>
-                    updateNestedFormData("nextOfKin", {
-                      contactNo: e.target.value,
-                    })
-                  }
+                  onChange={handleInputChange}
                 />
               </div>
             </div>
@@ -486,11 +486,10 @@ export default function AdvanceDirectivesForm() {
               <label className="font-medium">Address</label>
               <Input
                 type="text"
+                name="nextOfKin.address"
                 className="w-full"
                 value={formData.nextOfKin.address}
-                onChange={(e) =>
-                  updateNestedFormData("nextOfKin", { address: e.target.value })
-                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -500,26 +499,20 @@ export default function AdvanceDirectivesForm() {
               <label className="font-medium">Medical Record</label>
               <Input
                 type="text"
+                name="medicalRecord.recordNumber"
                 className="w-full"
                 value={formData.medicalRecord.recordNumber}
-                onChange={(e) =>
-                  updateNestedFormData("medicalRecord", {
-                    recordNumber: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
             <div>
               <label className="font-medium">Date Accomplished</label>
               <Input
                 type="date"
+                name="medicalRecord.dateAccomplished"
                 className="w-full"
                 value={formData.medicalRecord.dateAccomplished}
-                onChange={(e) =>
-                  updateNestedFormData("medicalRecord", {
-                    dateAccomplished: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -535,13 +528,10 @@ export default function AdvanceDirectivesForm() {
           <label className="flex items-center mt-2">
             <input
               type="checkbox"
+              name="carePreferences.attemptCPR"
               className="mr-2"
               checked={formData.carePreferences.attemptCPR}
-              onChange={(e) =>
-                updateNestedFormData("carePreferences", {
-                  attemptCPR: e.target.checked,
-                })
-              }
+              onChange={handleInputChange}
             />
             ATTEMPT RESUSCITATION / CPR
           </label>
@@ -558,13 +548,10 @@ export default function AdvanceDirectivesForm() {
           <label className="flex items-center mt-2">
             <input
               type="checkbox"
+              name="carePreferences.comfortOnly"
               className="mr-2"
               checked={formData.carePreferences.comfortOnly}
-              onChange={(e) =>
-                updateNestedFormData("carePreferences", {
-                  comfortOnly: e.target.checked,
-                })
-              }
+              onChange={handleInputChange}
             />
             COMFORT MEASURES ONLY
           </label>
@@ -575,13 +562,10 @@ export default function AdvanceDirectivesForm() {
             <label className="flex items-center mb-2">
               <input
                 type="checkbox"
+                name="carePreferences.limitedIntervention"
                 className="mr-2"
                 checked={formData.carePreferences.limitedIntervention}
-                onChange={(e) =>
-                  updateNestedFormData("carePreferences", {
-                    limitedIntervention: e.target.checked,
-                  })
-                }
+                onChange={handleInputChange}
               />
               LIMITED ADDITIONAL INTERVENTIONS
             </label>
@@ -593,19 +577,12 @@ export default function AdvanceDirectivesForm() {
                 <label key={key} className="flex items-center">
                   <input
                     type="checkbox"
+                    name={`carePreferences.limitedInterventionOptions.${key}`}
                     className="mr-2"
                     checked={
                       formData.carePreferences.limitedInterventionOptions[key]
                     }
-                    onChange={(e) =>
-                      updateNestedFormData("carePreferences", {
-                        limitedInterventionOptions: {
-                          ...formData.carePreferences
-                            .limitedInterventionOptions,
-                          [key]: e.target.checked,
-                        },
-                      })
-                    }
+                    onChange={handleInputChange}
                   />
                   {label}
                 </label>
@@ -616,13 +593,10 @@ export default function AdvanceDirectivesForm() {
           <label className="flex items-center mt-4">
             <input
               type="checkbox"
+              name="carePreferences.fullTreatment"
               className="mr-2"
               checked={formData.carePreferences.fullTreatment}
-              onChange={(e) =>
-                updateNestedFormData("carePreferences", {
-                  fullTreatment: e.target.checked,
-                })
-              }
+              onChange={handleInputChange}
             />
             FULL TREATMENT
           </label>
@@ -635,9 +609,10 @@ export default function AdvanceDirectivesForm() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">ADDITIONAL ORDERS</h2>
         <textarea
+          name="additionalOrders"
           className="w-full border border-gray-300 rounded-md p-2 min-h-[100px]"
           value={formData.additionalOrders}
-          onChange={(e) => updateFormData({ additionalOrders: e.target.value })}
+          onChange={handleInputChange}
         />
       </div>
 
@@ -649,26 +624,20 @@ export default function AdvanceDirectivesForm() {
           <label className="flex items-center">
             <input
               type="checkbox"
+              name="discussedWith.withPatient"
               className="mr-2"
               checked={formData.discussedWith.withPatient}
-              onChange={(e) =>
-                updateNestedFormData("discussedWith", {
-                  withPatient: e.target.checked,
-                })
-              }
+              onChange={handleInputChange}
             />
             Patient (has capacity for decision-making)
           </label>
           <label className="flex items-center">
             <input
               type="checkbox"
+              name="discussedWith.withKin"
               className="mr-2"
               checked={formData.discussedWith.withKin}
-              onChange={(e) =>
-                updateNestedFormData("discussedWith", {
-                  withKin: e.target.checked,
-                })
-              }
+              onChange={handleInputChange}
             />
             Next of kin or legally recognized decision-maker
           </label>
@@ -712,39 +681,30 @@ export default function AdvanceDirectivesForm() {
               <label className="block font-medium mb-1">Name</label>
               <Input
                 type="text"
+                name="decisionMaker.name"
                 className="w-full"
                 value={formData.decisionMaker.name}
-                onChange={(e) =>
-                  updateNestedFormData("decisionMaker", {
-                    name: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
             <div>
               <label className="block font-medium mb-1">Relation</label>
               <Input
                 type="text"
+                name="decisionMaker.relation"
                 className="w-full"
                 value={formData.decisionMaker.relation}
-                onChange={(e) =>
-                  updateNestedFormData("decisionMaker", {
-                    relation: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
                 type="date"
+                name="decisionMaker.dateSigned"
                 className="w-full"
                 value={formData.decisionMaker.dateSigned}
-                onChange={(e) =>
-                  updateNestedFormData("decisionMaker", {
-                    dateSigned: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -786,11 +746,10 @@ export default function AdvanceDirectivesForm() {
               <label className="block font-medium mb-1">Name</label>
               <Input
                 type="text"
+                name="physician.name"
                 className="w-full"
                 value={formData.physician.name}
-                onChange={(e) =>
-                  updateNestedFormData("physician", { name: e.target.value })
-                }
+                onChange={handleInputChange}
               />
             </div>
             <div>
@@ -799,26 +758,20 @@ export default function AdvanceDirectivesForm() {
               </label>
               <Input
                 type="text"
+                name="physician.prcLicenseNumber"
                 className="w-full"
                 value={formData.physician.prcLicenseNumber}
-                onChange={(e) =>
-                  updateNestedFormData("physician", {
-                    prcLicenseNumber: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
                 type="date"
+                name="physician.dateSigned"
                 className="w-full"
                 value={formData.physician.dateSigned}
-                onChange={(e) =>
-                  updateNestedFormData("physician", {
-                    dateSigned: e.target.value,
-                  })
-                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -883,9 +836,15 @@ export default function AdvanceDirectivesForm() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <Button onClick={handleSubmit} disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit Form"}
-      </Button>
+      <div className="mt-6">
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? "Submitting..." : "Submit Form"}
+        </Button>
+      </div>
     </div>
   );
 }

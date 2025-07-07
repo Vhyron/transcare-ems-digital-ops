@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // This would be your database in production
-let refusalForms: any[] = [];
+const refusalForms: any[] = [];
 
 export async function GET(
   request: NextRequest,

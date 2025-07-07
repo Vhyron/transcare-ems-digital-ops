@@ -7,6 +7,7 @@ import {
   boolean,
   text,
   timestamp,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 
@@ -24,7 +25,7 @@ export const refusalForms = pgTable("refusal_forms", {
 
   patient_name: varchar({ length: 255 }),
   dob: date(),
-  age: uuid(),
+  age: integer(), // Changed from uuid() to integer()
   landline: varchar({ length: 20 }),
   cell: varchar({ length: 20 }),
 
@@ -32,7 +33,7 @@ export const refusalForms = pgTable("refusal_forms", {
   guardian_landline: varchar({ length: 20 }),
   guardian_cell: varchar({ length: 20 }),
   guardian_name: varchar({ length: 255 }),
-  guardian_age: uuid(),
+  guardian_age: integer(), // Changed from uuid() to integer()
   relationship: varchar({ length: 100 }),
 
   situation: text(),
@@ -64,7 +65,6 @@ export const refusalForms = pgTable("refusal_forms", {
   created_by: uuid(),
   updated_by: uuid(),
 }).enableRLS();
-
 
 export type RefusalForm = typeof refusalForms.$inferSelect;
 export type NewRefusalForm = typeof refusalForms.$inferInsert;
