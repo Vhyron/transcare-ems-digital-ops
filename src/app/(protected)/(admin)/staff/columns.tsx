@@ -1,16 +1,16 @@
 'use client';
 
-import { ColumnDef } from '@tanstack/react-table';
-import { formatDate } from 'date-fns';
-import { User } from '@/db/schema/users.schema';
+import { StaffAction } from '@/components/StaffAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { StaffAction } from '@/components/StaffAction';
+import { User } from '@/db/schema/users.schema';
+import { ColumnDef } from '@tanstack/react-table';
+import { formatDate } from 'date-fns';
 
 export const columns: ColumnDef<User>[] = [
   {
     id: 'name',
-    accessorKey: 'name',
+    accessorKey: 'first_name',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
@@ -48,6 +48,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'created_at',
+    enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created At" />
     ),
@@ -59,6 +60,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     accessorKey: 'updated_at',
+    enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Updated At" />
     ),
@@ -70,6 +72,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     id: 'actions',
+    enableGlobalFilter: false,
     cell: ({ row }) => <StaffAction user={row.original} />,
   },
 ];
