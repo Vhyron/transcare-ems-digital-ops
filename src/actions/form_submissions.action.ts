@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   formSubmissionsTable,
@@ -11,14 +11,52 @@ export async function listAllFormSubmissions() {
   return await db.select().from(formSubmissionsTable);
 }
 
-export async function listPendingFormSubmissions() {
+export async function getPendingFormSubmissions() {
   return await db
     .select()
     .from(formSubmissionsTable)
     .where(eq(formSubmissionsTable.status, 'pending'));
 }
 
-// TODO: add a raw sql query here utilizing the reference_id for forms
+export async function listPendingForms() {
+  const pendingSubmissions = await db
+    .select()
+    .from(formSubmissionsTable)
+    .where(eq(formSubmissionsTable.status, 'pending'));
+
+  const grouped = pendingSubmissions.reduce((acc, submission) => {
+    if (!acc[submission.form_type]) acc[submission.form_type] = [];
+    acc[submission.form_type].push(submission);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const results: any[] = [];
+
+  for (const [formType, submissions] of Object.entries(grouped)) {
+    const referenceIds = submissions
+      .map((s) => `'${s.reference_id}'`)
+      .join(',');
+    if (!referenceIds) continue;
+    const referencedForms = await db.execute(
+      sql`SELECT * FROM ${sql.raw(formType)} WHERE id IN (${sql.raw(
+        referenceIds
+      )})`
+    );
+
+    const refMap = Object.fromEntries(
+      referencedForms.map((f: any) => [f.id, f])
+    );
+
+    for (const submission of submissions) {
+      results.push({
+        ...submission,
+        referenced_form: refMap[submission.reference_id] || null,
+      });
+    }
+  }
+
+  return results;
+}
 
 export async function createFormSubmission(formSubmission: NewFormSubmission) {
   const [inserted] = await db

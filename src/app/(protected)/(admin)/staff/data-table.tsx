@@ -1,15 +1,22 @@
-"use client";
+'use client';
 
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
+import Link from 'next/link';
+import { useState } from 'react';
 
+import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { DataTableViewOptions } from '@/components/table/data-table-view';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -17,23 +24,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { DataTablePagination } from "./data-table-pagination";
-import { useState } from "react";
-import { DataTableViewOptions } from "./data-table-view";
+} from '@/components/ui/table';
+import { Plus } from 'lucide-react';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  actionComponent?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  actionComponent,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState<any>([]);
 
   const table = useReactTable({
     data,
@@ -42,16 +46,32 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
+    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
+      globalFilter,
     },
   });
 
   return (
     <>
-      <div className="flex items-center">
-        {actionComponent}
-        <DataTableViewOptions table={table} />
+      <div className="flex items-center justify-between">
+        <Input
+          placeholder="Filter emails and names..."
+          value={globalFilter || ''}
+          onChange={(e) => table.setGlobalFilter(e.target.value as string)}
+          className="max-w-sm"
+        />
+        <div className="flex items-center gap-2">
+          <DataTableViewOptions table={table} />
+          <Link href="/staff/new" className="w-fit">
+            <Button size="sm">
+              <Plus />
+              Add New Staff
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-md border">
@@ -65,9 +85,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -79,7 +99,7 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="pl-4 py-4">
@@ -109,3 +129,5 @@ export function DataTable<TData, TValue>({
     </>
   );
 }
+
+// TODO: PUSH THIS RIGHT NOW DON'T THINK AND JUST PUSH
