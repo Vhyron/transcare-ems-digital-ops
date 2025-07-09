@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useRef, useEffect, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Input } from "@/components/ui/input";
+import { useRef, useEffect, useState } from 'react';
+import SignatureCanvas from 'react-signature-canvas';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Button } from '@/components/ui/button';
+import { Plus, X } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Input } from '@/components/ui/input';
 
 export default function AdvanceDirectivesForm() {
   const decisionMakerSignature = useRef<SignatureCanvas | null>(null);
@@ -19,7 +19,7 @@ export default function AdvanceDirectivesForm() {
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
-    "decisionMaker" | "physician" | null
+    'decisionMaker' | 'physician' | null
   >(null);
 
   const [sigData, setSigData] = useState<{
@@ -34,7 +34,7 @@ export default function AdvanceDirectivesForm() {
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
     if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
+      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
 
       setFormData((prev) => ({
         ...prev,
@@ -48,7 +48,7 @@ export default function AdvanceDirectivesForm() {
         ...prev,
         [activeSig!]: {
           image: dataUrl,
-          name: prev[activeSig!]?.name || "",
+          name: prev[activeSig!]?.name || '',
         },
       }));
 
@@ -57,25 +57,25 @@ export default function AdvanceDirectivesForm() {
   };
   const [formData, setFormData] = useState({
     patient: {
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      age: "",
-      sex: "",
-      birthdate: "",
-      citizenship: "",
-      address: "",
-      contactNo: "",
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      age: '',
+      sex: '',
+      birthdate: '',
+      citizenship: '',
+      address: '',
+      contactNo: '',
     },
     nextOfKin: {
-      name: "",
-      relation: "",
-      contactNo: "",
-      address: "",
+      name: '',
+      relation: '',
+      contactNo: '',
+      address: '',
     },
     medicalRecord: {
-      recordNumber: "",
-      dateAccomplished: "",
+      recordNumber: '',
+      dateAccomplished: '',
     },
     carePreferences: {
       attemptCPR: false,
@@ -91,28 +91,28 @@ export default function AdvanceDirectivesForm() {
       },
       fullTreatment: false,
     },
-    additionalOrders: "",
+    additionalOrders: '',
     discussedWith: {
       withPatient: false,
       withKin: false,
     },
     decisionMaker: {
-      name: "",
-      relation: "",
-      dateSigned: "",
+      name: '',
+      relation: '',
+      dateSigned: '',
       signature: null as string | null,
     },
     physician: {
-      name: "",
-      prcLicenseNumber: "",
-      dateSigned: "",
+      name: '',
+      prcLicenseNumber: '',
+      dateSigned: '',
       signature: null as string | null,
     },
   });
 
   const getRefByType = (type: string | null) => {
-    if (type === "decisionMaker") return decisionMakerSignature;
-    if (type === "physician") return physicianSignature;
+    if (type === 'decisionMaker') return decisionMakerSignature;
+    if (type === 'physician') return physicianSignature;
     return null;
   };
 
@@ -127,7 +127,7 @@ export default function AdvanceDirectivesForm() {
       if (ref?.current) {
         const img = new Image();
         img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext("2d");
+          const ctx = ref.current!.getCanvas().getContext('2d');
           ctx?.clearRect(
             0,
             0,
@@ -149,7 +149,7 @@ export default function AdvanceDirectivesForm() {
   };
   useEffect(() => {
     const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ""];
+    const dataUrl = sigData[activeSig || ''];
     if (ref?.current && dataUrl) {
       ref.current.clear();
       (ref.current as any).loadFromDataURL(dataUrl);
@@ -169,12 +169,12 @@ export default function AdvanceDirectivesForm() {
     keyof typeof formData.carePreferences.limitedInterventionOptions;
 
   const limitedOptions: { key: LimitedInterventionKey; label: string }[] = [
-    { key: "ivFluid", label: "IV Fluid therapy" },
-    { key: "ngTube", label: "Nasogastric tube feeding" },
-    { key: "o2Therapy", label: "O2 therapy" },
-    { key: "cpapBipap", label: "Use of CPAP/BiPAP" },
-    { key: "antibiotics", label: "Antibiotics therapy" },
-    { key: "diagnostics", label: "Diagnostics work up" },
+    { key: 'ivFluid', label: 'IV Fluid therapy' },
+    { key: 'ngTube', label: 'Nasogastric tube feeding' },
+    { key: 'o2Therapy', label: 'O2 therapy' },
+    { key: 'cpapBipap', label: 'Use of CPAP/BiPAP' },
+    { key: 'antibiotics', label: 'Antibiotics therapy' },
+    { key: 'diagnostics', label: 'Diagnostics work up' },
   ];
 
   const handleInputChange = (
@@ -184,13 +184,13 @@ export default function AdvanceDirectivesForm() {
   ) => {
     const { name, value, type } = e.target;
 
-    if (type === "checkbox") {
+    if (type === 'checkbox') {
       const checkbox = e.target as HTMLInputElement;
       const checked = checkbox.checked;
 
       // Handle nested object updates
-      if (name.includes(".")) {
-        const keys = name.split(".");
+      if (name.includes('.')) {
+        const keys = name.split('.');
         setFormData((prev) => {
           const newData = { ...prev };
           let current: any = newData;
@@ -210,8 +210,8 @@ export default function AdvanceDirectivesForm() {
       }
     } else {
       // Handle nested object updates for regular inputs
-      if (name.includes(".")) {
-        const keys = name.split(".");
+      if (name.includes('.')) {
+        const keys = name.split('.');
         setFormData((prev) => {
           const newData = { ...prev };
           let current: any = newData;
@@ -235,25 +235,25 @@ export default function AdvanceDirectivesForm() {
   const resetForm = () => {
     setFormData({
       patient: {
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        age: "",
-        sex: "",
-        birthdate: "",
-        citizenship: "",
-        address: "",
-        contactNo: "",
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        age: '',
+        sex: '',
+        birthdate: '',
+        citizenship: '',
+        address: '',
+        contactNo: '',
       },
       nextOfKin: {
-        name: "",
-        relation: "",
-        contactNo: "",
-        address: "",
+        name: '',
+        relation: '',
+        contactNo: '',
+        address: '',
       },
       medicalRecord: {
-        recordNumber: "",
-        dateAccomplished: "",
+        recordNumber: '',
+        dateAccomplished: '',
       },
       carePreferences: {
         attemptCPR: false,
@@ -269,21 +269,21 @@ export default function AdvanceDirectivesForm() {
         },
         fullTreatment: false,
       },
-      additionalOrders: "",
+      additionalOrders: '',
       discussedWith: {
         withPatient: false,
         withKin: false,
       },
       decisionMaker: {
-        name: "",
-        relation: "",
-        dateSigned: "",
+        name: '',
+        relation: '',
+        dateSigned: '',
         signature: null,
       },
       physician: {
-        name: "",
-        prcLicenseNumber: "",
-        dateSigned: "",
+        name: '',
+        prcLicenseNumber: '',
+        dateSigned: '',
         signature: null,
       },
     });
@@ -291,64 +291,67 @@ export default function AdvanceDirectivesForm() {
   };
 
   const handleSubmit = async () => {
-  setIsSubmitting(true);
-  try {
-    // Step 1: Submit the advance directives form
-    const response = await fetch("/api/advance-directives", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ formData }),
-    });
+    setIsSubmitting(true);
+    try {
+      // Step 1: Submit the advance directives form
+      const response = await fetch('/api/advance-directives', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ formData }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        `HTTP ${response.status}: ${
-          errorData.error || "Failed to submit form"
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `HTTP ${response.status}: ${
+            errorData.error || 'Failed to submit form'
+          }`
+        );
+      }
+
+      const result = await response.json();
+      const formId = result.id || result.data?.id;
+
+      if (formId) {
+        try {
+          await fetch('/api/form-submissions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              form_type: 'advance_directives',
+              reference_id: formId,
+              status: 'pending',
+              submitted_by: 'current_user_id',
+              reviewed_by: null,
+            }),
+          });
+        } catch (submissionError) {
+          console.error(
+            'Failed to create submission tracking:',
+            submissionError
+          );
+        }
+      }
+
+      alert('Saved successfully!');
+
+      resetForm();
+      setSigData({});
+    } catch (error) {
+      console.error('Error saving:', error);
+      alert(
+        `Failed to save: ${
+          error instanceof Error ? error.message : 'Unknown error'
         }`
       );
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const result = await response.json();
-    const formId = result.id || result.data?.id;
-
-    if (formId) {
-      try {
-        await fetch("/api/form-submissions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            form_type: "advance_directives",
-            reference_id: formId,
-            status: "pending",
-            submitted_by: "current_user_id", 
-            reviewed_by: null,
-          }),
-        });
-      } catch (submissionError) {
-        console.error("Failed to create submission tracking:", submissionError);
-      }
-    }
-
-    alert("Saved successfully!");
-
-    resetForm();
-    setSigData({});
-  } catch (error) {
-    console.error("Error saving:", error);
-    alert(
-      `Failed to save: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="p-10 w-full">
@@ -678,7 +681,7 @@ export default function AdvanceDirectivesForm() {
             </label>
             <div
               className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[170px] hover:bg-gray-100 cursor-pointer"
-              onClick={() => setActiveSig("decisionMaker")}
+              onClick={() => setActiveSig('decisionMaker')}
             >
               {formData.decisionMaker.signature ? (
                 <img
@@ -743,7 +746,7 @@ export default function AdvanceDirectivesForm() {
             </label>
             <div
               className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[170px] hover:bg-gray-100 cursor-pointer"
-              onClick={() => setActiveSig("physician")}
+              onClick={() => setActiveSig('physician')}
             >
               {formData.physician.signature ? (
                 <img
@@ -807,9 +810,9 @@ export default function AdvanceDirectivesForm() {
         <Dialog.Portal>
           <Dialog.Title>
             <VisuallyHidden>
-              {activeSig === "decisionMaker"
-                ? "Decision Maker Signature"
-                : "Physician Signature"}
+              {activeSig === 'decisionMaker'
+                ? 'Decision Maker Signature'
+                : 'Physician Signature'}
             </VisuallyHidden>
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
@@ -828,7 +831,7 @@ export default function AdvanceDirectivesForm() {
                   canvasProps={{
                     width: sigCanvasSize.width,
                     height: sigCanvasSize.height,
-                    className: "bg-gray-100 rounded shadow",
+                    className: 'bg-gray-100 rounded shadow',
                   }}
                 />
               </div>
@@ -858,13 +861,9 @@ export default function AdvanceDirectivesForm() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <div className="mt-6">
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="w-full"
-        >
-          {isSubmitting ? "Submitting..." : "Submit Form"}
+      <div className="flex gap-4 mt-6">
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit Form'}
         </Button>
       </div>
     </div>
