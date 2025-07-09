@@ -1,31 +1,40 @@
-import { pgEnum, pgTable, timestamp, uuid } from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
-import { usersTable } from "./users.schema";
+import { pgEnum, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
+import { usersTable } from './users.schema';
+import { DISPATCH_FORM_TABLE } from './dispatch_form.schema';
+import { HOSPITAL_TRIP_TICKETS_TABLE } from './hospital-trip-ticket.schema';
+import { ADVANCE_DIRECTIVES_TABLE } from './advance_directive.schema';
+import { REFUSAL_FORMS_TABLE } from './refusal_form.schema';
+import { CONDUCTION_REFUSAL_FORMS_TABLE } from './conduction_refusal_form.schema';
 
-const formTypeEnum = pgEnum("form_type", [
-  "dispatch_form", 
-  "trip_tickets", 
-  "census_record", 
-  "advance_directives", 
-  "refusal_form",          
-  "conduction_refusal_form" 
+export const formTypeEnum = pgEnum('form_types', [
+  DISPATCH_FORM_TABLE,
+  HOSPITAL_TRIP_TICKETS_TABLE,
+  ADVANCE_DIRECTIVES_TABLE,
+  REFUSAL_FORMS_TABLE,
+  CONDUCTION_REFUSAL_FORMS_TABLE,
 ]);
 
-const formStatusEnum = pgEnum("status", ["pending", "approved", "rejected"]);
+export const formStatusEnum = pgEnum('form_status', [
+  'pending',
+  'approved',
+  'rejected',
+]);
 
-export const formSubmissionsTable = pgTable("form_submissions", {
+export const formSubmissionsTable = pgTable('form_submissions', {
   id: uuid().primaryKey().defaultRandom(),
 
-  form_type: formTypeEnum().notNull(), 
-  reference_id: uuid().notNull(), 
-  status: formStatusEnum().notNull().default('pending'), 
+  form_type: formTypeEnum().notNull(),
+  reference_id: uuid().notNull(),
+  status: formStatusEnum().notNull().default('pending'),
 
-  submitted_by: uuid().references(() => usersTable.id, { onDelete: 'set null' }),
-  reviewed_by: uuid().references(() => usersTable.id, { onDelete: 'set null' }), 
+  submitted_by: uuid().references(() => usersTable.id, {
+    onDelete: 'set null',
+  }),
+  reviewed_by: uuid().references(() => usersTable.id, { onDelete: 'set null' }),
 
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
-
 });
 
 export type FormSubmission = typeof formSubmissionsTable.$inferSelect;

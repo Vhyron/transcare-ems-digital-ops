@@ -40,19 +40,23 @@ export async function createUser(user: NewUser) {
 }
 
 export async function updateUser(id: string, data: Partial<NewUser>) {
-  const validated = UpdateUserSchema.safeParse(data);
+  try {
+    const validated = UpdateUserSchema.safeParse(data);
 
-  if (validated?.error) {
-    return { error: validated.error };
+    if (validated?.error) {
+      return { error: `Validation error: ${validated.error.message}` };
+    }
+
+    const [updatedUser] = await db
+      .update(usersTable)
+      .set(validated.data)
+      .where(eq(usersTable.id, id))
+      .returning();
+
+    return { data: updatedUser };
+  } catch (error) {
+    return { error: `Failed to update user: ${error}` };
   }
-
-  const [updatedUser] = await db
-    .update(usersTable)
-    .set(validated.data)
-    .where(eq(usersTable.id, id))
-    .returning();
-
-  return { data: updatedUser };
 }
 
 export async function deleteUser(id: string) {

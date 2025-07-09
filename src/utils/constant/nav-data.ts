@@ -4,7 +4,7 @@ import {
   FileText,
   Grid2X2,
   Users2,
-} from "lucide-react";
+} from 'lucide-react';
 
 export interface BreadcrumbItem {
   label: string;
@@ -23,54 +23,59 @@ export interface NavItem {
 
 export const adminNavs: NavItem[] = [
   {
-    title: "Dashboard",
-    url: "/admin-dashboard",
+    title: 'Dashboard',
+    url: '/admin-dashboard',
     icon: Grid2X2,
-    breadcrumbs: [{ label: "Dashboard", isPage: true }],
+    breadcrumbs: [{ label: 'Dashboard', isPage: true }],
   },
   {
-    title: "Staff Management",
+    title: 'Staff Management',
     icon: Users2,
-    url: "/staff",
+    url: '/staff',
     items: [
       {
-        title: "All Staff",
-        url: "/staff",
+        title: 'All Staff',
+        url: '/staff',
         breadcrumbs: [
-          { label: "Staff Management" },
-          { label: "All Staff", isPage: true },
+          { label: 'Staff Management' },
+          { label: 'All Staff', isPage: true },
         ],
       },
       {
-        title: "Add Staff",
-        url: "/staff/new",
+        title: 'Add Staff',
+        url: '/staff/new',
         breadcrumbs: [
-          { label: "Staff Management" },
-          { label: "All Staff", href: "/staff" },
-          { label: "Add Staff", isPage: true },
+          { label: 'Staff Management' },
+          { label: 'All Staff', href: '/staff' },
+          { label: 'Add Staff', isPage: true },
         ],
       },
     ],
   },
   {
-    title: "Form Approvals",
+    title: 'Form Approvals',
     icon: FileText,
-    url: "/forms",
+    url: '/forms',
     items: [
       {
-        title: "Pending Forms",
-        url: "/forms/pending",
+        title: 'All Forms',
+        url: '/forms',
+        breadcrumbs: [{ label: 'Form Approvals', isPage: true }],
+      },
+      {
+        title: 'Pending Forms',
+        url: '/forms/pending',
         breadcrumbs: [
-          { label: "Form Approvals" },
-          { label: "Pending Forms", isPage: true },
+          { label: 'Form Approvals' },
+          { label: 'Pending Forms', isPage: true },
         ],
       },
       {
-        title: "Reviewed Forms",
-        url: "/forms/reviewed",
+        title: 'Reviewed Forms',
+        url: '/forms/reviewed',
         breadcrumbs: [
-          { label: "Form Approvals" },
-          { label: "Reviewed Forms", isPage: true },
+          { label: 'Form Approvals' },
+          { label: 'Reviewed Forms', isPage: true },
         ],
       },
     ],
@@ -79,63 +84,63 @@ export const adminNavs: NavItem[] = [
 
 export const staffNavs: NavItem[] = [
   {
-    title: "Dashboard",
-    url: "/staff-dashboard",
+    title: 'Dashboard',
+    url: '/staff-dashboard',
     icon: Grid2X2,
     isActive: true,
-    breadcrumbs: [{ label: "Dashboard", isPage: true }],
+    breadcrumbs: [{ label: 'Dashboard', isPage: true }],
   },
   {
-    title: "Operations",
+    title: 'Operations',
     icon: ClipboardList,
-    url: "/operations",
+    url: '/operations',
     items: [
       {
-        title: "Dispatch Form",
-        url: "/operations/dispatch-form/pages",
+        title: 'Dispatch Form',
+        url: '/operations/dispatch-form/pages',
         breadcrumbs: [
-          { label: "Operations" },
-          { label: "Dispatch Form", isPage: true },
+          { label: 'Operations' },
+          { label: 'Dispatch Form', isPage: true },
         ],
       },
       {
-        title: "Census Record",
-        url: "/operations/census-record",
+        title: 'Census Record',
+        url: '/operations/census-record',
         breadcrumbs: [
-          { label: "Operations" },
-          { label: "Census Record", isPage: true },
+          { label: 'Operations' },
+          { label: 'Census Record', isPage: true },
         ],
       },
       {
-        title: "Trip Tickets",
-        url: "/trip-tickets/hospital",
+        title: 'Trip Tickets',
+        url: '/trip-tickets/hospital',
         breadcrumbs: [
-          { label: "Trip Tickets" },
-          { label: "Hospital Trip Ticket", isPage: true },
+          { label: 'Trip Tickets' },
+          { label: 'Hospital Trip Ticket', isPage: true },
         ],
       },
       {
-        title: "Advance Directives",
-        url: "/operations/advance-directives",
+        title: 'Advance Directives',
+        url: '/operations/advance-directives',
         breadcrumbs: [
-          { label: "Advance Directives" },
-          { label: "Advance Directives", isPage: true },
+          { label: 'Advance Directives' },
+          { label: 'Advance Directives', isPage: true },
         ],
       },
-        {
-        title: "Conduction Refusal",
-        url: "/operations/conduction-refusal-form",
+      {
+        title: 'Conduction Refusal',
+        url: '/operations/conduction-refusal-form',
         breadcrumbs: [
-          { label: "Conduction Refusal" },
-          { label: "Conduction Refusal", isPage: true },
+          { label: 'Conduction Refusal' },
+          { label: 'Conduction Refusal', isPage: true },
         ],
       },
-         {
-        title: "Refusal Form",
-        url: "/operations/refusal-form",
+      {
+        title: 'Refusal Form',
+        url: '/operations/refusal-form',
         breadcrumbs: [
-          { label: " Refusal Form" },
-          { label: " Refusal Form", isPage: true },
+          { label: ' Refusal Form' },
+          { label: ' Refusal Form', isPage: true },
         ],
       },
     ],
@@ -156,24 +161,24 @@ export const staffNavs: NavItem[] = [
   //   ],
   // },
   {
-    title: "More Forms",
+    title: 'More Forms',
     icon: FilePlus,
-    url: "/forms",
+    url: '/forms',
     items: [
       {
-        title: "New Form A",
-        url: "/forms/new-form-a",
+        title: 'New Form A',
+        url: '/forms/new-form-a',
         breadcrumbs: [
-          { label: "More Forms" },
-          { label: "New Form A", isPage: true },
+          { label: 'More Forms' },
+          { label: 'New Form A', isPage: true },
         ],
       },
       {
-        title: "New Form B",
-        url: "/forms/new-form-b",
+        title: 'New Form B',
+        url: '/forms/new-form-b',
         breadcrumbs: [
-          { label: "More Forms" },
-          { label: "New Form B", isPage: true },
+          { label: 'More Forms' },
+          { label: 'New Form B', isPage: true },
         ],
       },
     ],

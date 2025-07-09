@@ -1,6 +1,6 @@
 'use client';
 
-import { StaffAction } from '@/components/StaffAction';
+import { StaffAction } from '@/components/table-action/StaffAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User } from '@/db/schema/users.schema';
