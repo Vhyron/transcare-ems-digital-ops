@@ -1,13 +1,28 @@
-"use client";
+'use client';
 
-import { useQueryClient } from "@tanstack/react-query";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
-import { toast } from "sonner";
-import { removeUser } from "@/actions/users.action";
-import { User } from "@/db/schema/users.schema";
+import { removeUser } from '@/actions/users.action';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { User } from '@/db/schema/users.schema';
+import { useQueryClient } from '@tanstack/react-query';
+import { MoreHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function StaffAction({ user }: { user: User }) {
   const queryClient = useQueryClient();
@@ -16,14 +31,14 @@ export function StaffAction({ user }: { user: User }) {
     const res = await removeUser(id);
 
     if (res.error) {
-      toast.error("Failed to delete user.", {
-        description: res.error.message || "Something went wrong...",
+      toast.error('Failed to delete user.', {
+        description: res.error.message || 'Something went wrong...',
       });
       return;
     }
 
-    queryClient.invalidateQueries({ queryKey: ["staffs"] });
-    toast.success("User has been deleted.");
+    queryClient.invalidateQueries({ queryKey: ['staffs'] });
+    toast.success('User has been deleted.');
   };
 
   return (
@@ -36,7 +51,10 @@ export function StaffAction({ user }: { user: User }) {
       <DropdownMenuContent align="end">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={(e) => e.preventDefault()}
+            >
               Delete
             </DropdownMenuItem>
           </AlertDialogTrigger>
@@ -44,7 +62,8 @@ export function StaffAction({ user }: { user: User }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the user and remove their data from our servers.
+                This action cannot be undone. This will permanently delete the
+                user and remove their data from our servers.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -59,6 +78,6 @@ export function StaffAction({ user }: { user: User }) {
           </AlertDialogContent>
         </AlertDialog>
       </DropdownMenuContent>
-    </DropdownMenu >
+    </DropdownMenu>
   );
 }

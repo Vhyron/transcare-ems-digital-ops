@@ -8,7 +8,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const userRoleEnum = pgEnum('user_role', ['admin', 'staff']);
+export const userRoleEnum = pgEnum('user_roles', ['admin', 'staff']);
 
 export const usersTable = pgTable('users', {
   id: uuid().primaryKey().defaultRandom(),

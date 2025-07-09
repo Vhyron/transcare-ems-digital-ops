@@ -1,12 +1,8 @@
-import {
-  pgTable,
-  uuid,
-  varchar,
-  timestamp,
-} from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const hospitalTripTickets = pgTable("hospital_trip_tickets", {
+export const HOSPITAL_TRIP_TICKETS_TABLE = 'hospital_trip_tickets';
+export const hospitalTripTickets = pgTable(HOSPITAL_TRIP_TICKETS_TABLE, {
   id: uuid().primaryKey().defaultRandom(),
 
   // Trip Info
@@ -51,5 +47,7 @@ export const hospitalTripTickets = pgTable("hospital_trip_tickets", {
 export type HospitalTripTicket = typeof hospitalTripTickets.$inferSelect;
 export type NewHospitalTripTicket = typeof hospitalTripTickets.$inferInsert;
 
-export const NewHospitalTripTicketSchema = createInsertSchema(hospitalTripTickets);
-export const UpdateHospitalTripTicketSchema = createUpdateSchema(hospitalTripTickets);
+export const NewHospitalTripTicketSchema =
+  createInsertSchema(hospitalTripTickets);
+export const UpdateHospitalTripTicketSchema =
+  createUpdateSchema(hospitalTripTickets);

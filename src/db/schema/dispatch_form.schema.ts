@@ -6,10 +6,11 @@ import {
   timestamp,
   integer,
   jsonb,
-} from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const dispatchForms = pgTable("dispatch_forms", {
+export const DISPATCH_FORM_TABLE = 'dispatch_forms';
+export const dispatchForms = pgTable(DISPATCH_FORM_TABLE, {
   id: uuid().primaryKey().defaultRandom(),
 
   // Timestamps
@@ -52,11 +53,15 @@ export const dispatchForms = pgTable("dispatch_forms", {
   number_of_crew: text(),
 
   // Array fields stored as JSONB
-  ambulance_models: jsonb().$type<Array<{
-    model: string;
-    plate_number: string;
-    type: string;
-  }>>().default([]),
+  ambulance_models: jsonb()
+    .$type<
+      Array<{
+        model: string;
+        plate_number: string;
+        type: string;
+      }>
+    >()
+    .default([]),
   md_names: jsonb().$type<string[]>().default([]),
   point_of_destinations: jsonb().$type<string[]>().default([]),
 
@@ -121,21 +126,25 @@ export const dispatchForms = pgTable("dispatch_forms", {
   page3_total_crew: integer(),
 
   // Crew Data stored as JSONB
-  crew_data: jsonb().$type<Array<{
-    name: string;
-    title: string;
-    position: string;
-    time_in: string;
-    time_out: string;
-    signature: string;
-  }>>().default([]),
+  crew_data: jsonb()
+    .$type<
+      Array<{
+        name: string;
+        title: string;
+        position: string;
+        time_in: string;
+        time_out: string;
+        signature: string;
+      }>
+    >()
+    .default([]),
 
   // Page 3 Signatures
   page3_team_leader_signature: text(),
   page3_client_representative_signature: text(),
   page3_ems_supervisor_signature: text(),
 
-  form_status: varchar({ length: 20 }).default("draft"), 
+  form_status: varchar({ length: 20 }).default('draft'),
   current_page: integer().default(1),
 });
 

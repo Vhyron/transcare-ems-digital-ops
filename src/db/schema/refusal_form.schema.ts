@@ -8,15 +8,16 @@ import {
   text,
   timestamp,
   integer,
-} from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const refusalForms = pgTable("refusal_forms", {
+export const REFUSAL_FORMS_TABLE = 'refusal_forms';
+export const refusalForms = pgTable(REFUSAL_FORMS_TABLE, {
   id: uuid().primaryKey().defaultRandom(),
   created_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
   updated_at: timestamp({ withTimezone: true }).defaultNow().notNull(),
 
-  status: varchar({ length: 20 }).notNull().default("draft"),
+  status: varchar({ length: 20 }).notNull().default('draft'),
 
   league_event: varchar({ length: 255 }),
   type: varchar({ length: 100 }),
