@@ -138,6 +138,7 @@ export default function HospitalTripForm() {
           ? "http://localhost:3000"
           : window.location.origin;
 
+      // Step 1: Submit the trip ticket form
       const response = await fetch(`${baseUrl}/api/trip-ticket`, {
         method: "POST",
         headers: {
@@ -153,6 +154,34 @@ export default function HospitalTripForm() {
             errorData.error || "Failed to submit form"
           }`
         );
+      }
+
+      const result = await response.json();
+      const formId = result.id || result.data?.id;
+
+      // Step 2: Create form submission tracking entry
+      if (formId) {
+        try {
+          await fetch(`${baseUrl}/api/form-submissions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              form_type: "trip_tickets",
+              reference_id: formId,
+              status: "pending",
+              submitted_by: "current_user_id", // Replace with actual user ID
+              reviewed_by: null,
+            }),
+          });
+        } catch (submissionError) {
+          console.error(
+            "Failed to create submission tracking:",
+            submissionError
+          );
+          // Don't fail the entire process since the form was saved successfully
+        }
       }
 
       alert("Saved successfully!");

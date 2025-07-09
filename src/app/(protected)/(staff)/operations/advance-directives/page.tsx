@@ -26,7 +26,35 @@ export default function AdvanceDirectivesForm() {
     [key: string]: { image: string; name: string };
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const clearSig = () => {
+    const ref = getRefByType(activeSig);
+    ref?.current?.clear();
+  };
 
+  const uploadSig = () => {
+    const ref = getRefByType(activeSig);
+    if (ref?.current && !ref.current.isEmpty()) {
+      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
+
+      setFormData((prev) => ({
+        ...prev,
+        [activeSig!]: {
+          ...((prev[activeSig! as keyof typeof prev] || {}) as object),
+          signature: dataUrl,
+        },
+      }));
+
+      setSigData((prev) => ({
+        ...prev,
+        [activeSig!]: {
+          image: dataUrl,
+          name: prev[activeSig!]?.name || "",
+        },
+      }));
+
+      setActiveSig(null);
+    }
+  };
   const [formData, setFormData] = useState({
     patient: {
       firstName: "",
@@ -88,36 +116,6 @@ export default function AdvanceDirectivesForm() {
     return null;
   };
 
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    ref?.current?.clear();
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
-
-      setFormData((prev) => ({
-        ...prev,
-        [activeSig!]: {
-          ...((prev[activeSig! as keyof typeof prev] || {}) as object),
-          signature: dataUrl,
-        },
-      }));
-
-      setSigData((prev) => ({
-        ...prev,
-        [activeSig!]: {
-          image: dataUrl,
-          name: prev[activeSig!]?.name || "",
-        },
-      }));
-
-      setActiveSig(null);
-    }
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -157,7 +155,7 @@ export default function AdvanceDirectivesForm() {
       (ref.current as any).loadFromDataURL(dataUrl);
     }
   }, [activeSig, sigData]);
-  
+
   useEffect(() => {
     if (modalCanvasRef.current) {
       const width = modalCanvasRef.current.offsetWidth;
@@ -293,40 +291,64 @@ export default function AdvanceDirectivesForm() {
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/advance-directives", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ formData }),
-      });
+  setIsSubmitting(true);
+  try {
+    // Step 1: Submit the advance directives form
+    const response = await fetch("/api/advance-directives", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ formData }),
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          `HTTP ${response.status}: ${
-            errorData.error || "Failed to submit form"
-          }`
-        );
-      }
-
-      alert("Saved successfully!");
-
-      resetForm();
-      setSigData({});
-    } catch (error) {
-      console.error("Error saving:", error);
-      alert(
-        `Failed to save: ${
-          error instanceof Error ? error.message : "Unknown error"
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `HTTP ${response.status}: ${
+          errorData.error || "Failed to submit form"
         }`
       );
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+
+    const result = await response.json();
+    const formId = result.id || result.data?.id;
+
+    if (formId) {
+      try {
+        await fetch("/api/form-submissions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            form_type: "advance_directives",
+            reference_id: formId,
+            status: "pending",
+            submitted_by: "current_user_id", 
+            reviewed_by: null,
+          }),
+        });
+      } catch (submissionError) {
+        console.error("Failed to create submission tracking:", submissionError);
+      }
+    }
+
+    alert("Saved successfully!");
+
+    resetForm();
+    setSigData({});
+  } catch (error) {
+    console.error("Error saving:", error);
+    alert(
+      `Failed to save: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="p-10 w-full">

@@ -64,7 +64,7 @@ export default function DispatchFormPage1({
     onDataChange?.(newData);
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async () => {
     setIsSaving(true);
     try {
       let result;
@@ -102,7 +102,7 @@ export default function DispatchFormPage1({
         <h1 className="text-xl font-bold">
           Transcare Emergency Medical Services - Operation Dispatch Form 1
         </h1>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSubmit} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save Form"}
         </Button>
       </div>
@@ -126,7 +126,6 @@ export default function DispatchFormPage1({
               value={formData.event_type || ""}
               onChange={(e) => handleInputChange("event_type", e.target.value)}
             >
-              <option value="">Select Event Type</option>
               {["PAID", "CHARITY", "BILLING", "DISCOUNTED"].map((type) => (
                 <option key={type} value={type}>
                   {type}
@@ -254,7 +253,6 @@ export default function DispatchFormPage1({
                 handleInputChange("type_of_events", e.target.value)
               }
             >
-              <option value="">Select Event Type</option>
               {[
                 "Religious Gathering",
                 "Exhibition/Trade Event",
@@ -282,7 +280,6 @@ export default function DispatchFormPage1({
               value={formData.venue_type || ""}
               onChange={(e) => handleInputChange("venue_type", e.target.value)}
             >
-              <option value="">Select Venue Type</option>
               {["Indoor", "Outdoor"].map((type) => (
                 <option key={type} value={type} className="bg-gray-950">
                   {type}
@@ -341,7 +338,6 @@ export default function DispatchFormPage1({
                   )
                 }
               >
-                <option value="">Select {category}</option>
                 {getCrowdOptions(category).map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -376,7 +372,6 @@ export default function DispatchFormPage1({
                 handleInputChange("economic_class", e.target.value)
               }
             >
-              <option value="">Select Economic Class</option>
               {["A", "B", "C", "D", "E", "MIXED", "OTHERS"].map((cls) => (
                 <option key={cls} value={cls}>
                   {cls}
@@ -392,7 +387,6 @@ export default function DispatchFormPage1({
               value={formData.crowd_type || ""}
               onChange={(e) => handleInputChange("crowd_type", e.target.value)}
             >
-              <option value="">Select Crowd Type</option>
               {[
                 "3-7",
                 "7-12",
@@ -422,7 +416,6 @@ export default function DispatchFormPage1({
               handleInputChange("venue_safety_equipment", e.target.value)
             }
           >
-            <option value="">Select Safety Equipment</option>
             {["Extinguisher", "First Aid Kit", "Fire Hose", "SCBA", "AED"].map(
               (item) => (
                 <option key={item} value={item}>

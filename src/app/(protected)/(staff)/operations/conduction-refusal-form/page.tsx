@@ -15,6 +15,19 @@ export default function ConductionRefusalForm() {
   const [sigData, setSigData] = useState<{
     [key: string]: { image: string; name: string };
   }>({});
+
+  const [sigCanvasSize, setSigCanvasSize] = useState({
+    width: 950,
+    height: 750,
+  });
+
+  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
+  const [activeSig, setActiveSig] = useState<"witness" | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: "";
+  } | null>(null);
+
   const [formData, setFormData] = useState<ConductionRefusalFormData>({
     id: "",
     created_at: "",
@@ -47,20 +60,8 @@ export default function ConductionRefusalForm() {
     vital_pupils: "",
     vital_loc: "",
 
-    // Mental Status Assessment
-    // oriented_person_place_time: "",
-    // coherent_speech: "",
-    // hallucinations: "",
-    // suicidal_homicidal_ideation: "",
-    // understands_refusal_consequences: "",
-
     // Narrative
     narrative_description: "",
-
-    // Refusal Options
-    // refused_treatment_and_transport: "",
-    // refused_treatment_willing_transport: "",
-    // wants_treatment_refused_transport: "",
 
     // Witness Information
     witness_name: "",
@@ -79,18 +80,6 @@ export default function ConductionRefusalForm() {
     refused_treatment_willing_transport: false,
     wants_treatment_refused_transport: false,
   });
-
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
-
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
-  const [activeSig, setActiveSig] = useState<"witness" | null>(null);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: "";
-  } | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -123,7 +112,6 @@ export default function ConductionRefusalForm() {
         }));
       }
     } else if (type === "select-one") {
-      // Handle select dropdown - convert "yes"/"no" to boolean for mental status questions
       const mentalStatusFields = [
         "oriented_person_place_time",
         "coherent_speech",
@@ -199,20 +187,8 @@ export default function ConductionRefusalForm() {
       vital_pupils: "",
       vital_loc: "",
 
-      // Mental Status Assessment
-      // oriented_person_place_time: "",
-      // coherent_speech: "",
-      // hallucinations: "",
-      // suicidal_homicidal_ideation: "",
-      // understands_refusal_consequences: "",
-
       // Narrative
       narrative_description: "",
-
-      // Refusal Options
-      // refused_treatment_and_transport: "",
-      // refused_treatment_willing_transport: "",
-      // wants_treatment_refused_transport: "",
 
       // Witness Information
       witness_name: "",
@@ -248,6 +224,7 @@ export default function ConductionRefusalForm() {
     console.log(JSON.stringify(formData, null, 2));
 
     try {
+      // Step 1: Submit the conduction refusal form
       const response = await fetch("/api/conduction-refusal-form", {
         method: "POST",
         headers: {
@@ -265,6 +242,32 @@ export default function ConductionRefusalForm() {
         );
       }
 
+      const result = await response.json();
+      const formId = result.id || result.data?.id;
+
+      if (formId) {
+        try {
+          await fetch("/api/form-submissions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              form_type: "condcuction_refusal_form", 
+              reference_id: formId,
+              status: "pending",
+              submitted_by: "current_user_id",
+              reviewed_by: null,
+            }),
+          });
+        } catch (submissionError) {
+          console.error(
+            "Failed to create submission tracking:",
+            submissionError
+          );
+        }
+      }
+
       alert("Saved successfully!");
 
       resetForm();
@@ -280,7 +283,6 @@ export default function ConductionRefusalForm() {
       setIsSubmitting(false);
     }
   };
-
   const clearSig = () => {
     witnessSignature.current?.clear();
   };

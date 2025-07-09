@@ -211,6 +211,32 @@ export default function RefusalTreatmentTransportationForm() {
         );
       }
 
+      const result = await response.json();
+      const formId = result.id || result.data?.id;
+
+      if (formId) {
+        try {
+          await fetch(`${baseUrl}/api/form-submissions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              form_type: "condcuction_refusal_form", 
+              reference_id: formId,
+              status: "pending",
+              submitted_by: "current_user_id", 
+              reviewed_by: null,
+            }),
+          });
+        } catch (submissionError) {
+          console.error(
+            "Failed to create submission tracking:",
+            submissionError
+          );
+        }
+      }
+
       alert("Saved successfully!");
 
       resetForm();
