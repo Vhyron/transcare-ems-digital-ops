@@ -10,10 +10,20 @@ import { formatDate } from 'date-fns';
 export const columns: ColumnDef<User>[] = [
   {
     id: 'name',
-    accessorKey: 'first_name',
+    accessorFn: (row) => `${row.first_name || ''} ${row.last_name || ''}`,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
+    filterFn: (row, _columnId, filterValue) => {
+      const first = row.original.first_name || '';
+      const last = row.original.last_name || '';
+      const full = `${first} ${last}`.toLowerCase();
+      return (
+        first.toLowerCase().includes(filterValue.toLowerCase()) ||
+        last.toLowerCase().includes(filterValue.toLowerCase()) ||
+        full.includes(filterValue.toLowerCase())
+      );
+    },
     cell: ({ row }) => {
       const { first_name, last_name, email } = row.original;
       const getInitials = () => {

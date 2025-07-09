@@ -10,12 +10,10 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import Link from 'next/link';
 import { useState } from 'react';
 
 import { DataTablePagination } from '@/components/table/data-table-pagination';
 import { DataTableViewOptions } from '@/components/table/data-table-view';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -25,16 +23,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus } from 'lucide-react';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  actionComponent?: React.ReactNode;
+  searchPlaceholder?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  actionComponent,
+  searchPlaceholder = 'Filter names...',
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState<any>([]);
@@ -58,19 +59,14 @@ export function DataTable<TData, TValue>({
     <>
       <div className="flex items-center justify-between">
         <Input
-          placeholder="Filter emails and names..."
+          placeholder={searchPlaceholder}
           value={globalFilter || ''}
           onChange={(e) => table.setGlobalFilter(e.target.value as string)}
           className="max-w-sm"
         />
         <div className="flex items-center gap-2">
           <DataTableViewOptions table={table} />
-          <Link href="/staff/new" className="w-fit">
-            <Button size="sm">
-              <Plus />
-              Add New Staff
-            </Button>
-          </Link>
+          {actionComponent}
         </div>
       </div>
 
@@ -129,5 +125,3 @@ export function DataTable<TData, TValue>({
     </>
   );
 }
-
-// TODO: PUSH THIS RIGHT NOW DON'T THINK AND JUST PUSH
