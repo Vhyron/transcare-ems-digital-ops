@@ -1,39 +1,43 @@
-"use client";
-
+'use client';
+import { useState } from 'react';
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 
+import { DataTablePagination } from '@/components/table/data-table-pagination';
+import { DataTableViewOptions } from '@/components/table/data-table-view';
+import { Input } from '@/components/ui/input';
 import {
   Table,
-  TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { DataTablePagination } from "./data-table-pagination";
-import { useState } from "react";
-import { DataTableViewOptions } from "./data-table-view";
+  TableBody,
+} from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   actionComponent?: React.ReactNode;
+  searchPlaceholder?: string;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   actionComponent,
+  searchPlaceholder = 'Filter names...',
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState<any>([]);
 
   const table = useReactTable({
     data,
@@ -42,16 +46,27 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    onGlobalFilterChange: setGlobalFilter,
+    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
+      globalFilter,
     },
   });
 
   return (
     <>
-      <div className="flex items-center">
-        {actionComponent}
-        <DataTableViewOptions table={table} />
+      <div className="flex items-center justify-between">
+        <Input
+          placeholder={searchPlaceholder}
+          value={globalFilter || ''}
+          onChange={(e) => table.setGlobalFilter(e.target.value as string)}
+          className="max-w-sm"
+        />
+        <div className="flex items-center gap-2">
+          <DataTableViewOptions table={table} />
+          {actionComponent}
+        </div>
       </div>
 
       <div className="rounded-md border">
@@ -65,9 +80,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -79,7 +94,7 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="pl-4 py-4">

@@ -20,13 +20,26 @@ export async function login(data: { email: string; password: string }) {
     return { error: error.message };
   }
 
+  if (!user) {
+    return { error: "User not found" };
+  }
+
   revalidatePath("/", "layout");
 
-  if (user?.user_metadata?.user_role === "admin") {
-    redirect("/admin-dashboard");
-  } else if (user?.user_metadata?.user_role === "staff") {
-    redirect("/staff-dashboard");
+  const role = user.user_metadata?.user_role;
+
+  switch (role) {
+    case 'admin':
+      redirect('/admin-dashboard');
+      break;
+    case 'staff':
+      redirect('/staff-dashboard');
+      break;
+    default:
+      console.warn("Unrecognized user role:", role);
   }
+
+  return { error: null };
 }
 
 export async function registerStaff(data: NewStaffFormData) {

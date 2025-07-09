@@ -1,19 +1,29 @@
-"use client";
+'use client';
 
-import { ColumnDef } from "@tanstack/react-table";
-import { formatDate } from "date-fns";
-import { User } from "@/db/schema/users.schema";
-import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { StaffAction } from "@/components/StaffAction";
+import { StaffAction } from '@/components/StaffAction';
+import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { User } from '@/db/schema/users.schema';
+import { ColumnDef } from '@tanstack/react-table';
+import { formatDate } from 'date-fns';
 
 export const columns: ColumnDef<User>[] = [
   {
-    id: "name",
-    accessorKey: "name",
+    id: 'name',
+    accessorFn: (row) => `${row.first_name || ''} ${row.last_name || ''}`,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
+    filterFn: (row, _columnId, filterValue) => {
+      const first = row.original.first_name || '';
+      const last = row.original.last_name || '';
+      const full = `${first} ${last}`.toLowerCase();
+      return (
+        first.toLowerCase().includes(filterValue.toLowerCase()) ||
+        last.toLowerCase().includes(filterValue.toLowerCase()) ||
+        full.includes(filterValue.toLowerCase())
+      );
+    },
     cell: ({ row }) => {
       const { first_name, last_name, email } = row.original;
       const getInitials = () => {
@@ -23,7 +33,7 @@ export const columns: ColumnDef<User>[] = [
         if (email) {
           return email.substring(0, 2);
         }
-        return "??";
+        return '??';
       };
 
       return (
@@ -34,31 +44,45 @@ export const columns: ColumnDef<User>[] = [
           <span>
             {first_name && last_name
               ? `${first_name} ${last_name}`
-              : `@${email.split("@")[0]}`}
+              : `@${email.split('@')[0]}`}
           </span>
         </div>
       );
     },
   },
   {
-    accessorKey: "email",
+    accessorKey: 'email',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Email" />
     ),
   },
   {
-    accessorKey: "created_at",
+    accessorKey: 'created_at',
+    enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created At" />
     ),
     cell: ({ row }) => {
-      const date = row.getValue("created_at") as Date;
+      const date = row.getValue('created_at') as Date;
 
-      return formatDate(date, "MMMM dd, yyyy");
+      return formatDate(date, 'MMMM dd, yyyy');
     },
   },
   {
-    id: "actions",
+    accessorKey: 'updated_at',
+    enableGlobalFilter: false,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Updated At" />
+    ),
+    cell: ({ row }) => {
+      const date = row.getValue('updated_at') as Date;
+
+      return formatDate(date, 'MMMM dd, yyyy');
+    },
+  },
+  {
+    id: 'actions',
+    enableGlobalFilter: false,
     cell: ({ row }) => <StaffAction user={row.original} />,
   },
 ];

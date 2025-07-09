@@ -13,7 +13,7 @@ const formTypeEnum = pgEnum("form_type", [
 
 const formStatusEnum = pgEnum("status", ["pending", "approved", "rejected"]);
 
-export const formSubmissions = pgTable("form_submissions", {
+export const formSubmissionsTable = pgTable("form_submissions", {
   id: uuid().primaryKey().defaultRandom(),
 
   form_type: formTypeEnum().notNull(), 
@@ -25,10 +25,13 @@ export const formSubmissions = pgTable("form_submissions", {
 
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
-}).enableRLS();
 
-export type FormSubmission = typeof formSubmissions.$inferSelect;
-export type NewFormSubmission = typeof formSubmissions.$inferInsert;
+});
 
-export const NewFormSubmissionSchema = createInsertSchema(formSubmissions);
-export const UpdateFormSubmissionSchema = createUpdateSchema(formSubmissions);
+export type FormSubmission = typeof formSubmissionsTable.$inferSelect;
+export type NewFormSubmission = typeof formSubmissionsTable.$inferInsert;
+
+// use this for validating data in the server
+export const NewFormSubmissionSchema = createInsertSchema(formSubmissionsTable);
+export const UpdateFormSubmissionSchema =
+  createUpdateSchema(formSubmissionsTable);

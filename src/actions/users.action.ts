@@ -1,13 +1,13 @@
-"use server";
+'use server';
 
-import { db } from "@/db";
+import { db } from '@/db';
 import {
   NewUser,
   UpdateUserSchema,
   usersTable,
-} from "@/db/schema/users.schema";
-import { eq } from "drizzle-orm";
-import { supabaseAdmin } from "../lib/supabase/admin_client";
+} from '@/db/schema/users.schema';
+import { eq } from 'drizzle-orm';
+import { supabaseAdmin } from '../lib/supabase/admin_client';
 
 export async function getUserById(id: string) {
   const [user] = await db
@@ -31,7 +31,7 @@ export async function listAllStaff() {
   return await db
     .select()
     .from(usersTable)
-    .where(eq(usersTable.user_role, "staff"));
+    .where(eq(usersTable.user_role, 'staff'));
 }
 
 export async function createUser(user: NewUser) {
@@ -41,6 +41,7 @@ export async function createUser(user: NewUser) {
 
 export async function updateUser(id: string, data: Partial<NewUser>) {
   const validated = UpdateUserSchema.safeParse(data);
+
   if (validated?.error) {
     return { error: validated.error };
   }
@@ -50,6 +51,7 @@ export async function updateUser(id: string, data: Partial<NewUser>) {
     .set(validated.data)
     .where(eq(usersTable.id, id))
     .returning();
+
   return { data: updatedUser };
 }
 

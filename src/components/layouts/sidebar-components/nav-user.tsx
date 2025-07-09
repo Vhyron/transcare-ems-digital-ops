@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   BadgeCheck,
@@ -6,9 +6,9 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,21 +17,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { logout } from "../../../actions/auth.action";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/sidebar';
+import { logout } from '../../../actions/auth.action';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 interface Props {
   user: {
     name: string;
     email: string;
     avatar: string;
+    user_role: string;
   };
   loading?: boolean;
 }
@@ -78,7 +80,7 @@ export function NavUser({ user, loading = false }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
@@ -96,9 +98,19 @@ export function NavUser({ user, loading = false }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`${
+                    user.user_role === 'admin'
+                      ? '/admin-profile'
+                      : user.user_role === 'staff'
+                      ? '/staff-profile'
+                      : '#'
+                  }`}
+                >
+                  <BadgeCheck />
+                  My Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <CreditCard />
