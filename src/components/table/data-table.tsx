@@ -1,5 +1,5 @@
 'use client';
-
+import { useState } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -10,18 +10,17 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useState } from 'react';
 
 import { DataTablePagination } from '@/components/table/data-table-pagination';
 import { DataTableViewOptions } from '@/components/table/data-table-view';
 import { Input } from '@/components/ui/input';
 import {
   Table,
-  TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  TableBody,
 } from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {

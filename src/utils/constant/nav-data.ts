@@ -92,7 +92,7 @@ export const staffNavs: NavItem[] = [
     items: [
       {
         title: "Dispatch Form",
-        url: "/operations/dispatch-form",
+        url: "/operations/dispatch-form/pages",
         breadcrumbs: [
           { label: "Operations" },
           { label: "Dispatch Form", isPage: true },
@@ -112,6 +112,30 @@ export const staffNavs: NavItem[] = [
         breadcrumbs: [
           { label: "Trip Tickets" },
           { label: "Hospital Trip Ticket", isPage: true },
+        ],
+      },
+      {
+        title: "Advance Directives",
+        url: "/operations/advance-directives",
+        breadcrumbs: [
+          { label: "Advance Directives" },
+          { label: "Advance Directives", isPage: true },
+        ],
+      },
+        {
+        title: "Conduction Refusal",
+        url: "/operations/conduction-refusal-form",
+        breadcrumbs: [
+          { label: "Conduction Refusal" },
+          { label: "Conduction Refusal", isPage: true },
+        ],
+      },
+         {
+        title: "Refusal Form",
+        url: "/operations/refusal-form",
+        breadcrumbs: [
+          { label: " Refusal Form" },
+          { label: " Refusal Form", isPage: true },
         ],
       },
     ],

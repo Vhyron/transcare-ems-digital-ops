@@ -1,6 +1,6 @@
 {
-  "id": "c3545ea9-6185-46e2-9cb1-9e63c52c7595",
-  "prevId": "c698b70b-eb07-4d15-b3b8-f6282e34c8a9",
+  "id": "c038d6df-d8ce-4775-a65f-3adc531c59e7",
+  "prevId": "75835086-57eb-4eb9-b224-d2f6e9f51ed7",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -282,6 +282,269 @@
       "checkConstraints": {},
       "isRLSEnabled": true
     },
+    "public.refusal_forms": {
+      "name": "refusal_forms",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "league_event": {
+          "name": "league_event",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location": {
+          "name": "location",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "incident": {
+          "name": "incident",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patient_name": {
+          "name": "patient_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dob": {
+          "name": "dob",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "age": {
+          "name": "age",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "landline": {
+          "name": "landline",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cell": {
+          "name": "cell",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian": {
+          "name": "guardian",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "guardian_landline": {
+          "name": "guardian_landline",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_cell": {
+          "name": "guardian_cell",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_name": {
+          "name": "guardian_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_age": {
+          "name": "guardian_age",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "relationship": {
+          "name": "relationship",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "situation": {
+          "name": "situation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "treatment_refused": {
+          "name": "treatment_refused",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "treatment_not_necessary": {
+          "name": "treatment_not_necessary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "refuses_transport_against_advice": {
+          "name": "refuses_transport_against_advice",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "treatment_received_no_transport": {
+          "name": "treatment_received_no_transport",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "alternative_transportation": {
+          "name": "alternative_transportation",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "accepts_transport_refuses_treatment": {
+          "name": "accepts_transport_refuses_treatment",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "company": {
+          "name": "company",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pcr": {
+          "name": "pcr",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "form_date": {
+          "name": "form_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "form_time": {
+          "name": "form_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patient_guardian_signature_image": {
+          "name": "patient_guardian_signature_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "patient_guardian_signature_name": {
+          "name": "patient_guardian_signature_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "events_organizer_signature_image": {
+          "name": "events_organizer_signature_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "events_organizer_signature_name": {
+          "name": "events_organizer_signature_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "witness_signature_image": {
+          "name": "witness_signature_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "witness_signature_name": {
+          "name": "witness_signature_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medic_personnel_signature_image": {
+          "name": "medic_personnel_signature_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "medic_personnel_signature_name": {
+          "name": "medic_personnel_signature_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -319,12 +582,6 @@
           "notNull": true,
           "default": "'staff'"
         },
-        "signature": {
-          "name": "signature",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -358,24 +615,6 @@
     }
   },
   "enums": {
-    "public.status": {
-      "name": "status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "approved",
-        "rejected"
-      ]
-    },
-    "public.form_type": {
-      "name": "form_type",
-      "schema": "public",
-      "values": [
-        "dispatch",
-        "trip_tickets",
-        "census"
-      ]
-    },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
