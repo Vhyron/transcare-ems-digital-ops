@@ -66,7 +66,6 @@ export default function ConsolidatedDispatchForm() {
     'success'
   );
   const [formStatus, setFormStatus] = useState('draft');
-  const [formId, setFormId] = useState('12345678');
 
   const [typeOfServiceOther, setTypeOfServiceOther] = useState('');
   const [crewCredentialOther, setCrewCredentialOther] = useState('');
@@ -188,14 +187,16 @@ export default function ConsolidatedDispatchForm() {
     // Page 3 Fields
     page3_event_title: '',
     page3_total_crew: '',
-    crew_data: Array<{
-      name: '';
-      title: '';
-      position: '';
-      time_in: '';
-      time_out: '';
-      signature: '';
-    }>,
+    crew_data: Array(10)
+      .fill(null)
+      .map(() => ({
+        name: '',
+        title: '',
+        position: '',
+        time_in: '',
+        time_out: '',
+        signature: '',
+      })),
     page3_team_leader_signature: '',
     page3_client_representative_signature: '',
     page3_ems_supervisor_signature: '',
@@ -241,7 +242,26 @@ export default function ConsolidatedDispatchForm() {
     if (type === 'EMSSupervisor') return emsSupervisorSigRef;
     return null;
   };
-
+  const handleNumberOfCrewChange = (value: string) => {
+    const numCrew = parseInt(value) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      number_of_crew: value,
+      crew_data: Array(numCrew)
+        .fill(null)
+        .map(
+          (_, i) =>
+            prev.crew_data[i] || {
+              name: '',
+              title: '',
+              position: '',
+              time_in: '',
+              time_out: '',
+              signature: '',
+            }
+        ),
+    }));
+  };
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -374,14 +394,16 @@ export default function ConsolidatedDispatchForm() {
       // Page 3 Fields
       page3_event_title: '',
       page3_total_crew: '',
-      crew_data: Array<{
-        name: '';
-        title: '';
-        position: '';
-        time_in: '';
-        time_out: '';
-        signature: '';
-      }>,
+      crew_data: Array(10)
+        .fill(null)
+        .map(() => ({
+          name: '',
+          title: '',
+          position: '',
+          time_in: '',
+          time_out: '',
+          signature: '',
+        })),
       page3_team_leader_signature: '',
       page3_client_representative_signature: '',
       page3_ems_supervisor_signature: '',
@@ -392,6 +414,8 @@ export default function ConsolidatedDispatchForm() {
     });
     setSigData({});
   };
+
+
   interface AmbulanceModel {
     model: string;
     plate_number: string;
@@ -424,6 +448,11 @@ export default function ConsolidatedDispatchForm() {
         client_representative_signature:
           sigData.clientRepresentative?.image || '',
         ems_supervisor_signature: sigData.EMSSupervisor?.image || '',
+        // Add "Others" fields
+        type_of_service_other:
+          formData.type_of_service === 'Others' ? typeOfServiceOther : '',
+        crew_credential_other:
+          formData.crew_credential === 'Others' ? crewCredentialOther : '',
       };
 
       const baseUrl =
@@ -856,8 +885,11 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block mb-2 font-medium">Number of Crew</label>
           <Input
+            type="number"
+            min="0"
+            max="50"
             className="h-10 text-base"
-            onChange={handleInputChange}
+            onChange={(e) => handleNumberOfCrewChange(e.target.value)}
             name="number_of_crew"
             value={formData.number_of_crew}
           />
@@ -867,13 +899,21 @@ export default function ConsolidatedDispatchForm() {
             Full Name and Signature of MD
           </label>
           <div className="space-y-2">
-            {[1, 2, 3, 4].map((_, i) => (
+            {[1, 2, 3, 4].map((num, i) => (
               <Input
                 key={i}
-                placeholder={`Line ${i + 1}`}
+                placeholder={`MD ${num}`}
                 className="h-10 text-base"
-                name="md_names"
-                value={formData.md_names}
+                name={`md_name_${i}`}
+                value={formData.md_names.split('\n')[i] || ''}
+                onChange={(e) => {
+                  const lines = formData.md_names.split('\n');
+                  lines[i] = e.target.value;
+                  setFormData((prev) => ({
+                    ...prev,
+                    md_names: lines.join('\n'),
+                  }));
+                }}
               />
             ))}
           </div>
@@ -883,13 +923,21 @@ export default function ConsolidatedDispatchForm() {
       <div>
         <label className="block mb-2 font-medium">Point of Destination</label>
         <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map((num, i) => (
             <Input
               key={i}
-              placeholder={`${i})`}
+              placeholder={`${num})`}
               className="h-10 text-base"
-              name="point_of_destination"
-              value={formData.point_of_destinations}
+              name={`destination_${i}`}
+              value={formData.point_of_destinations.split('\n')[i] || ''}
+              onChange={(e) => {
+                const lines = formData.point_of_destinations.split('\n');
+                lines[i] = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  point_of_destinations: lines.join('\n'),
+                }));
+              }}
             />
           ))}
         </div>
@@ -907,140 +955,235 @@ export default function ConsolidatedDispatchForm() {
 
       <div className="border rounded-lg p-6 space-y-4">
         <h3 className="text-lg font-semibold border-b pb-2">Patient Census</h3>
-        {[
-          { label: 'Treated', field: 'WAIVER' },
-          { label: 'Transported', field: 'INSURANCE' },
-          { label: 'Refused', field: 'PRE-MED CHECK' },
-        ].map(({ label, field }) => (
-          <div
-            key={field}
-            className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center"
-          >
-            <span className="font-medium">{label}</span>
-            <div className="flex items-center gap-2">
-              <label className="text-sm">Trauma</label>
-              <Input
-                placeholder="#"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_trauma"
-                value={formData.treated_trauma}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm">Medical</label>
-              <Input
-                placeholder="#"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_medical"
-                value={formData.treated_medical}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Rate"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_rate_1"
-                value={formData.treated_rate_1}
-              />
-              <span className="text-sm">/</span>
-              <Input
-                placeholder="Rate"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_rate_2"
-                value={formData.treated_rate_2}
-              />
-            </div>
-            <span className="text-sm">{field}</span>
-            <div className="col-span-3">
-              <select
-                name={`${label.toLowerCase()}_${field
-                  .toLowerCase()
-                  .replace('-', '_')
-                  .replace(' ', '_')}`}
-                value={
-                  formData[
-                    `${label.toLowerCase()}_${field
-                      .toLowerCase()
-                      .replace('-', '_')
-                      .replace(' ', '_')}` as keyof typeof formData
-                  ] as string
-                }
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
-                style={{ backgroundColor: '#0a0a0a', color: 'white' }}
-              >
-                <option value="">Select</option>
-                <option value="Y">Y</option>
-                <option value="N">N</option>
-                <option value="NA">N/A</option>
-              </select>
-            </div>
+
+        {/* Treated Row */}
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+          <span className="font-medium">Treated</span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Trauma</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_trauma"
+              value={formData.treated_trauma}
+            />
           </div>
-        ))}
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Medical</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_medical"
+              value={formData.treated_medical}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_rate_1"
+              value={formData.treated_rate_1}
+            />
+            <span className="text-sm">/</span>
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_rate_2"
+              value={formData.treated_rate_2}
+            />
+          </div>
+          <span className="text-sm">WAIVER</span>
+          <div className="col-span-3">
+            <select
+              name="treated_waiver"
+              value={formData.treated_waiver}
+              onChange={handleInputChange}
+              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+            >
+              <option value="">Select</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              <option value="NA">N/A</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Transported Row */}
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+          <span className="font-medium">Transported</span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Trauma</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_trauma"
+              value={formData.transported_trauma}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Medical</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_medical"
+              value={formData.transported_medical}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_rate_1"
+              value={formData.transported_rate_1}
+            />
+            <span className="text-sm">/</span>
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_rate_2"
+              value={formData.transported_rate_2}
+            />
+          </div>
+          <span className="text-sm">INSURANCE</span>
+          <div className="col-span-3">
+            <select
+              name="transported_insurance"
+              value={formData.transported_insurance}
+              onChange={handleInputChange}
+              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+            >
+              <option value="">Select</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              <option value="NA">N/A</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Refused Row */}
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+          <span className="font-medium">Refused</span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Trauma</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_trauma"
+              value={formData.refused_trauma}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Medical</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_medical"
+              value={formData.refused_medical}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_rate_1"
+              value={formData.refused_rate_1}
+            />
+            <span className="text-sm">/</span>
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_rate_2"
+              value={formData.refused_rate_2}
+            />
+          </div>
+          <span className="text-sm">PRE-MED CHECK</span>
+          <div className="col-span-3">
+            <select
+              name="refused_pre_med_check"
+              value={formData.refused_pre_med_check}
+              onChange={handleInputChange}
+              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+            >
+              <option value="">Select</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              <option value="NA">N/A</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Time Records</h3>
-        {['Dispatch', 'On Scene', 'Departure', 'Arrival'].map(
-          (stage) => (
-            <div
-              key={stage}
-              className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
-            >
-              <label className="font-medium">{stage}</label>
-              <Input
-                placeholder="HRS"
-                name={`${stage.toLowerCase().replace(' ', '_')}_hrs`}
-                value={
-                  formData[
-                    `${stage
-                      .toLowerCase()
-                      .replace(' ', '_')}_hrs` as keyof typeof formData
-                  ] as string
-                }
-                className="h-10 text-base"
-                onChange={handleInputChange}
-              />
-              <Input
-                placeholder="MIN"
-                name={`${stage.toLowerCase().replace(' ', '_')}_min`}
-                value={
-                  formData[
-                    `${stage
-                      .toLowerCase()
-                      .replace(' ', '_')}_min` as keyof typeof formData
-                  ] as string
-                }
-                className="h-10 text-base"
-                onChange={handleInputChange}
-              />
-              <Input
-                placeholder="READING"
-                name={`${stage.toLowerCase().replace(' ', '_')}_reading`}
-                value={
-                  formData[
-                    `${stage
-                      .toLowerCase()
-                      .replace(' ', '_')}_reading` as keyof typeof formData
-                  ] as string
-                }
-                className="h-10 text-base"
-                onChange={handleInputChange}
-              />
-            </div>
-          )
-        )}
-
-        {['Working Time', 'Travel Time', 'Over-all'].map((label) => (
+        {['Dispatch', 'On Scene', 'Departure', 'Arrival'].map((stage) => (
           <div
-            key={label}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
+            key={stage}
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
           >
-            <label className="font-medium">{label}</label>
+            <label className="font-medium">{stage}</label>
+            <Input
+              placeholder="HRS"
+              name={`${stage.toLowerCase().replace(' ', '_')}_hrs`}
+              value={
+                formData[
+                  `${stage
+                    .toLowerCase()
+                    .replace(' ', '_')}_hrs` as keyof typeof formData
+                ] as string
+              }
+              className="h-10 text-base"
+              onChange={handleInputChange}
+            />
+            <Input
+              placeholder="MIN"
+              name={`${stage.toLowerCase().replace(' ', '_')}_min`}
+              value={
+                formData[
+                  `${stage
+                    .toLowerCase()
+                    .replace(' ', '_')}_min` as keyof typeof formData
+                ] as string
+              }
+              className="h-10 text-base"
+              onChange={handleInputChange}
+            />
+            <Input
+              placeholder="READING"
+              name={`${stage.toLowerCase().replace(' ', '_')}_reading`}
+              value={
+                formData[
+                  `${stage
+                    .toLowerCase()
+                    .replace(' ', '_')}_reading` as keyof typeof formData
+                ] as string
+              }
+              className="h-10 text-base"
+              onChange={handleInputChange}
+            />
+          </div>
+        ))}
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Time Records</h3>
+
+          {/* Working Time */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <label className="font-medium">Working Time</label>
             <Input
               placeholder="HRS"
               className="h-10 text-base"
@@ -1056,7 +1199,45 @@ export default function ConsolidatedDispatchForm() {
               value={formData.working_time_min}
             />
           </div>
-        ))}
+
+          {/* Travel Time */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <label className="font-medium">Travel Time</label>
+            <Input
+              placeholder="HRS"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="travel_time_hrs"
+              value={formData.travel_time_hrs}
+            />
+            <Input
+              placeholder="MIN"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="travel_time_min"
+              value={formData.travel_time_min}
+            />
+          </div>
+
+          {/* Overall Time */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <label className="font-medium">Over-all</label>
+            <Input
+              placeholder="HRS"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="overall_hrs"
+              value={formData.overall_hrs}
+            />
+            <Input
+              placeholder="MIN"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="overall_min"
+              value={formData.overall_min}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1226,32 +1407,12 @@ export default function ConsolidatedDispatchForm() {
         <div className=" rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold">
                 Transcare Emergency Medical Services
               </h1>
-              <p className="text-gray-600">Operation Dispatch Form</p>
+              <p className="">Operation Dispatch Form</p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Status:</span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    formStatus === 'submitted'
-                      ? 'bg-green-100 text-green-800'
-                      : formStatus === 'completed'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}
-                >
-                  {formStatus.toUpperCase()}
-                </span>
-              </div>
-              {formId && (
-                <span className="text-sm text-gray-500">
-                  ID: {formId.slice(0, 8)}...
-                </span>
-              )}
-            </div>
+       
           </div>
         </div>
 
