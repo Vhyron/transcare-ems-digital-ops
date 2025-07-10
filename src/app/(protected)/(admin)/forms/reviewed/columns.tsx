@@ -42,7 +42,7 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <span className="capitalize flex items-center gap-1">
+        <span className="capitalize flex items-center gap-1.5">
           {row.original.form_submissions.status === 'approved' ? (
             <Check className="size-5 text-green-500" />
           ) : (
@@ -70,7 +70,10 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     id: 'Action',
     enableGlobalFilter: false,
     cell: ({ row }) => (
-      <ReviewedFormAction formSubmission={row.original.form_submissions} />
+      <ReviewedFormAction
+        formSubmission={row.original.form_submissions}
+        formData={row.original.referenceForm}
+      />
     ),
   },
 ];

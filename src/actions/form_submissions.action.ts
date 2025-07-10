@@ -55,6 +55,8 @@ export async function deleteFormSubmission(id: string) {
     .where(eq(formSubmissionsTable.id, id))
     .returning();
 
+  revalidatePath('/forms');
+
   return deleted;
 }
 

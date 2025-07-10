@@ -42,7 +42,7 @@ export const columns: ColumnDef<PendingFormType>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <span className="capitalize flex items-center gap-1">
+        <span className="capitalize flex items-center gap-1.5">
           <ClockFading className="size-5 text-yellow-500" />
           {row.original.form_submissions.status}
         </span>
@@ -66,7 +66,10 @@ export const columns: ColumnDef<PendingFormType>[] = [
     id: 'Action',
     enableGlobalFilter: false,
     cell: ({ row }) => (
-      <PendingFormAction formSubmission={row.original.form_submissions} />
+      <PendingFormAction
+        formSubmission={row.original.form_submissions}
+        formData={row.original.referenceForm}
+      />
     ),
   },
 ];

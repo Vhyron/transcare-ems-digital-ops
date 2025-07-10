@@ -7,13 +7,17 @@ import { ADVANCE_DIRECTIVES_TABLE } from './advance_directive.schema';
 import { REFUSAL_FORMS_TABLE } from './refusal_form.schema';
 import { CONDUCTION_REFUSAL_FORMS_TABLE } from './conduction_refusal_form.schema';
 
-export const formTypeEnum = pgEnum('form_types', [
+// Add new table forms here
+export const FORM_TYPE_TABLES = [
   DISPATCH_FORM_TABLE,
   HOSPITAL_TRIP_TICKETS_TABLE,
   ADVANCE_DIRECTIVES_TABLE,
   REFUSAL_FORMS_TABLE,
   CONDUCTION_REFUSAL_FORMS_TABLE,
-]);
+] as const;
+
+export const formTypeEnum = pgEnum('form_types', FORM_TYPE_TABLES);
+export type FormType = (typeof FORM_TYPE_TABLES)[number];
 
 export const formStatusEnum = pgEnum('form_status', [
   'pending',
@@ -35,7 +39,7 @@ export const formSubmissionsTable = pgTable('form_submissions', {
 
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
-});
+}).enableRLS();
 
 export type FormSubmission = typeof formSubmissionsTable.$inferSelect;
 export type NewFormSubmission = typeof formSubmissionsTable.$inferInsert;

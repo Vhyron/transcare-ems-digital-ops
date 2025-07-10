@@ -146,7 +146,7 @@ export const dispatchForms = pgTable(DISPATCH_FORM_TABLE, {
 
   form_status: varchar({ length: 20 }).default('draft'),
   current_page: integer().default(1),
-});
+}).enableRLS();
 
 export type DispatchForm = typeof dispatchForms.$inferSelect;
 export type NewDispatchForm = typeof dispatchForms.$inferInsert;
