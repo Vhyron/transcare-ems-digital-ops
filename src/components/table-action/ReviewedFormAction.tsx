@@ -33,7 +33,7 @@ interface Props {
 
 const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
   const handleDelete = async (formSubmission: FormSubmission) => {
-    const res = deleteFormSubmission(formSubmission.id);
+    const res = await deleteFormSubmission(formSubmission.id);
 
     if (!res) {
       toast.error('Failed to delete form submission', {
