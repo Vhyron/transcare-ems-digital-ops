@@ -297,8 +297,16 @@ export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
     '2_yes/no',
     '3_yes/no',
     '4_yes/no',
+    '1_intervention',
+    '2_intervention',
+    '3_intervention',
+    '4_intervention',
+    '5_intervention',
+    '6_intervention',
+    '7_intervention',
     'additional_orders',
-    'discuss_with',
+    'discuss_with_patient',
+    'discuss_with_kin',
     'decision_maker_name',
     'decision_maker_relation',
     'decision_maker_date_signed',
@@ -329,7 +337,6 @@ export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
     '3_yes/no': data.limited_intervention ? 'yes' : 'no',
     '4_yes/no': data.full_treatment ? 'yes' : 'no',
     additional_orders: data.additional_orders,
-    discuss_with: data.discussed_with_kin,
     decision_maker_name: data.decision_maker_name,
     decision_maker_relation: data.decision_maker_relation,
     decision_maker_date_signed: data.decision_maker_date_signed,
@@ -338,6 +345,34 @@ export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
     physician_date_signed: data.physician_date_signed,
   };
   fillPdfTextFields(form, fieldMap);
+
+  checkFormCheckbox(form, data.iv_fluid ? 'yes' : 'no', {
+    yes: '1_intervention',
+  });
+  checkFormCheckbox(form, data.ng_tube ? 'yes' : 'no', {
+    yes: '2_intervention',
+  });
+  checkFormCheckbox(form, data.ng_tube ? 'yes' : 'no', {
+    yes: '3_intervention',
+  });
+  checkFormCheckbox(form, data.cpap_bipap ? 'yes' : 'no', {
+    yes: '4_intervention',
+  });
+  checkFormCheckbox(form, data.antibiotics ? 'yes' : 'no', {
+    yes: '5_intervention',
+  });
+  checkFormCheckbox(form, data.diagnostics ? 'yes' : 'no', {
+    yes: '6_intervention',
+  });
+  checkFormCheckbox(form, data.diagnostics ? 'yes' : 'no', {
+    yes: '7_intervention',
+  });
+  checkFormCheckbox(form, data.discussed_with_patient ? 'yes' : 'no', {
+    yes: 'discuss_with_patient',
+  });
+  checkFormCheckbox(form, data.discussed_with_kin ? 'yes' : 'no', {
+    yes: 'discuss_with_kin',
+  });
 
   await embedSignatureImage(
     pdfDoc,

@@ -37,8 +37,9 @@ export const fillPdfTextFields = (
   form: PDFForm,
   fieldMap: Record<string, any>
 ) => {
-  Object.entries(fieldMap).forEach(([pdfField, value]) => {
-    form.getTextField(pdfField).setText(value ? String(value) : '');
+  Object.entries(fieldMap).forEach(([field, value]) => {
+    form.getTextField(field).setText(value ? String(value) : '');
+    form.getField(field).enableReadOnly();
   });
 };
 
@@ -53,6 +54,7 @@ export const checkFormCheckbox = (
   if (checkboxName) {
     try {
       form.getCheckBox(checkboxName).check();
+      form.getField(checkboxName).enableReadOnly();
     } catch (err) {
       console.warn(`Failed to check ${checkboxName} checkbox`, err);
     }
