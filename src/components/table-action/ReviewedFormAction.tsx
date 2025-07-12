@@ -19,12 +19,9 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { deleteFormSubmission } from '../../actions/form_submissions.action';
-import {
-  FormSubmission,
-  FormType,
-} from '../../db/schema/form_submissions.schema';
+import { FormSubmission } from '../../db/schema/form_submissions.schema';
+import { generatePdf } from '../../utils/pdf_util';
 import { Separator } from '../ui/separator';
-import { hospitalTripTicketsPdf } from '../../utils/pdf';
 
 interface Props {
   formSubmission: FormSubmission;
@@ -45,31 +42,6 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
     toast.success('Deleted form submission successfully!');
   };
 
-  const generatePdf = async (form: FormType) => {
-    switch (form) {
-      case 'hospital_trip_tickets':
-        hospitalTripTicketsPdf(formData);
-        break;
-      case 'dispatch_forms':
-        console.log('Generate Dispatch Form');
-        break;
-      case 'advance_directives':
-        console.log('Generate Advance Directives');
-        break;
-      case 'refusal_forms':
-        console.log('Generate Refusal Forms');
-        break;
-      case 'conduction_refusal_forms':
-        console.log('Generate Conduction Refusal Forms');
-        break;
-      default:
-        toast.error('Invalid form type', {
-          description: 'The form type is not recognized.',
-          richColors: true,
-        });
-    }
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -78,7 +50,9 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => generatePdf(formSubmission.form_type)}>
+        <DropdownMenuItem
+          onClick={() => generatePdf(formSubmission.form_type, formData)}
+        >
           View Form Details
         </DropdownMenuItem>
 
