@@ -365,7 +365,9 @@ export const refusalForTreatmentOrTransportFormPdf = async (
     throw new Error('Invalid data provided for PDF generation');
   }
 
-  const response = await fetch('/pdf/advance_directives_fill.pdf');
+  const response = await fetch(
+    '/pdf/refusal_for_treatment_or_transportation_fill.pdf'
+  );
   if (!response.ok) {
     throw new Error('Failed to fetch PDF file');
   }
