@@ -1,7 +1,12 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
 import { toast } from 'sonner';
 import { FormType } from '../db/schema/form_submissions.schema';
-import { conductionRefusalFormPdf, hospitalTripTicketsPdf } from './pdf_forms';
+import {
+  advanceDirectivesFormPdf,
+  conductionRefusalFormPdf,
+  hospitalTripTicketsPdf,
+  refusalForTreatmentOrTransportFormPdf,
+} from './pdf_forms';
 
 export const generatePdf = async (form: FormType, data: any) => {
   switch (form) {
@@ -12,10 +17,10 @@ export const generatePdf = async (form: FormType, data: any) => {
       console.log('Generate Dispatch Form');
       break;
     case 'advance_directives':
-      console.log('Generate Advance Directives');
+      await advanceDirectivesFormPdf(data);
       break;
     case 'refusal_forms':
-      console.log('Generate Refusal Forms');
+      await refusalForTreatmentOrTransportFormPdf(data);
       break;
     case 'conduction_refusal_forms':
       await conductionRefusalFormPdf(data);
