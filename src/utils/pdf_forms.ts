@@ -1,0 +1,262 @@
+import { PDFDocument } from 'pdf-lib';
+import { ConductionRefusalForm } from '../db/schema/conduction_refusal_form.schema';
+import { HospitalTripTicket } from '../db/schema/hospital-trip-ticket.schema';
+import {
+  checkFormCheckbox,
+  embedSignatureImage,
+  fillPdfTextFields,
+  setFieldsReadOnly,
+} from './pdf_util';
+
+export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
+  if (!data || !data.id) {
+    throw new Error('Invalid data provided for PDF generation');
+  }
+
+  const response = await fetch('/pdf/hospital_trip_tickets_fill.pdf');
+  if (!response.ok) {
+    throw new Error('Failed to fetch PDF file');
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+  const form = pdfDoc.getForm();
+
+  const fieldNames = [
+    'date',
+    'time',
+    'room',
+    'vehicle',
+    'plate',
+    'pt_name',
+    'age_sex',
+    'purpose',
+    'pick_up',
+    'destination',
+    'tare_reg',
+    'scd',
+    'pwd',
+    'cr',
+    'type_reg',
+    'hmo',
+    'type_p/n',
+    'in_house',
+    'drp',
+    'billing_p/n',
+    'billed',
+    'csr/p',
+    'csr/wp',
+    'gross',
+    'vat',
+    'vatables',
+    'discount',
+    'zero_vat',
+    'witholding',
+    'payables',
+    'remarks',
+  ];
+  setFieldsReadOnly(form, fieldNames);
+
+  const fieldMap = {
+    date: data.date,
+    time: data.time,
+    room: data.room,
+    vehicle: data.vehicle,
+    plate: data.plate,
+    pt_name: data.patient_name,
+    age_sex: data.age_sex,
+    purpose: data.purpose,
+    pick_up: data.pickup,
+    destination: data.destination,
+    gross: data.gross,
+    vat: data.vat,
+    vatables: data.vatables,
+    discount: data.discount,
+    zero_vat: data.zero_vat,
+    witholding: data.withholding,
+    payables: data.payables,
+    remarks: data.remarks,
+  };
+  fillPdfTextFields(form, fieldMap);
+
+  await embedSignatureImage(pdfDoc, 'signature1', data.sig_nurse || '');
+  await embedSignatureImage(pdfDoc, 'signature2', data.sig_billing || '');
+  await embedSignatureImage(pdfDoc, 'signature3', data.sig_ambulance || '');
+
+  if (data.trip_type) {
+    checkFormCheckbox(form, data.trip_type, {
+      BLS: 'bls',
+      'BLS-ER': 'bls-er',
+      ALS: 'als',
+      ALS1: 'als1',
+    });
+  }
+
+  if (data.tare) {
+    checkFormCheckbox(form, data.tare, {
+      REG: 'tare_reg',
+      SCD: 'scd',
+      PWD: 'pwd',
+      CR: 'cr',
+    });
+  }
+
+  if (data.billing_type) {
+    checkFormCheckbox(form, data.billing_type, {
+      REG: 'type_reg',
+      HMO: 'hmo',
+      'P/N': 'type_p/n',
+      InHOUSE: 'in_house',
+    });
+  }
+
+  if (data.billing_class) {
+    checkFormCheckbox(form, data.billing_class, {
+      DRP: 'drp',
+      'P/N': 'billing_p/n',
+      BILLED: 'billed',
+      'CSR/P': 'csr/p',
+      'CSR/WP': 'csr/wp',
+    });
+  }
+
+  const pdfBytes = await pdfDoc.save();
+  const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
+    type: 'application/pdf',
+  });
+  const url = URL.createObjectURL(pdfBlob);
+  window.open(url, '_blank');
+};
+
+export const conductionRefusalFormPdf = async (data: ConductionRefusalForm) => {
+  if (!data || !data.id) {
+    throw new Error('Invalid data provided for PDF generation');
+  }
+
+  const response = await fetch('/pdf/conduction_refusal_form_fill.pdf');
+  if (!response.ok) {
+    throw new Error('Failed to fetch PDF file');
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+  const form = pdfDoc.getForm();
+
+  const fieldNames = [
+    'patient_first_name',
+    'patient_middle_name',
+    'patient_last_name',
+    'age',
+    'sex',
+    'birthday',
+    'patient_address',
+    'citizenship',
+    'patient_contact_no',
+    'guardian_name',
+    'relation',
+    'guardian_contact_no',
+    'guardian_address',
+    'medical_record',
+    'date_accomplished',
+    'bp',
+    'pulse',
+    'resp',
+    'skin',
+    'pupils',
+    'loc',
+    '1_yes',
+    '1_no',
+    '2_yes',
+    '2_no',
+    '3_yes',
+    '3_no',
+    '4_yes',
+    '4_no',
+    '5_yes',
+    '5_no',
+    'narrative',
+    '1_following',
+    '2_following',
+    '3_following',
+    'date',
+    'witness_name',
+  ];
+  setFieldsReadOnly(form, fieldNames);
+
+  const fieldMap = {
+    patient_first_name: data.patient_first_name,
+    patient_middle_name: data.patient_middle_name,
+    patient_last_name: data.patient_last_name,
+    age: data.patient_age,
+    sex: data.patient_sex,
+    birthday: data.patient_birthdate,
+    patient_address: data.patient_address,
+    citizenship: data.patient_citizenship,
+    patient_contact_no: data.patient_contact_no,
+    guardian_name: data.kin_name,
+    relation: data.kin_relation,
+    guardian_contact_no: data.kin_contact_no,
+    guardian_address: data.kin_address,
+    medical_record: data.medical_record,
+    date_accomplished: data.date_accomplished,
+    bp: data.vital_bp,
+    pulse: data.vital_pulse,
+    resp: data.vital_resp,
+    skin: data.vital_skin,
+    pupils: data.vital_pupils,
+    loc: data.vital_loc,
+    narrative: data.narrative_description,
+    date: data.witness_date,
+    witness_name: data.witness_name,
+  };
+  fillPdfTextFields(form, fieldMap);
+
+  checkFormCheckbox(form, data.oriented_person_place_time ? 'yes' : 'no', {
+    yes: '1_yes',
+    no: '1_no',
+  });
+  checkFormCheckbox(form, data.coherent_speech ? 'yes' : 'no', {
+    yes: '2_yes',
+    no: '2_no',
+  });
+  checkFormCheckbox(form, data.hallucinations ? 'yes' : 'no', {
+    yes: '3_yes',
+    no: '3_no',
+  });
+  checkFormCheckbox(form, data.suicidal_homicidal_ideation ? 'yes' : 'no', {
+    yes: '4_yes',
+    no: '4_no',
+  });
+  checkFormCheckbox(
+    form,
+    data.understands_refusal_consequences ? 'yes' : 'no',
+    { yes: '5_yes', no: '5_no' }
+  );
+
+  checkFormCheckbox(form, data.refused_treatment_and_transport ? 'yes' : 'no', {
+    yes: '1_following',
+  });
+  checkFormCheckbox(
+    form,
+    data.refused_treatment_willing_transport ? 'yes' : 'no',
+    { yes: '2_following' }
+  );
+  checkFormCheckbox(
+    form,
+    data.wants_treatment_refused_transport ? 'yes' : 'no',
+    { yes: '3_following' }
+  );
+
+  await embedSignatureImage(
+    pdfDoc,
+    'witness_signature',
+    data.witness_signature_image || ''
+  );
+
+  const pdfBytes = await pdfDoc.save();
+  const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
+    type: 'application/pdf',
+  });
+  const url = URL.createObjectURL(pdfBlob);
+  window.open(url, '_blank');
+};

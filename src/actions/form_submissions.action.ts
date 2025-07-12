@@ -138,7 +138,7 @@ export async function listReviewedForms(): Promise<ReviewedFormType[]> {
 }
 
 export interface AllFormType extends PendingFormType {
-  reviewed_by?: User;
+  reviewed_by?: User | null;
 }
 export async function listAllForms(): Promise<AllFormType[]> {
   const submittedByQuery = db
