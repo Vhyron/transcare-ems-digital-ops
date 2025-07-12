@@ -136,6 +136,7 @@ export async function listReviewedForms(): Promise<ReviewedFormType[]> {
 
   return forms;
 }
+
 export interface AllFormType extends PendingFormType {
   reviewed_by?: User;
 }
@@ -154,15 +155,8 @@ export async function listAllForms(): Promise<AllFormType[]> {
   const pendingSubmissions = await db
     .select()
     .from(formSubmissionsTable)
-    .where(
-      or(
-        eq(formSubmissionsTable.status, 'approved'),
-        eq(formSubmissionsTable.status, 'rejected'),
-        eq(formSubmissionsTable.status, 'pending')
-      )
-    )
     .innerJoinLateral(submittedByQuery, sql`true`)
-    .innerJoinLateral(reviewedByQuery, sql`true`);
+    .leftJoinLateral(reviewedByQuery, sql`true`);
 
   const forms = [];
   for (const form of pendingSubmissions) {
