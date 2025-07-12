@@ -43,7 +43,7 @@ export const columns: ColumnDef<AllFormType>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <span className="capitalize flex items-center gap-1">
+        <span className="capitalize flex items-center gap-1.5">
           {row.original.form_submissions.status === 'approved' ? (
             <Check className="size-5 text-green-500" />
           ) : row.original.form_submissions.status === 'rejected' ? (
@@ -74,9 +74,15 @@ export const columns: ColumnDef<AllFormType>[] = [
     enableGlobalFilter: false,
     cell: ({ row }) =>
       row.original.form_submissions.status === 'pending' ? (
-        <PendingFormAction formSubmission={row.original.form_submissions} />
+        <PendingFormAction
+          formSubmission={row.original.form_submissions}
+          formData={row.original.referenceForm}
+        />
       ) : (
-        <ReviewedFormAction formSubmission={row.original.form_submissions} />
+        <ReviewedFormAction
+          formSubmission={row.original.form_submissions}
+          formData={row.original.referenceForm}
+        />
       ),
   },
 ];

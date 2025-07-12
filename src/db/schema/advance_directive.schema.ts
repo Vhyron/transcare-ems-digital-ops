@@ -68,7 +68,7 @@ export const advanceDirectives = pgTable(ADVANCE_DIRECTIVES_TABLE, {
   // Metadata
   created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+}).enableRLS();
 
 export type AdvanceDirectiveForm = typeof advanceDirectives.$inferSelect;
 export type NewAdvanceDirectiveForm = typeof advanceDirectives.$inferInsert;

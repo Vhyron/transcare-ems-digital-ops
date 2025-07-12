@@ -1,3 +1,5 @@
+'use client';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,18 +19,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
-import { FormSubmission } from '../../db/schema/form_submissions.schema';
-import { Separator } from '../ui/separator';
-import { updateFormSubmission } from '../../actions/form_submissions.action';
 import { toast } from 'sonner';
+import {
+  deleteFormSubmission,
+  updateFormSubmission,
+} from '../../actions/form_submissions.action';
+import {
+  FormSubmission,
+  FormType,
+} from '../../db/schema/form_submissions.schema';
 import { capitalizeString } from '../../utils';
 import { useAuth } from '../provider/auth-provider';
-
+import { Separator } from '../ui/separator';
+import { hospitalTripTicketsPdf } from '../../utils/pdf';
 interface Props {
   formSubmission: FormSubmission;
+  formData: any;
 }
 
-const PendingFormAction = ({ formSubmission }: Props) => {
+const PendingFormAction = ({ formSubmission, formData }: Props) => {
   const { user } = useAuth();
 
   const handleUpdateStatus = async (
@@ -56,18 +65,54 @@ const PendingFormAction = ({ formSubmission }: Props) => {
   };
 
   const handleDelete = async (formSubmission: FormSubmission) => {
-    console.log(formSubmission);
+    const res = await deleteFormSubmission(formSubmission.id);
+
+    if (!res) {
+      toast.error('Failed to delete form submission', {
+        description: 'There was an error deleting the form submission.',
+        richColors: true,
+      });
+    }
+
+    toast.success('Deleted form submission successfully!');
+  };
+
+  const generatePdf = async (form: FormType) => {
+    switch (form) {
+      case 'hospital_trip_tickets':
+        hospitalTripTicketsPdf(formData);
+        break;
+      case 'dispatch_forms':
+        console.log('Generate Dispatch Form');
+        break;
+      case 'advance_directives':
+        console.log('Generate Advance Directives');
+        break;
+      case 'refusal_forms':
+        console.log('Generate Refusal Forms');
+        break;
+      case 'conduction_refusal_forms':
+        console.log('Generate Conduction Refusal Forms');
+        break;
+      default:
+        toast.error('Invalid form type', {
+          description: 'The form type is not recognized.',
+          richColors: true,
+        });
+    }
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreHorizontal className="h-4 w-4" />
+        <Button variant="ghost" className="w-8 h-8 p-0">
+          <MoreHorizontal className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>View Form Details</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => generatePdf(formSubmission.form_type)}>
+          View Form Details
+        </DropdownMenuItem>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>

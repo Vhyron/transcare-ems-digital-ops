@@ -67,7 +67,7 @@ export const conductionRefusalForms = pgTable(CONDUCTION_REFUSAL_FORMS_TABLE, {
   // Metadata
   form_status: varchar({ length: 20 }).default('draft'),
   completed_by: uuid(),
-});
+}).enableRLS();
 
 // Inferred types
 export type ConductionRefusalForm = typeof conductionRefusalForms.$inferSelect;
