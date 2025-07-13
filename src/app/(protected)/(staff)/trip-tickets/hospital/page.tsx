@@ -257,13 +257,7 @@ export default function HospitalTripForm() {
 
   return (
     <div className="p-10 w-full">
-      {/* Debug info */}
-      <div className="mb-4 p-4 rounded text-sm">
-        <p><strong>Current User ID:</strong> {user?.id || 'Not logged in'}</p>
-        <p><strong>User Email:</strong> {user?.email || 'N/A'}</p>
-        <p><strong>User Role:</strong> {user?.user_metadata?.user_role || 'N/A'}</p>
-        <p><strong>User Name:</strong> {user?.user_metadata?.firstName} {user?.user_metadata?.lastName}</p>
-      </div>
+    
 
       <h1 className="text-xl font-bold mb-6">
         Transcare Emergency Medical Services - Hospital Trip Ticket
