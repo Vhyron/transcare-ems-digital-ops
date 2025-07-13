@@ -8,7 +8,13 @@ import { Plus, X, AlertCircle, CheckCircle } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import SignatureCanvas from 'react-signature-canvas';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 function SelectWithOthers({
   options,
   value,
@@ -30,6 +36,7 @@ function SelectWithOthers({
         onChange={(e) => onChange(e.target.value)}
         style={{ backgroundColor: '#0a0a0a', color: 'white' }}
       >
+        <option value="">Select an option</option>
         {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}
@@ -41,7 +48,7 @@ function SelectWithOthers({
         <input
           className="mt-2 border border-gray-300 rounded-md px-3 py-2 w-full"
           placeholder="Please specify"
-          value={otherValue}
+          value={otherValue || ''}
           onChange={(e) => onOtherChange?.(e.target.value)}
         />
       )}
@@ -65,7 +72,7 @@ export default function ConsolidatedDispatchForm() {
   const [notificationType, setNotificationType] = useState<'success' | 'error'>(
     'success'
   );
-  const [formStatus, setFormStatus] = useState('draft');
+  const { user, loading } = useAuth();
 
   const [typeOfServiceOther, setTypeOfServiceOther] = useState('');
   const [crewCredentialOther, setCrewCredentialOther] = useState('');
@@ -101,10 +108,12 @@ export default function ConsolidatedDispatchForm() {
   };
 
   const [formData, setFormData] = useState({
-    id: '',
+    // Remove the id field from here - let the database generate it
+    // id: '', // Remove this line
+
     // Page 1 Fields
     event_title: '',
-    event_type: '',
+    event_type: 'PAID',
     event_owner: '',
     event_owner_contact: '',
     event_organizer: '',
@@ -114,22 +123,22 @@ export default function ConsolidatedDispatchForm() {
     event_call_time: '',
     estimated_crowd: '',
     event_venue: '',
-    type_of_events: '',
+    type_of_events: 'Religious Gathering',
     venue_type: '',
     brief_concept_description: '',
     expected_vip_guest: '',
-    crowd_access: '',
-    crowd_security: '',
-    crowd_risk: '',
+    crowd_access: 'Free Ticket',
+    crowd_security: 'Internal',
+    crowd_risk: 'Low',
     crowd_others: '',
-    economic_class: '',
-    crowd_type: '',
-    venue_safety_equipment: '',
+    economic_class: 'A',
+    crowd_type: '18-45',
+    venue_safety_equipment: 'Extinguisher',
 
     // Page 2 Fields
-    type_of_service: '',
+    type_of_service: 'Manpower',
     type_of_service_other: '',
-    crew_credential: '',
+    crew_credential: 'EMT',
     crew_credential_other: '',
     number_of_crew: '',
     ambulance_models: [
@@ -201,26 +210,27 @@ export default function ConsolidatedDispatchForm() {
     page3_client_representative_signature: '',
     page3_ems_supervisor_signature: '',
 
-    // Form Status
-    form_status: 'default',
+    form_status: 'draft',
     current_page: '',
   });
 
   const clearSig = () => {
     const ref = getRefByType(activeSig);
-    ref?.current?.clear();
+    if (ref?.current) {
+      ref.current.clear();
+    }
   };
 
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
+    if (ref?.current && !ref.current.isEmpty() && activeSig) {
       const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
 
       setSigData((prev) => ({
         ...prev,
-        [activeSig!]: {
+        [activeSig]: {
           image: dataUrl,
-          name: prev[activeSig!]?.name || '',
+          name: prev[activeSig]?.name || '',
         },
       }));
 
@@ -233,7 +243,18 @@ export default function ConsolidatedDispatchForm() {
       setNumberOfRows((prev) => prev + 1);
     }
   };
-
+  const handleCrewDataChange = (
+    rowIndex: number,
+    field: string,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      crew_data: prev.crew_data.map((crew, index) =>
+        index === rowIndex ? { ...crew, [field]: value } : crew
+      ),
+    }));
+  };
   const getRefByType = (
     type: 'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
   ) => {
@@ -308,10 +329,11 @@ export default function ConsolidatedDispatchForm() {
 
   const resetForm = () => {
     setFormData({
-      id: '',
+      // Remove id: '', from here too
+
       // Page 1 Fields
       event_title: '',
-      event_type: '',
+      event_type: 'PAID',
       event_owner: '',
       event_owner_contact: '',
       event_organizer: '',
@@ -321,22 +343,22 @@ export default function ConsolidatedDispatchForm() {
       event_call_time: '',
       estimated_crowd: '',
       event_venue: '',
-      type_of_events: '',
+      type_of_events: 'Religious Gathering',
       venue_type: '',
       brief_concept_description: '',
       expected_vip_guest: '',
-      crowd_access: '',
-      crowd_security: '',
-      crowd_risk: '',
+      crowd_access: 'Free Ticket',
+      crowd_security: 'Internal',
+      crowd_risk: 'Low',
       crowd_others: '',
-      economic_class: '',
-      crowd_type: '',
-      venue_safety_equipment: '',
+      economic_class: 'A',
+      crowd_type: '18-45',
+      venue_safety_equipment: 'Extinguisher',
 
       // Page 2 Fields
-      type_of_service: '',
+      type_of_service: 'Manpower',
       type_of_service_other: '',
-      crew_credential: '',
+      crew_credential: 'EMT',
       crew_credential_other: '',
       number_of_crew: '',
       ambulance_models: [
@@ -409,12 +431,14 @@ export default function ConsolidatedDispatchForm() {
       page3_ems_supervisor_signature: '',
 
       // Form Status
-      form_status: 'default',
+      form_status: 'draft',
       current_page: '',
     });
     setSigData({});
+    setTypeOfServiceOther('');
+    setCrewCredentialOther('');
+    setCurrentPage(1);
   };
-
 
   interface AmbulanceModel {
     model: string;
@@ -436,31 +460,63 @@ export default function ConsolidatedDispatchForm() {
       ),
     }));
   };
+
   const handleSubmit = async () => {
+    if (!user) {
+      alert('Please log in to submit the form');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const submitData = {
         ...formData,
-        form_status: formStatus,
+        form_status: 'draft',
         current_page: currentPage.toString(),
-        // Add signature data
         team_leader_signature: sigData.teamLeader?.image || '',
         client_representative_signature:
           sigData.clientRepresentative?.image || '',
         ems_supervisor_signature: sigData.EMSSupervisor?.image || '',
-        // Add "Others" fields
         type_of_service_other:
           formData.type_of_service === 'Others' ? typeOfServiceOther : '',
         crew_credential_other:
           formData.crew_credential === 'Others' ? crewCredentialOther : '',
       };
 
+      // Remove id field if it exists and is empty
+      if ('id' in submitData && (!submitData.id || submitData.id === '')) {
+        delete submitData.id;
+      }
+
       const baseUrl =
         process.env.NODE_ENV === 'development'
           ? 'http://localhost:3000'
           : window.location.origin;
 
-      const response = await fetch(`${baseUrl}/api/dispatch-forms`, {
+      // Get the current session token
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      console.log('Submitting form with user:', user.id);
+      console.log('Session token available:', !!session?.access_token);
+
+      const response = await fetch('/api/dispatch-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -480,10 +536,46 @@ export default function ConsolidatedDispatchForm() {
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
+      console.log('Form submitted successfully, ID:', formId);
+
       if (formId) {
-        setFormId(formId);
-        setFormStatus('submitted');
+        try {
+          console.log('Creating form submission tracking...');
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'dispatch_forms',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
+
+          if (!submissionResponse.ok) {
+            const errorData = await submissionResponse.json().catch(() => ({}));
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
+          }
+
+          const submissionResult = await submissionResponse.json();
+          console.log('Form submission tracking created:', submissionResult);
+        } catch (submissionError) {
+          console.error(
+            'Failed to create submission tracking:',
+            submissionError
+          );
+        }
       }
+      alert('Saved successfully!');
+
       resetForm();
       setSigData({});
       showNotificationMessage('Form submitted successfully!', 'success');
@@ -509,6 +601,24 @@ export default function ConsolidatedDispatchForm() {
       const width = modalCanvasRef.current.offsetWidth;
       const height = 750;
       setSigCanvasSize({ width, height });
+    }
+  }, [activeSig]);
+
+  useEffect(() => {
+    if (activeSig && sigData[activeSig]) {
+      const ref = getRefByType(activeSig);
+      if (ref?.current) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = ref.current!.getCanvas();
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          }
+        };
+        img.src = sigData[activeSig].image;
+      }
     }
   }, [activeSig]);
 
@@ -857,7 +967,7 @@ export default function ConsolidatedDispatchForm() {
               />
               <Input
                 placeholder="Type"
-                className="h-iten text-base"
+                className="h-10 text-base"
                 value={model.type}
                 onChange={(e) =>
                   handleAmbulanceModelChange(index, 'type', e.target.value)
@@ -1314,11 +1424,23 @@ export default function ConsolidatedDispatchForm() {
                 {Array.from({ length: numberOfRows }, (_, i) => (
                   <tr key={i} className="border-b">
                     <td className="p-2 text-center">{i + 1}</td>
-                    {Array.from({ length: 6 }, (_, j) => (
+                    {(
+                      [
+                        'name',
+                        'title',
+                        'position',
+                        'time_in',
+                        'time_out',
+                        'signature',
+                      ] as (keyof (typeof formData.crew_data)[number])[]
+                    ).map((field, j) => (
                       <td key={j} className="p-2">
                         <Input
                           className="h-8 text-sm"
-                          onChange={handleInputChange}
+                          value={formData.crew_data[i]?.[field] || ''}
+                          onChange={(e) =>
+                            handleCrewDataChange(i, field, e.target.value)
+                          }
                         />
                       </td>
                     ))}
@@ -1340,17 +1462,17 @@ export default function ConsolidatedDispatchForm() {
           {
             label: 'Team Leader',
             signatureLabel: 'Prepared and Filled by',
-            key: 'nurse',
+            key: 'teamLeader',
           },
           {
             label: 'Client Representative',
             signatureLabel: 'Conformed by',
-            key: 'billing',
+            key: 'clientRepresentative',
           },
           {
             label: 'EMS Supervisor',
             signatureLabel: 'Noted by',
-            key: 'ambulance',
+            key: 'EMSSupervisor',
           },
         ].map(({ label, signatureLabel, key }) => (
           <div key={key}>
@@ -1358,7 +1480,7 @@ export default function ConsolidatedDispatchForm() {
               {signatureLabel} ({label})
             </label>
             <div
-              className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-50 cursor-pointer transition-colors"
+              className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
               onClick={() => setActiveSig(key as typeof activeSig)}
             >
               {sigData[key] ? (
@@ -1412,7 +1534,6 @@ export default function ConsolidatedDispatchForm() {
               </h1>
               <p className="">Operation Dispatch Form</p>
             </div>
-       
           </div>
         </div>
 
@@ -1443,9 +1564,19 @@ export default function ConsolidatedDispatchForm() {
               </Button>
             </div>
             <div className="flex gap-4 mt-6">
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              <Button
+                className="mt-6"
+                onClick={handleSubmit}
+                disabled={isSubmitting || loading || !user}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </Button>
+
+              {!user && !loading && (
+                <p className="text-red-500 mt-2">
+                  Please log in to submit the form
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -1500,25 +1631,42 @@ export default function ConsolidatedDispatchForm() {
                   />
                 </div>
 
-                <div className="absolute left-6 flex gap-2 items-center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    id="sig-upload"
-                    onChange={handleFileUpload}
-                  />
-                  <label htmlFor="sig-upload">
-                    <Button size="sm" variant="secondary">
-                      Upload
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="sig-upload"
+                      onChange={handleFileUpload}
+                    />
+                    <label htmlFor="sig-upload">
+                      <Button size="sm" variant="secondary" type="button">
+                        Upload
+                      </Button>
+                    </label>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={clearSig}
+                      type="button"
+                    >
+                      Clear
                     </Button>
-                  </label>
-                  <Button size="sm" variant="secondary" onClick={clearSig}>
-                    Clear
-                  </Button>
-                  <Button size="sm" onClick={uploadSig}>
-                    Save
-                  </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setActiveSig(null)}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={uploadSig} type="button">
+                      Save
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Dialog.Content>

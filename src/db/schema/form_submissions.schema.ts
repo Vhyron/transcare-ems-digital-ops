@@ -4,7 +4,7 @@ import { usersTable } from "./users.schema";
 
 const formTypeEnum = pgEnum("form_type", [
   "dispatch_form", 
-  "trip_tickets", 
+  "hospital_trip_tickets", 
   "census_record", 
   "advance_directives", 
   "refusal_form",          

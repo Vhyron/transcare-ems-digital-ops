@@ -1,23 +1,24 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "../components/provider/theme-provider";
-import { Toaster } from "../components/ui/sonner";
-import QueryProvider from "../components/provider/query-provider";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '../components/provider/theme-provider';
+import { Toaster } from '../components/ui/sonner';
+import QueryProvider from '../components/provider/query-provider';
+import { AuthProvider } from '../components/provider/auth-provider';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Transcare EMS",
-  description: "Transcare Emergency Medical Services Web Application",
+  title: 'Transcare EMS',
+  description: 'Transcare Emergency Medical Services Web Application',
 };
 
 export default function RootLayout({
@@ -36,7 +37,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>
+            <AuthProvider>{children} </AuthProvider>
+          </QueryProvider>
           <Toaster />
         </ThemeProvider>
       </body>

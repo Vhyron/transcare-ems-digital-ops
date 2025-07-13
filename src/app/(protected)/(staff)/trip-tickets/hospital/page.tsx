@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { createClient } from "@supabase/supabase-js";
+import { useAuth } from "@/components/provider/auth-provider"; 
 
-// const supabase = createClient(
-//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-// );
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function HospitalTripForm() {
   const nurseSigRef = useRef<SignatureCanvas | null>(null);
@@ -28,6 +30,8 @@ export default function HospitalTripForm() {
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const { user, loading } = useAuth();
 
   const getRefByType = (type: string | null) => {
     if (type === "nurse") return nurseSigRef;
@@ -124,6 +128,11 @@ export default function HospitalTripForm() {
   });
 
   const handleSubmit = async () => {
+    if (!user) {
+      alert("Please log in to submit the form");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const submitData = {
@@ -138,12 +147,29 @@ export default function HospitalTripForm() {
           ? "http://localhost:3000"
           : window.location.origin;
 
-      // Step 1: Submit the trip ticket form
+      // Get the current session token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Error getting session:", sessionError);
+        throw new Error("Authentication error");
+      }
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      // Add authorization header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      console.log("Submitting form with user:", user.id);
+      console.log("Session token available:", !!session?.access_token);
+
       const response = await fetch(`${baseUrl}/api/trip-ticket`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ formData: submitData }),
       });
 
@@ -159,33 +185,41 @@ export default function HospitalTripForm() {
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
-      // Step 2: Create form submission tracking entry
+      console.log("Form submitted successfully, ID:", formId);
+
       if (formId) {
         try {
-          await fetch(`${baseUrl}/api/form-submissions`, {
+          console.log("Creating form submission tracking...");
+          
+          const submissionResponse = await fetch(`${baseUrl}/api/form-submissions`, {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers,
             body: JSON.stringify({
-              form_type: "trip_tickets",
+              form_type: "hospital_trip_tickets",
               reference_id: formId,
               status: "pending",
-              submitted_by: "current_user_id", // Replace with actual user ID
+              submitted_by: user.id,
               reviewed_by: null,
             }),
           });
+
+          if (!submissionResponse.ok) {
+            const errorData = await submissionResponse.json().catch(() => ({}));
+            console.error("Form submission tracking failed:", errorData);
+            throw new Error(`Failed to create submission tracking: ${errorData.error}`);
+          }
+
+          const submissionResult = await submissionResponse.json();
+          console.log("Form submission tracking created:", submissionResult);
+          
         } catch (submissionError) {
-          console.error(
-            "Failed to create submission tracking:",
-            submissionError
-          );
-          // Don't fail the entire process since the form was saved successfully
+          console.error("Failed to create submission tracking:", submissionError);
         }
       }
 
       alert("Saved successfully!");
 
+      // Reset form
       setFormData({
         date: "",
         time: "",
@@ -213,13 +247,22 @@ export default function HospitalTripForm() {
       setSigData({});
     } catch (error) {
       console.error("Error saving:", error);
-      alert(`Failed to save`);
+      alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
     <div className="p-10 w-full">
+      {/* Debug info */}
+      <div className="mb-4 p-4 rounded text-sm">
+        <p><strong>Current User ID:</strong> {user?.id || 'Not logged in'}</p>
+        <p><strong>User Email:</strong> {user?.email || 'N/A'}</p>
+        <p><strong>User Role:</strong> {user?.user_metadata?.user_role || 'N/A'}</p>
+        <p><strong>User Name:</strong> {user?.user_metadata?.firstName} {user?.user_metadata?.lastName}</p>
+      </div>
+
       <h1 className="text-xl font-bold mb-6">
         Transcare Emergency Medical Services - Hospital Trip Ticket
       </h1>
@@ -432,7 +475,6 @@ export default function HospitalTripForm() {
             </select>
           </div>
 
-          {/* Fixed billing fields with proper state connections */}
           <div>
             <label className="block mb-1 font-medium">Gross</label>
             <Input
@@ -618,9 +660,17 @@ export default function HospitalTripForm() {
           </Dialog.Root>
         </div>
       </div>
-      <Button className="mt-6" onClick={handleSubmit} disabled={isSubmitting}>
+      <Button 
+        className="mt-6" 
+        onClick={handleSubmit} 
+        disabled={isSubmitting || loading || !user}
+      >
         {isSubmitting ? "Submitting..." : "Submit"}
       </Button>
+      
+      {!user && !loading && (
+        <p className="text-red-500 mt-2">Please log in to submit the form</p>
+      )}
     </div>
   );
 }

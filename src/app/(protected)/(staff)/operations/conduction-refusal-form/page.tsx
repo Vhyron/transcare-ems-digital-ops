@@ -8,6 +8,13 @@ import { Plus, X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Input } from '@/components/ui/input';
 import { ConductionRefusalFormData } from '@/types/conduction-refusal-form';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider'; // Import your auth provider
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function ConductionRefusalForm() {
   const witnessSignature = useRef<SignatureCanvas | null>(null);
@@ -20,6 +27,7 @@ export default function ConductionRefusalForm() {
     width: 950,
     height: 750,
   });
+  const { user, loading } = useAuth();
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<'witness' | null>(null);
@@ -220,6 +228,11 @@ export default function ConductionRefusalForm() {
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      alert('Please log in to submit the form');
+      return;
+    }
+
     setIsSubmitting(true);
     console.log(JSON.stringify(formData, null, 2));
 
@@ -241,25 +254,65 @@ export default function ConductionRefusalForm() {
           }`
         );
       }
+      const baseUrl =
+        process.env.NODE_ENV === 'development'
+          ? 'http://localhost:3000'
+          : window.location.origin;
+
+      // Get the current session token
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
 
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
+      console.log('Form submitted successfully, ID:', formId);
+
       if (formId) {
         try {
-          await fetch('/api/form-submissions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              form_type: 'condcuction_refusal_form',
-              reference_id: formId,
-              status: 'pending',
-              submitted_by: 'current_user_id',
-              reviewed_by: null,
-            }),
-          });
+          console.log('Creating form submission tracking...');
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'conduction_refusal_forms',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
+
+          if (!submissionResponse.ok) {
+            const errorData = await submissionResponse.json().catch(() => ({}));
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
+          }
+
+          const submissionResult = await submissionResponse.json();
+          console.log('Form submission tracking created:', submissionResult);
         } catch (submissionError) {
           console.error(
             'Failed to create submission tracking:',
@@ -870,12 +923,21 @@ export default function ConductionRefusalForm() {
             </Dialog.Portal>
           </Dialog.Root>
           <div className="flex gap-4 mt-6">
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Form'}
+            <Button
+              className="mt-6"
+              onClick={handleSubmit}
+              disabled={isSubmitting || loading || !user}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
+
+            {!user && !loading && (
+              <p className="text-red-500 mt-2">
+                Please log in to submit the form
+              </p>
+            )}
           </div>
         </div>
-      
       </div>
     </div>
   );

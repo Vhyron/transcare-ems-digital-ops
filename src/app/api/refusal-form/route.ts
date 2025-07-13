@@ -7,6 +7,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Helper function to truncate text fields if they exceed database limits
+function truncateText(text: string | null | undefined, maxLength: number): string | null {
+  if (!text) return null;
+  return text.length > maxLength ? text.substring(0, maxLength) : text;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,42 +25,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Map frontend field names to database column names
+    // Map frontend field names to database column names with proper truncation
     const mappedData = {
-      league_event: formData.leagueEvent,
-      type: formData.type,
-      location: formData.location,
-      incident: formData.incident,
-      patient_name: formData.patientName,
+      league_event: truncateText(formData.leagueEvent, 255),
+      type: truncateText(formData.type, 255),
+      location: truncateText(formData.location, 255),
+      incident: truncateText(formData.incident, 255),
+      patient_name: truncateText(formData.patientName, 255),
       dob: formData.dob,
       age: formData.age ? parseInt(formData.age) : null,
-      landline: formData.landline,
-      cell: formData.cell,
+      landline: truncateText(formData.landline, 50),
+      cell: truncateText(formData.cell, 50),
       guardian: formData.guardian === "yes",
-      guardian_landline: formData.guardianLandline,
-      guardian_cell: formData.guardianCell,
-      guardian_name: formData.guardianName,
+      guardian_landline: truncateText(formData.guardianLandline, 50),
+      guardian_cell: truncateText(formData.guardianCell, 50),
+      guardian_name: truncateText(formData.guardianName, 255),
       guardian_age: formData.guardianAge ? parseInt(formData.guardianAge) : null,
-      relationship: formData.relationship,
-      situation: formData.situation,
-      treatment_refused: formData.treatmentRefused,
+      relationship: truncateText(formData.relationship, 255),
+      situation: formData.situation, // Assuming this is TEXT type in database
+      treatment_refused: formData.treatmentRefused, // Assuming this is TEXT type in database
       treatment_not_necessary: formData.refusalReasons?.treatmentNotNecessary || false,
       refuses_transport_against_advice: formData.refusalReasons?.refusesTransportAgainstAdvice || false,
       treatment_received_no_transport: formData.refusalReasons?.treatmentReceivedNoTransport || false,
       alternative_transportation: formData.refusalReasons?.alternativeTransportation || false,
       accepts_transport_refuses_treatment: formData.refusalReasons?.acceptsTransportRefusesTreatment || false,
-      company: formData.company,
-      pcr: formData.pcr,
+      company: truncateText(formData.company, 255),
+      pcr: truncateText(formData.pcr, 255),
       form_date: formData.date,
       form_time: formData.time,
       patient_guardian_signature_image: formData.patientGuardian?.image || null,
-      patient_guardian_signature_name: formData.patientGuardian?.name || null,
+      patient_guardian_signature_name: truncateText(formData.patientGuardian?.name, 255),
       events_organizer_signature_image: formData.eventsOrganizer?.image || null,
-      events_organizer_signature_name: formData.eventsOrganizer?.name || null,
+      events_organizer_signature_name: truncateText(formData.eventsOrganizer?.name, 255),
       witness_signature_image: formData.witness?.image || null,
-      witness_signature_name: formData.witness?.name || null,
+      witness_signature_name: truncateText(formData.witness?.name, 255),
       medic_personnel_signature_image: formData.medicPersonnel?.image || null,
-      medic_personnel_signature_name: formData.medicPersonnel?.name || null,
+      medic_personnel_signature_name: truncateText(formData.medicPersonnel?.name, 255),
       status: "submitted",
     };
 
@@ -69,9 +74,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Create form submission tracking record
+    const formId = data[0].id;
+    try {
+      const { error: submissionError } = await supabase
+        .from("form_submissions")
+        .insert({
+          form_type: "refusal_form",
+          reference_id: formId,
+          status: "pending",
+          submitted_by: "current_user_id", // Replace with actual user ID when available
+          reviewed_by: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+      if (submissionError) {
+        console.error("Form submission tracking error:", submissionError);
+        // Don't fail the main request, just log the error
+      }
+    } catch (submissionTrackingError) {
+      console.error("Failed to create submission tracking:", submissionTrackingError);
+    }
+
     return NextResponse.json({
       success: true,
       data: data[0],
+      id: formId,
       message: "Refusal form saved successfully",
     });
   } catch (error) {
@@ -127,23 +156,23 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Map frontend field names to database column names
+    // Map frontend field names to database column names with proper truncation
     const mappedData = {
-      league_event: formData.leagueEvent,
-      type: formData.type,
-      location: formData.location,
-      incident: formData.incident,
-      patient_name: formData.patientName,
+      league_event: truncateText(formData.leagueEvent, 255),
+      type: truncateText(formData.type, 255),
+      location: truncateText(formData.location, 255),
+      incident: truncateText(formData.incident, 255),
+      patient_name: truncateText(formData.patientName, 255),
       dob: formData.dob,
       age: formData.age ? parseInt(formData.age) : null,
-      landline: formData.landline,
-      cell: formData.cell,
+      landline: truncateText(formData.landline, 50),
+      cell: truncateText(formData.cell, 50),
       guardian: formData.guardian === "yes",
-      guardian_landline: formData.guardianLandline,
-      guardian_cell: formData.guardianCell,
-      guardian_name: formData.guardianName,
+      guardian_landline: truncateText(formData.guardianLandline, 50),
+      guardian_cell: truncateText(formData.guardianCell, 50),
+      guardian_name: truncateText(formData.guardianName, 255),
       guardian_age: formData.guardianAge ? parseInt(formData.guardianAge) : null,
-      relationship: formData.relationship,
+      relationship: truncateText(formData.relationship, 255),
       situation: formData.situation,
       treatment_refused: formData.treatmentRefused,
       treatment_not_necessary: formData.refusalReasons?.treatmentNotNecessary || false,
@@ -151,18 +180,18 @@ export async function PUT(request: NextRequest) {
       treatment_received_no_transport: formData.refusalReasons?.treatmentReceivedNoTransport || false,
       alternative_transportation: formData.refusalReasons?.alternativeTransportation || false,
       accepts_transport_refuses_treatment: formData.refusalReasons?.acceptsTransportRefusesTreatment || false,
-      company: formData.company,
-      pcr: formData.pcr,
+      company: truncateText(formData.company, 255),
+      pcr: truncateText(formData.pcr, 255),
       form_date: formData.date,
       form_time: formData.time,
       patient_guardian_signature_image: formData.patientGuardian?.image || null,
-      patient_guardian_signature_name: formData.patientGuardian?.name || null,
+      patient_guardian_signature_name: truncateText(formData.patientGuardian?.name, 255),
       events_organizer_signature_image: formData.eventsOrganizer?.image || null,
-      events_organizer_signature_name: formData.eventsOrganizer?.name || null,
+      events_organizer_signature_name: truncateText(formData.eventsOrganizer?.name, 255),
       witness_signature_image: formData.witness?.image || null,
-      witness_signature_name: formData.witness?.name || null,
+      witness_signature_name: truncateText(formData.witness?.name, 255),
       medic_personnel_signature_image: formData.medicPersonnel?.image || null,
-      medic_personnel_signature_name: formData.medicPersonnel?.name || null,
+      medic_personnel_signature_name: truncateText(formData.medicPersonnel?.name, 255),
       updated_at: new Date().toISOString(),
     };
 

@@ -32,9 +32,9 @@ CREATE TABLE "hospital_trip_tickets" (
   "remarks" varchar(1000),
 
   -- Signatures
-  "sig_nurse" varchar(10000),
-  "sig_billing" varchar(10000),
-  "sig_ambulance" varchar(10000),
+  "sig_nurse" varchar(255),
+  "sig_billing" varchar(255),
+  "sig_ambulance" varchar(255),
 
   "created_at" timestamp DEFAULT now() NOT NULL,
   "updated_at" timestamp DEFAULT now() NOT NULL
