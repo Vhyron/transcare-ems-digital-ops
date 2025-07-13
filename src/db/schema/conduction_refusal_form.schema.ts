@@ -6,10 +6,11 @@ import {
   text,
   date,
   timestamp,
-} from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const conductionRefusalForms = pgTable("conduction_refusal_forms", {
+export const CONDUCTION_REFUSAL_FORMS_TABLE = 'conduction_refusal_forms';
+export const conductionRefusalForms = pgTable(CONDUCTION_REFUSAL_FORMS_TABLE, {
   id: uuid().primaryKey().defaultRandom(),
 
   // Timestamps
@@ -64,14 +65,19 @@ export const conductionRefusalForms = pgTable("conduction_refusal_forms", {
   witness_signature_image: text(), // base64-encoded image
 
   // Metadata
-  form_status: varchar({ length: 20 }).default("draft"),
+  form_status: varchar({ length: 20 }).default('draft'),
   completed_by: uuid(),
-});
+}).enableRLS();
 
 // Inferred types
 export type ConductionRefusalForm = typeof conductionRefusalForms.$inferSelect;
-export type NewConductionRefusalForm = typeof conductionRefusalForms.$inferInsert;
+export type NewConductionRefusalForm =
+  typeof conductionRefusalForms.$inferInsert;
 
 // Zod schemas
-export const NewConductionRefusalFormSchema = createInsertSchema(conductionRefusalForms);
-export const UpdateConductionRefusalFormSchema = createUpdateSchema(conductionRefusalForms);
+export const NewConductionRefusalFormSchema = createInsertSchema(
+  conductionRefusalForms
+);
+export const UpdateConductionRefusalFormSchema = createUpdateSchema(
+  conductionRefusalForms
+);

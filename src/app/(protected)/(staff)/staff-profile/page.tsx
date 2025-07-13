@@ -39,7 +39,7 @@ const StaffProfile = () => {
         updated_at: new Date(),
       });
 
-      if (!res) {
+      if (res?.error) {
         toast.error('Failed to update profile information');
       }
 

@@ -6,10 +6,11 @@ import {
   text,
   date,
   timestamp,
-} from "drizzle-orm/pg-core";
-import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
+} from 'drizzle-orm/pg-core';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const advanceDirectives = pgTable("advance_directives", {
+export const ADVANCE_DIRECTIVES_TABLE = 'advance_directives';
+export const advanceDirectives = pgTable(ADVANCE_DIRECTIVES_TABLE, {
   id: uuid().primaryKey().defaultRandom(),
 
   // Patient information
@@ -67,10 +68,12 @@ export const advanceDirectives = pgTable("advance_directives", {
   // Metadata
   created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+}).enableRLS();
 
 export type AdvanceDirectiveForm = typeof advanceDirectives.$inferSelect;
 export type NewAdvanceDirectiveForm = typeof advanceDirectives.$inferInsert;
 
-export const NewAdvanceDirectiveFormSchema = createInsertSchema(advanceDirectives);
-export const UpdateAdvanceDirectiveFormSchema = createUpdateSchema(advanceDirectives);
+export const NewAdvanceDirectiveFormSchema =
+  createInsertSchema(advanceDirectives);
+export const UpdateAdvanceDirectiveFormSchema =
+  createUpdateSchema(advanceDirectives);

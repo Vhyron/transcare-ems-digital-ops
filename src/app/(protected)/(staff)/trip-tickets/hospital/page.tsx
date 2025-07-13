@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useRef, useEffect, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
@@ -26,7 +26,7 @@ export default function HospitalTripForm() {
   });
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
-    "nurse" | "billing" | "ambulance" | null
+    'nurse' | 'billing' | 'ambulance' | null
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,9 +34,9 @@ export default function HospitalTripForm() {
   const { user, loading } = useAuth();
 
   const getRefByType = (type: string | null) => {
-    if (type === "nurse") return nurseSigRef;
-    if (type === "billing") return billingSigRef;
-    if (type === "ambulance") return ambulanceSigRef;
+    if (type === 'nurse') return nurseSigRef;
+    if (type === 'billing') return billingSigRef;
+    if (type === 'ambulance') return ambulanceSigRef;
     return null;
   };
 
@@ -48,7 +48,7 @@ export default function HospitalTripForm() {
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
     if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
+      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
       setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
     }
     setActiveSig(null);
@@ -64,7 +64,7 @@ export default function HospitalTripForm() {
       if (ref?.current) {
         const img = new Image();
         img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext("2d");
+          const ctx = ref.current!.getCanvas().getContext('2d');
           ctx?.clearRect(
             0,
             0,
@@ -87,7 +87,7 @@ export default function HospitalTripForm() {
 
   useEffect(() => {
     const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ""];
+    const dataUrl = sigData[activeSig || ''];
     if (ref?.current && dataUrl) {
       ref.current.clear();
       (ref.current as any).loadFromDataURL(dataUrl);
@@ -103,28 +103,28 @@ export default function HospitalTripForm() {
   }, [activeSig]);
 
   const [formData, setFormData] = useState({
-    date: "",
-    time: "",
-    room: "",
-    trip_type: "BLS",
-    vehicle: "",
-    plate: "",
-    age_sex: "",
-    patient_name: "",
-    purpose: "THOC",
-    pickup: "",
-    destination: "",
-    billing_class: "REG",
-    tare: "REG",
-    billing_type: "DRP",
-    gross: "",
-    discount: "",
-    payables: "",
-    vat: "",
-    vatables: "",
-    zero_vat: "",
-    withholding: "",
-    remarks: "",
+    date: '',
+    time: '',
+    room: '',
+    trip_type: 'BLS',
+    vehicle: '',
+    plate: '',
+    age_sex: '',
+    patient_name: '',
+    purpose: 'THOC',
+    pickup: '',
+    destination: '',
+    billing_class: 'REG',
+    tare: 'REG',
+    billing_type: 'DRP',
+    gross: '',
+    discount: '',
+    payables: '',
+    vat: '',
+    vatables: '',
+    zero_vat: '',
+    withholding: '',
+    remarks: '',
   });
 
   const handleSubmit = async () => {
@@ -143,8 +143,8 @@ export default function HospitalTripForm() {
       };
 
       const baseUrl =
-        process.env.NODE_ENV === "development"
-          ? "http://localhost:3000"
+        process.env.NODE_ENV === 'development'
+          ? 'http://localhost:3000'
           : window.location.origin;
 
       // Get the current session token
@@ -168,8 +168,10 @@ export default function HospitalTripForm() {
       console.log("Session token available:", !!session?.access_token);
 
       const response = await fetch(`${baseUrl}/api/trip-ticket`, {
-        method: "POST",
-        headers,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ formData: submitData }),
       });
 
@@ -177,7 +179,7 @@ export default function HospitalTripForm() {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           `HTTP ${response.status}: ${
-            errorData.error || "Failed to submit form"
+            errorData.error || 'Failed to submit form'
           }`
         );
       }
@@ -217,32 +219,32 @@ export default function HospitalTripForm() {
         }
       }
 
-      alert("Saved successfully!");
+      alert('Saved successfully!');
 
       // Reset form
       setFormData({
-        date: "",
-        time: "",
-        room: "",
-        trip_type: "BLS",
-        vehicle: "",
-        plate: "",
-        age_sex: "",
-        patient_name: "",
-        purpose: "THOC",
-        pickup: "",
-        destination: "",
-        billing_class: "REG",
-        tare: "REG",
-        billing_type: "DRP",
-        gross: "",
-        discount: "",
-        payables: "",
-        vat: "",
-        vatables: "",
-        zero_vat: "",
-        withholding: "",
-        remarks: "",
+        date: '',
+        time: '',
+        room: '',
+        trip_type: 'BLS',
+        vehicle: '',
+        plate: '',
+        age_sex: '',
+        patient_name: '',
+        purpose: 'THOC',
+        pickup: '',
+        destination: '',
+        billing_class: 'REG',
+        tare: 'REG',
+        billing_type: 'DRP',
+        gross: '',
+        discount: '',
+        payables: '',
+        vat: '',
+        vatables: '',
+        zero_vat: '',
+        withholding: '',
+        remarks: '',
       });
       setSigData({});
     } catch (error) {
@@ -313,7 +315,7 @@ export default function HospitalTripForm() {
                 setFormData({ ...formData, trip_type: e.target.value })
               }
             >
-              {["BLS", "ALS", "BLS-ER", "ALS1"].map((type) => (
+              {['BLS', 'ALS', 'BLS-ER', 'ALS1'].map((type) => (
                 <option key={type} value={type} className="text-gray-700">
                   {type}
                 </option>
@@ -380,12 +382,12 @@ export default function HospitalTripForm() {
               }
             >
               {[
-                "THOC",
-                "MGH",
-                "Procedural Run",
-                "NON Emergency Patient Transfer",
-                "NON Emergency Commercial Transfer",
-                "Long Distance Conduction",
+                'THOC',
+                'MGH',
+                'Procedural Run',
+                'NON Emergency Patient Transfer',
+                'NON Emergency Commercial Transfer',
+                'Long Distance Conduction',
               ].map((type) => (
                 <option key={type} value={type} className="text-gray-700">
                   {type}
@@ -433,7 +435,7 @@ export default function HospitalTripForm() {
                 setFormData({ ...formData, billing_type: e.target.value })
               }
             >
-              {["REG", "HMO", "P/N", "InHOUSE"].map((type) => (
+              {['REG', 'HMO', 'P/N', 'InHOUSE'].map((type) => (
                 <option key={type} value={type} className="text-gray-700">
                   {type}
                 </option>
@@ -450,7 +452,7 @@ export default function HospitalTripForm() {
                 setFormData({ ...formData, tare: e.target.value })
               }
             >
-              {["REG", "SCD", "PWD", "CR"].map((opt) => (
+              {['REG', 'SCD', 'PWD', 'CR'].map((opt) => (
                 <option key={opt} value={opt} className="text-gray-700">
                   {opt}
                 </option>
@@ -467,7 +469,7 @@ export default function HospitalTripForm() {
                 setFormData({ ...formData, billing_class: e.target.value })
               }
             >
-              {["DRP", "P/N", "BILLED", "CSR/P", "CSR/WP"].map((opt) => (
+              {['DRP', 'P/N', 'BILLED', 'CSR/P', 'CSR/WP'].map((opt) => (
                 <option key={opt} value={opt} className="text-gray-700">
                   {opt}
                 </option>
@@ -574,12 +576,12 @@ export default function HospitalTripForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {[
-            { label: "Nurse", ref: nurseSigRef, key: "nurse" },
-            { label: "Admitting/Billing", ref: billingSigRef, key: "billing" },
+            { label: 'Nurse', ref: nurseSigRef, key: 'nurse' },
+            { label: 'Admitting/Billing', ref: billingSigRef, key: 'billing' },
             {
-              label: "Ambulance Staff",
+              label: 'Ambulance Staff',
               ref: ambulanceSigRef,
-              key: "ambulance",
+              key: 'ambulance',
             },
           ].map(({ label, key }) => (
             <div key={key}>
@@ -629,7 +631,7 @@ export default function HospitalTripForm() {
                       canvasProps={{
                         width: sigCanvasSize.width,
                         height: sigCanvasSize.height,
-                        className: "bg-gray-100 rounded shadow ",
+                        className: 'bg-gray-100 rounded shadow ',
                       }}
                     />
                   </div>
