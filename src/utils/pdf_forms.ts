@@ -421,13 +421,14 @@ export const refusalForTreatmentOrTransportFormPdf = async (
     'patient_age',
     'patient_landline',
     'patient_cell',
-    'guardian_yes',
-    'guardian_no',
+    'yes',
+    'no',
     'guardian_landline',
     'guardian_cell',
     'guardian_name',
     'guardian_age',
     'relationship',
+    'situation',
     '1_applicable',
     '2_applicable',
     '3_applicable',
@@ -460,6 +461,7 @@ export const refusalForTreatmentOrTransportFormPdf = async (
     guardian_name: data.guardian_name,
     guardian_age: data.guardian_age,
     relationship: data.relationship,
+    situation: data.situation,
     specify: data.situation,
     organizer: data.company,
     'patient/guardian_printed_name': data.patient_guardian_signature_name,
@@ -491,6 +493,30 @@ export const refusalForTreatmentOrTransportFormPdf = async (
     pdfDoc,
     'personnel_signature',
     data.medic_personnel_signature_image || ''
+  );
+
+  checkFormCheckbox(form, data.treatment_not_necessary ? 'yes' : 'no', {
+    yes: '1_applicable',
+  });
+  checkFormCheckbox(
+    form,
+    data.refuses_transport_against_advice ? 'yes' : 'no',
+    {
+      yes: '2_applicable',
+    }
+  );
+  checkFormCheckbox(form, data.treatment_received_no_transport ? 'yes' : 'no', {
+    yes: '3_applicable',
+  });
+  checkFormCheckbox(form, data.alternative_transportation ? 'yes' : 'no', {
+    yes: '4_applicable',
+  });
+  checkFormCheckbox(
+    form,
+    data.accepts_transport_refuses_treatment ? 'yes' : 'no',
+    {
+      yes: '5_applicable',
+    }
   );
 
   const pdfBytes = await pdfDoc.save();
