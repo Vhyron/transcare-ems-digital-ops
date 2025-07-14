@@ -8,23 +8,23 @@ import {
   refusalForTreatmentOrTransportFormPdf,
 } from './pdf_forms';
 
-export const generatePdf = async (form: FormType, data: any) => {
+export const generatePdf = async (
+  form: FormType,
+  data: any,
+  returnBuffer: boolean = false
+) => {
   switch (form) {
     case 'hospital_trip_tickets':
-      await hospitalTripTicketsPdf(data);
-      break;
+      return await hospitalTripTicketsPdf(data, returnBuffer);
     case 'dispatch_forms':
       console.log('Generate Dispatch Form');
       break;
     case 'advance_directives':
-      await advanceDirectivesFormPdf(data);
-      break;
+      return await advanceDirectivesFormPdf(data, returnBuffer);
     case 'refusal_forms':
-      await refusalForTreatmentOrTransportFormPdf(data);
-      break;
+      return await refusalForTreatmentOrTransportFormPdf(data, returnBuffer);
     case 'conduction_refusal_forms':
-      await conductionRefusalFormPdf(data);
-      break;
+      return await conductionRefusalFormPdf(data, returnBuffer);
     default:
       toast.error('Invalid form type', {
         description: 'The form type is not recognized.',
