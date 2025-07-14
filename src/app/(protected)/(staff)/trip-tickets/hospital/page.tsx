@@ -15,15 +15,7 @@ import { useAuth } from "@/components/provider/auth-provider";
 const SignatureCanvas = dynamic(() => import("react-signature-canvas"), {
   ssr: false,
   loading: () => <div className="bg-gray-100 rounded shadow flex items-center justify-center h-[750px]">Loading signature pad...</div>
-}) as React.ComponentType<{
-  ref?: React.RefObject<SignatureCanvasRef | null>;
-  penColor?: string;
-  canvasProps?: {
-    width: number;
-    height: number;
-    className: string;
-  };
-}>;
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,7 +27,8 @@ interface SignatureCanvasRef {
   isEmpty: () => boolean;
   getTrimmedCanvas: () => HTMLCanvasElement;
   getCanvas: () => HTMLCanvasElement;
-  loadFromDataURL?: (dataURL: string) => void;
+  toDataURL: (type?: string) => string;
+  fromDataURL: (dataURL: string) => void;
 }
 
 export default function HospitalTripForm() {
@@ -72,11 +65,7 @@ export default function HospitalTripForm() {
     const ref = getRefByType(activeSig);
     if (ref?.current) {
       try {
-        if (typeof ref.current.clear === 'function') {
-          ref.current.clear();
-        } else {
-          console.error('Clear method not available on signature canvas');
-        }
+        ref.current.clear();
       } catch (error) {
         console.error('Error clearing signature:', error);
       }
@@ -85,52 +74,67 @@ export default function HospitalTripForm() {
 
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
-    if (!ref?.current) {
+    if (!ref?.current || !activeSig) {
       console.error('No signature canvas reference found');
       return;
     }
 
     try {
       // Check if the signature canvas is empty
-      if (typeof ref.current.isEmpty === 'function' && ref.current.isEmpty()) {
+      if (ref.current.isEmpty()) {
         console.log('Signature canvas is empty');
         setActiveSig(null);
         return;
       }
 
-      // Try to get the canvas and create data URL
+      // Get the signature data using multiple fallback methods
       let dataUrl: string | null = null;
 
-      if (typeof ref.current.getTrimmedCanvas === 'function') {
-        try {
-          const canvas = ref.current.getTrimmedCanvas();
-          dataUrl = canvas.toDataURL('image/png');
-        } catch (trimError) {
-          console.warn('getTrimmedCanvas failed, trying getCanvas:', trimError);
-          
-          // Fallback to getCanvas if getTrimmedCanvas fails
-          if (typeof ref.current.getCanvas === 'function') {
-            const canvas = ref.current.getCanvas();
-            dataUrl = canvas.toDataURL('image/png');
-          }
+      // Method 1: Try toDataURL first (most reliable)
+      try {
+        if (typeof ref.current.toDataURL === 'function') {
+          dataUrl = ref.current.toDataURL('image/png');
         }
-      } else if (typeof ref.current.getCanvas === 'function') {
-        const canvas = ref.current.getCanvas();
-        dataUrl = canvas.toDataURL('image/png');
+      } catch (error) {
+        console.warn('toDataURL failed:', error);
       }
 
-      if (dataUrl) {
-        setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
+      // Method 2: Try getTrimmedCanvas if toDataURL failed
+      if (!dataUrl) {
+        try {
+          const canvas = ref.current.getTrimmedCanvas();
+          if (canvas && typeof canvas.toDataURL === 'function') {
+            dataUrl = canvas.toDataURL('image/png');
+          }
+        } catch (error) {
+          console.warn('getTrimmedCanvas failed:', error);
+        }
+      }
+
+      // Method 3: Try getCanvas as final fallback
+      if (!dataUrl) {
+        try {
+          const canvas = ref.current.getCanvas();
+          if (canvas && typeof canvas.toDataURL === 'function') {
+            dataUrl = canvas.toDataURL('image/png');
+          }
+        } catch (error) {
+          console.warn('getCanvas failed:', error);
+        }
+      }
+
+      if (dataUrl && dataUrl !== 'data:,') {
+        setSigData((prev) => ({ ...prev, [activeSig]: dataUrl }));
         console.log('Signature saved successfully');
+        setActiveSig(null);
       } else {
         console.error('Could not generate signature data URL');
+        alert('Could not save signature. Please try drawing again.');
       }
     } catch (error) {
       console.error('Error uploading signature:', error);
       alert('Error saving signature. Please try again.');
     }
-    
-    setActiveSig(null);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,22 +145,27 @@ export default function HospitalTripForm() {
     reader.onload = () => {
       const imageData = reader.result as string;
       const ref = getRefByType(activeSig);
-      if (ref?.current) {
+      if (ref?.current && activeSig) {
         try {
-          const img = new Image();
-          img.onload = () => {
-            if (typeof ref.current!.getCanvas === 'function') {
-              const canvas = ref.current!.getCanvas();
-              const ctx = canvas.getContext('2d');
-              if (ctx) {
+          // Try using fromDataURL if available
+          if (typeof ref.current.fromDataURL === 'function') {
+            ref.current.fromDataURL(imageData);
+          } else {
+            // Fallback to manual canvas drawing
+            const canvas = ref.current.getCanvas();
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              const img = new Image();
+              img.onload = () => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-              }
+              };
+              img.src = imageData;
             }
-          };
-          img.src = imageData;
+          }
         } catch (error) {
           console.error('Error loading image:', error);
+          alert('Error loading image. Please try again.');
         }
       }
     };
@@ -164,16 +173,32 @@ export default function HospitalTripForm() {
   };
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || !activeSig) return;
     
     const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl && typeof ref.current.loadFromDataURL === 'function') {
+    const dataUrl = sigData[activeSig];
+    
+    if (ref?.current && dataUrl) {
       try {
-        if (typeof ref.current.clear === 'function') {
-          ref.current.clear();
+        // Clear the canvas first
+        ref.current.clear();
+        
+        // Try to load the signature
+        if (typeof ref.current.fromDataURL === 'function') {
+          ref.current.fromDataURL(dataUrl);
+        } else {
+          // Fallback method
+          const canvas = ref.current.getCanvas();
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            const img = new Image();
+            img.onload = () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = dataUrl;
+          }
         }
-        ref.current.loadFromDataURL(dataUrl);
       } catch (error) {
         console.error('Error loading signature from data URL:', error);
       }
@@ -345,7 +370,7 @@ export default function HospitalTripForm() {
     try {
       return (
         <SignatureCanvas
-          ref={ref as React.RefObject<SignatureCanvasRef | null>}
+          ref={ref}
           penColor="black"
           canvasProps={{
             width: sigCanvasSize.width,
