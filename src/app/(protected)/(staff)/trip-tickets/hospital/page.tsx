@@ -54,7 +54,19 @@ export default function HospitalTripForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { user, loading } = useAuth();
+  const [sigReady, setSigReady] = useState(false);
 
+  useEffect(() => {
+    if (ref.current && typeof ref.current.getTrimmedCanvas === 'function') {
+      setSigReady(true);
+    }
+  }, [activeSig]); // or whatever triggers canvas mount
+
+  // Then in uploadSig:
+  if (!sigReady) {
+    alert('Signature pad is still loading. Please wait.');
+    return;
+  }
   const getRefByType = (type: string | null) => {
     if (type === 'nurse') return nurseSigRef;
     if (type === 'billing') return billingSigRef;
@@ -89,17 +101,23 @@ export default function HospitalTripForm() {
       alert('Signature pad is not properly loaded yet.');
       return;
     }
-
+    if (typeof ref?.current?.getTrimmedCanvas !== 'function') {
+      console.warn('Canvas not ready');
+      return;
+    }
     try {
       if (ref.current.isEmpty && ref.current.isEmpty()) {
         alert('Please draw a signature first');
         return;
       }
-
-      const canvas = ref.current.getTrimmedCanvas();
-      const dataUrl = canvas.toDataURL('image/png');
-      setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
-      setActiveSig(null);
+      setTimeout(() => {
+        if (ref.current && typeof ref.current.getTrimmedCanvas === 'function') {
+          const canvas = ref.current.getTrimmedCanvas();
+          const dataUrl = canvas.toDataURL('image/png');
+          setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
+          setActiveSig(null);
+        }
+      }, 100); // Try increasing delay to 200 if needed
     } catch (error) {
       console.error('Error saving signature:', error);
       alert('Error saving signature. Please try again.');
