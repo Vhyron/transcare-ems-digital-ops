@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     };
 
     const { data: result, error } = await supabase
-      .from("dispatch_form")
+      .from("dispatch_forms")
       .insert([dataToInsert])
       .select()
       .single();

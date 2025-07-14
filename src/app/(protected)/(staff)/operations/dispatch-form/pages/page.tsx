@@ -8,7 +8,13 @@ import { Plus, X, AlertCircle, CheckCircle } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import SignatureCanvas from 'react-signature-canvas';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 function SelectWithOthers({
   options,
   value,
@@ -30,6 +36,7 @@ function SelectWithOthers({
         onChange={(e) => onChange(e.target.value)}
         style={{ backgroundColor: '#0a0a0a', color: 'white' }}
       >
+        <option value="">Select an option</option>
         {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}
@@ -41,7 +48,7 @@ function SelectWithOthers({
         <input
           className="mt-2 border border-gray-300 rounded-md px-3 py-2 w-full"
           placeholder="Please specify"
-          value={otherValue}
+          value={otherValue || ''}
           onChange={(e) => onOtherChange?.(e.target.value)}
         />
       )}
@@ -65,8 +72,7 @@ export default function ConsolidatedDispatchForm() {
   const [notificationType, setNotificationType] = useState<'success' | 'error'>(
     'success'
   );
-  const [formStatus, setFormStatus] = useState('draft');
-  const [formId, setFormId] = useState('12345678');
+  const { user, loading } = useAuth();
 
   const [typeOfServiceOther, setTypeOfServiceOther] = useState('');
   const [crewCredentialOther, setCrewCredentialOther] = useState('');
@@ -102,10 +108,12 @@ export default function ConsolidatedDispatchForm() {
   };
 
   const [formData, setFormData] = useState({
-    id: '',
+    // Remove the id field from here - let the database generate it
+    // id: '', // Remove this line
+
     // Page 1 Fields
     event_title: '',
-    event_type: '',
+    event_type: 'PAID',
     event_owner: '',
     event_owner_contact: '',
     event_organizer: '',
@@ -115,22 +123,22 @@ export default function ConsolidatedDispatchForm() {
     event_call_time: '',
     estimated_crowd: '',
     event_venue: '',
-    type_of_events: '',
+    type_of_events: 'Religious Gathering',
     venue_type: '',
     brief_concept_description: '',
     expected_vip_guest: '',
-    crowd_access: '',
-    crowd_security: '',
-    crowd_risk: '',
+    crowd_access: 'Free Ticket',
+    crowd_security: 'Internal',
+    crowd_risk: 'Low',
     crowd_others: '',
-    economic_class: '',
-    crowd_type: '',
-    venue_safety_equipment: '',
+    economic_class: 'A',
+    crowd_type: '18-45',
+    venue_safety_equipment: 'Extinguisher',
 
     // Page 2 Fields
-    type_of_service: '',
+    type_of_service: 'Manpower',
     type_of_service_other: '',
-    crew_credential: '',
+    crew_credential: 'EMT',
     crew_credential_other: '',
     number_of_crew: '',
     ambulance_models: [
@@ -188,38 +196,41 @@ export default function ConsolidatedDispatchForm() {
     // Page 3 Fields
     page3_event_title: '',
     page3_total_crew: '',
-    crew_data: Array<{
-      name: '';
-      title: '';
-      position: '';
-      time_in: '';
-      time_out: '';
-      signature: '';
-    }>,
+    crew_data: Array(10)
+      .fill(null)
+      .map(() => ({
+        name: '',
+        title: '',
+        position: '',
+        time_in: '',
+        time_out: '',
+        signature: '',
+      })),
     page3_team_leader_signature: '',
     page3_client_representative_signature: '',
     page3_ems_supervisor_signature: '',
 
-    // Form Status
-    form_status: 'default',
+    form_status: 'draft',
     current_page: '',
   });
 
   const clearSig = () => {
     const ref = getRefByType(activeSig);
-    ref?.current?.clear();
+    if (ref?.current) {
+      ref.current.clear();
+    }
   };
 
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
+    if (ref?.current && !ref.current.isEmpty() && activeSig) {
       const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
 
       setSigData((prev) => ({
         ...prev,
-        [activeSig!]: {
+        [activeSig]: {
           image: dataUrl,
-          name: prev[activeSig!]?.name || '',
+          name: prev[activeSig]?.name || '',
         },
       }));
 
@@ -232,7 +243,18 @@ export default function ConsolidatedDispatchForm() {
       setNumberOfRows((prev) => prev + 1);
     }
   };
-
+  const handleCrewDataChange = (
+    rowIndex: number,
+    field: string,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      crew_data: prev.crew_data.map((crew, index) =>
+        index === rowIndex ? { ...crew, [field]: value } : crew
+      ),
+    }));
+  };
   const getRefByType = (
     type: 'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
   ) => {
@@ -241,7 +263,26 @@ export default function ConsolidatedDispatchForm() {
     if (type === 'EMSSupervisor') return emsSupervisorSigRef;
     return null;
   };
-
+  const handleNumberOfCrewChange = (value: string) => {
+    const numCrew = parseInt(value) || 0;
+    setFormData((prev) => ({
+      ...prev,
+      number_of_crew: value,
+      crew_data: Array(numCrew)
+        .fill(null)
+        .map(
+          (_, i) =>
+            prev.crew_data[i] || {
+              name: '',
+              title: '',
+              position: '',
+              time_in: '',
+              time_out: '',
+              signature: '',
+            }
+        ),
+    }));
+  };
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -288,10 +329,11 @@ export default function ConsolidatedDispatchForm() {
 
   const resetForm = () => {
     setFormData({
-      id: '',
+      // Remove id: '', from here too
+
       // Page 1 Fields
       event_title: '',
-      event_type: '',
+      event_type: 'PAID',
       event_owner: '',
       event_owner_contact: '',
       event_organizer: '',
@@ -301,22 +343,22 @@ export default function ConsolidatedDispatchForm() {
       event_call_time: '',
       estimated_crowd: '',
       event_venue: '',
-      type_of_events: '',
+      type_of_events: 'Religious Gathering',
       venue_type: '',
       brief_concept_description: '',
       expected_vip_guest: '',
-      crowd_access: '',
-      crowd_security: '',
-      crowd_risk: '',
+      crowd_access: 'Free Ticket',
+      crowd_security: 'Internal',
+      crowd_risk: 'Low',
       crowd_others: '',
-      economic_class: '',
-      crowd_type: '',
-      venue_safety_equipment: '',
+      economic_class: 'A',
+      crowd_type: '18-45',
+      venue_safety_equipment: 'Extinguisher',
 
       // Page 2 Fields
-      type_of_service: '',
+      type_of_service: 'Manpower',
       type_of_service_other: '',
-      crew_credential: '',
+      crew_credential: 'EMT',
       crew_credential_other: '',
       number_of_crew: '',
       ambulance_models: [
@@ -374,24 +416,30 @@ export default function ConsolidatedDispatchForm() {
       // Page 3 Fields
       page3_event_title: '',
       page3_total_crew: '',
-      crew_data: Array<{
-        name: '';
-        title: '';
-        position: '';
-        time_in: '';
-        time_out: '';
-        signature: '';
-      }>,
+      crew_data: Array(10)
+        .fill(null)
+        .map(() => ({
+          name: '',
+          title: '',
+          position: '',
+          time_in: '',
+          time_out: '',
+          signature: '',
+        })),
       page3_team_leader_signature: '',
       page3_client_representative_signature: '',
       page3_ems_supervisor_signature: '',
 
       // Form Status
-      form_status: 'default',
+      form_status: 'draft',
       current_page: '',
     });
     setSigData({});
+    setTypeOfServiceOther('');
+    setCrewCredentialOther('');
+    setCurrentPage(1);
   };
+
   interface AmbulanceModel {
     model: string;
     plate_number: string;
@@ -412,26 +460,63 @@ export default function ConsolidatedDispatchForm() {
       ),
     }));
   };
+
   const handleSubmit = async () => {
+    if (!user) {
+      alert('Please log in to submit the form');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const submitData = {
         ...formData,
-        form_status: formStatus,
+        form_status: 'draft',
         current_page: currentPage.toString(),
-        // Add signature data
         team_leader_signature: sigData.teamLeader?.image || '',
         client_representative_signature:
           sigData.clientRepresentative?.image || '',
         ems_supervisor_signature: sigData.EMSSupervisor?.image || '',
+        type_of_service_other:
+          formData.type_of_service === 'Others' ? typeOfServiceOther : '',
+        crew_credential_other:
+          formData.crew_credential === 'Others' ? crewCredentialOther : '',
       };
+
+      // Remove id field if it exists and is empty
+      if ('id' in submitData && (!submitData.id || submitData.id === '')) {
+        delete submitData.id;
+      }
 
       const baseUrl =
         process.env.NODE_ENV === 'development'
           ? 'http://localhost:3000'
           : window.location.origin;
 
-      const response = await fetch(`${baseUrl}/api/dispatch-forms`, {
+      // Get the current session token
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      console.log('Submitting form with user:', user.id);
+      console.log('Session token available:', !!session?.access_token);
+
+      const response = await fetch('/api/dispatch-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -451,10 +536,46 @@ export default function ConsolidatedDispatchForm() {
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
+      console.log('Form submitted successfully, ID:', formId);
+
       if (formId) {
-        setFormId(formId);
-        setFormStatus('submitted');
+        try {
+          console.log('Creating form submission tracking...');
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'dispatch_forms',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
+
+          if (!submissionResponse.ok) {
+            const errorData = await submissionResponse.json().catch(() => ({}));
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
+          }
+
+          const submissionResult = await submissionResponse.json();
+          console.log('Form submission tracking created:', submissionResult);
+        } catch (submissionError) {
+          console.error(
+            'Failed to create submission tracking:',
+            submissionError
+          );
+        }
       }
+      alert('Saved successfully!');
+
       resetForm();
       setSigData({});
       showNotificationMessage('Form submitted successfully!', 'success');
@@ -480,6 +601,24 @@ export default function ConsolidatedDispatchForm() {
       const width = modalCanvasRef.current.offsetWidth;
       const height = 750;
       setSigCanvasSize({ width, height });
+    }
+  }, [activeSig]);
+
+  useEffect(() => {
+    if (activeSig && sigData[activeSig]) {
+      const ref = getRefByType(activeSig);
+      if (ref?.current) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = ref.current!.getCanvas();
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          }
+        };
+        img.src = sigData[activeSig].image;
+      }
     }
   }, [activeSig]);
 
@@ -828,7 +967,7 @@ export default function ConsolidatedDispatchForm() {
               />
               <Input
                 placeholder="Type"
-                className="h-iten text-base"
+                className="h-10 text-base"
                 value={model.type}
                 onChange={(e) =>
                   handleAmbulanceModelChange(index, 'type', e.target.value)
@@ -856,8 +995,11 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block mb-2 font-medium">Number of Crew</label>
           <Input
+            type="number"
+            min="0"
+            max="50"
             className="h-10 text-base"
-            onChange={handleInputChange}
+            onChange={(e) => handleNumberOfCrewChange(e.target.value)}
             name="number_of_crew"
             value={formData.number_of_crew}
           />
@@ -867,13 +1009,21 @@ export default function ConsolidatedDispatchForm() {
             Full Name and Signature of MD
           </label>
           <div className="space-y-2">
-            {[1, 2, 3, 4].map((_, i) => (
+            {[1, 2, 3, 4].map((num, i) => (
               <Input
                 key={i}
-                placeholder={`Line ${i + 1}`}
+                placeholder={`MD ${num}`}
                 className="h-10 text-base"
-                name="md_names"
-                value={formData.md_names}
+                name={`md_name_${i}`}
+                value={formData.md_names.split('\n')[i] || ''}
+                onChange={(e) => {
+                  const lines = formData.md_names.split('\n');
+                  lines[i] = e.target.value;
+                  setFormData((prev) => ({
+                    ...prev,
+                    md_names: lines.join('\n'),
+                  }));
+                }}
               />
             ))}
           </div>
@@ -883,13 +1033,21 @@ export default function ConsolidatedDispatchForm() {
       <div>
         <label className="block mb-2 font-medium">Point of Destination</label>
         <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4].map((num, i) => (
             <Input
               key={i}
-              placeholder={`${i})`}
+              placeholder={`${num})`}
               className="h-10 text-base"
-              name="point_of_destination"
-              value={formData.point_of_destinations}
+              name={`destination_${i}`}
+              value={formData.point_of_destinations.split('\n')[i] || ''}
+              onChange={(e) => {
+                const lines = formData.point_of_destinations.split('\n');
+                lines[i] = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  point_of_destinations: lines.join('\n'),
+                }));
+              }}
             />
           ))}
         </div>
@@ -907,140 +1065,235 @@ export default function ConsolidatedDispatchForm() {
 
       <div className="border rounded-lg p-6 space-y-4">
         <h3 className="text-lg font-semibold border-b pb-2">Patient Census</h3>
-        {[
-          { label: 'Treated', field: 'WAIVER' },
-          { label: 'Transported', field: 'INSURANCE' },
-          { label: 'Refused', field: 'PRE-MED CHECK' },
-        ].map(({ label, field }) => (
-          <div
-            key={field}
-            className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center"
-          >
-            <span className="font-medium">{label}</span>
-            <div className="flex items-center gap-2">
-              <label className="text-sm">Trauma</label>
-              <Input
-                placeholder="#"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_trauma"
-                value={formData.treated_trauma}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm">Medical</label>
-              <Input
-                placeholder="#"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_medical"
-                value={formData.treated_medical}
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Rate"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_rate_1"
-                value={formData.treated_rate_1}
-              />
-              <span className="text-sm">/</span>
-              <Input
-                placeholder="Rate"
-                className="h-8 text-sm w-20"
-                onChange={handleInputChange}
-                name="treated_rate_2"
-                value={formData.treated_rate_2}
-              />
-            </div>
-            <span className="text-sm">{field}</span>
-            <div className="col-span-3">
-              <select
-                name={`${label.toLowerCase()}_${field
-                  .toLowerCase()
-                  .replace('-', '_')
-                  .replace(' ', '_')}`}
-                value={
-                  formData[
-                    `${label.toLowerCase()}_${field
-                      .toLowerCase()
-                      .replace('-', '_')
-                      .replace(' ', '_')}` as keyof typeof formData
-                  ] as string
-                }
-                onChange={handleInputChange}
-                className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
-                style={{ backgroundColor: '#0a0a0a', color: 'white' }}
-              >
-                <option value="">Select</option>
-                <option value="Y">Y</option>
-                <option value="N">N</option>
-                <option value="NA">N/A</option>
-              </select>
-            </div>
+
+        {/* Treated Row */}
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+          <span className="font-medium">Treated</span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Trauma</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_trauma"
+              value={formData.treated_trauma}
+            />
           </div>
-        ))}
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Medical</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_medical"
+              value={formData.treated_medical}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_rate_1"
+              value={formData.treated_rate_1}
+            />
+            <span className="text-sm">/</span>
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="treated_rate_2"
+              value={formData.treated_rate_2}
+            />
+          </div>
+          <span className="text-sm">WAIVER</span>
+          <div className="col-span-3">
+            <select
+              name="treated_waiver"
+              value={formData.treated_waiver}
+              onChange={handleInputChange}
+              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+            >
+              <option value="">Select</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              <option value="NA">N/A</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Transported Row */}
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+          <span className="font-medium">Transported</span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Trauma</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_trauma"
+              value={formData.transported_trauma}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Medical</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_medical"
+              value={formData.transported_medical}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_rate_1"
+              value={formData.transported_rate_1}
+            />
+            <span className="text-sm">/</span>
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="transported_rate_2"
+              value={formData.transported_rate_2}
+            />
+          </div>
+          <span className="text-sm">INSURANCE</span>
+          <div className="col-span-3">
+            <select
+              name="transported_insurance"
+              value={formData.transported_insurance}
+              onChange={handleInputChange}
+              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+            >
+              <option value="">Select</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              <option value="NA">N/A</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Refused Row */}
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 items-center">
+          <span className="font-medium">Refused</span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Trauma</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_trauma"
+              value={formData.refused_trauma}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Medical</label>
+            <Input
+              placeholder="#"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_medical"
+              value={formData.refused_medical}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_rate_1"
+              value={formData.refused_rate_1}
+            />
+            <span className="text-sm">/</span>
+            <Input
+              placeholder="Rate"
+              className="h-8 text-sm w-20"
+              onChange={handleInputChange}
+              name="refused_rate_2"
+              value={formData.refused_rate_2}
+            />
+          </div>
+          <span className="text-sm">PRE-MED CHECK</span>
+          <div className="col-span-3">
+            <select
+              name="refused_pre_med_check"
+              value={formData.refused_pre_med_check}
+              onChange={handleInputChange}
+              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+            >
+              <option value="">Select</option>
+              <option value="Y">Y</option>
+              <option value="N">N</option>
+              <option value="NA">N/A</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Time Records</h3>
-        {['Dispatch', 'On Scene', 'Departure', 'Arrival'].map(
-          (stage) => (
-            <div
-              key={stage}
-              className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
-            >
-              <label className="font-medium">{stage}</label>
-              <Input
-                placeholder="HRS"
-                name={`${stage.toLowerCase().replace(' ', '_')}_hrs`}
-                value={
-                  formData[
-                    `${stage
-                      .toLowerCase()
-                      .replace(' ', '_')}_hrs` as keyof typeof formData
-                  ] as string
-                }
-                className="h-10 text-base"
-                onChange={handleInputChange}
-              />
-              <Input
-                placeholder="MIN"
-                name={`${stage.toLowerCase().replace(' ', '_')}_min`}
-                value={
-                  formData[
-                    `${stage
-                      .toLowerCase()
-                      .replace(' ', '_')}_min` as keyof typeof formData
-                  ] as string
-                }
-                className="h-10 text-base"
-                onChange={handleInputChange}
-              />
-              <Input
-                placeholder="READING"
-                name={`${stage.toLowerCase().replace(' ', '_')}_reading`}
-                value={
-                  formData[
-                    `${stage
-                      .toLowerCase()
-                      .replace(' ', '_')}_reading` as keyof typeof formData
-                  ] as string
-                }
-                className="h-10 text-base"
-                onChange={handleInputChange}
-              />
-            </div>
-          )
-        )}
-
-        {['Working Time', 'Travel Time', 'Over-all'].map((label) => (
+        {['Dispatch', 'On Scene', 'Departure', 'Arrival'].map((stage) => (
           <div
-            key={label}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center"
+            key={stage}
+            className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center"
           >
-            <label className="font-medium">{label}</label>
+            <label className="font-medium">{stage}</label>
+            <Input
+              placeholder="HRS"
+              name={`${stage.toLowerCase().replace(' ', '_')}_hrs`}
+              value={
+                formData[
+                  `${stage
+                    .toLowerCase()
+                    .replace(' ', '_')}_hrs` as keyof typeof formData
+                ] as string
+              }
+              className="h-10 text-base"
+              onChange={handleInputChange}
+            />
+            <Input
+              placeholder="MIN"
+              name={`${stage.toLowerCase().replace(' ', '_')}_min`}
+              value={
+                formData[
+                  `${stage
+                    .toLowerCase()
+                    .replace(' ', '_')}_min` as keyof typeof formData
+                ] as string
+              }
+              className="h-10 text-base"
+              onChange={handleInputChange}
+            />
+            <Input
+              placeholder="READING"
+              name={`${stage.toLowerCase().replace(' ', '_')}_reading`}
+              value={
+                formData[
+                  `${stage
+                    .toLowerCase()
+                    .replace(' ', '_')}_reading` as keyof typeof formData
+                ] as string
+              }
+              className="h-10 text-base"
+              onChange={handleInputChange}
+            />
+          </div>
+        ))}
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Time Records</h3>
+
+          {/* Working Time */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <label className="font-medium">Working Time</label>
             <Input
               placeholder="HRS"
               className="h-10 text-base"
@@ -1056,7 +1309,45 @@ export default function ConsolidatedDispatchForm() {
               value={formData.working_time_min}
             />
           </div>
-        ))}
+
+          {/* Travel Time */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <label className="font-medium">Travel Time</label>
+            <Input
+              placeholder="HRS"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="travel_time_hrs"
+              value={formData.travel_time_hrs}
+            />
+            <Input
+              placeholder="MIN"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="travel_time_min"
+              value={formData.travel_time_min}
+            />
+          </div>
+
+          {/* Overall Time */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <label className="font-medium">Over-all</label>
+            <Input
+              placeholder="HRS"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="overall_hrs"
+              value={formData.overall_hrs}
+            />
+            <Input
+              placeholder="MIN"
+              className="h-10 text-base"
+              onChange={handleInputChange}
+              name="overall_min"
+              value={formData.overall_min}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1133,11 +1424,23 @@ export default function ConsolidatedDispatchForm() {
                 {Array.from({ length: numberOfRows }, (_, i) => (
                   <tr key={i} className="border-b">
                     <td className="p-2 text-center">{i + 1}</td>
-                    {Array.from({ length: 6 }, (_, j) => (
+                    {(
+                      [
+                        'name',
+                        'title',
+                        'position',
+                        'time_in',
+                        'time_out',
+                        'signature',
+                      ] as (keyof (typeof formData.crew_data)[number])[]
+                    ).map((field, j) => (
                       <td key={j} className="p-2">
                         <Input
                           className="h-8 text-sm"
-                          onChange={handleInputChange}
+                          value={formData.crew_data[i]?.[field] || ''}
+                          onChange={(e) =>
+                            handleCrewDataChange(i, field, e.target.value)
+                          }
                         />
                       </td>
                     ))}
@@ -1159,17 +1462,17 @@ export default function ConsolidatedDispatchForm() {
           {
             label: 'Team Leader',
             signatureLabel: 'Prepared and Filled by',
-            key: 'nurse',
+            key: 'teamLeader',
           },
           {
             label: 'Client Representative',
             signatureLabel: 'Conformed by',
-            key: 'billing',
+            key: 'clientRepresentative',
           },
           {
             label: 'EMS Supervisor',
             signatureLabel: 'Noted by',
-            key: 'ambulance',
+            key: 'EMSSupervisor',
           },
         ].map(({ label, signatureLabel, key }) => (
           <div key={key}>
@@ -1177,7 +1480,7 @@ export default function ConsolidatedDispatchForm() {
               {signatureLabel} ({label})
             </label>
             <div
-              className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-50 cursor-pointer transition-colors"
+              className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
               onClick={() => setActiveSig(key as typeof activeSig)}
             >
               {sigData[key] ? (
@@ -1226,31 +1529,10 @@ export default function ConsolidatedDispatchForm() {
         <div className=" rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold">
                 Transcare Emergency Medical Services
               </h1>
-              <p className="text-gray-600">Operation Dispatch Form</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Status:</span>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    formStatus === 'submitted'
-                      ? 'bg-green-100 text-green-800'
-                      : formStatus === 'completed'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}
-                >
-                  {formStatus.toUpperCase()}
-                </span>
-              </div>
-              {formId && (
-                <span className="text-sm text-gray-500">
-                  ID: {formId.slice(0, 8)}...
-                </span>
-              )}
+              <p className="">Operation Dispatch Form</p>
             </div>
           </div>
         </div>
@@ -1282,9 +1564,19 @@ export default function ConsolidatedDispatchForm() {
               </Button>
             </div>
             <div className="flex gap-4 mt-6">
-              <Button onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+              <Button
+                className="mt-6"
+                onClick={handleSubmit}
+                disabled={isSubmitting || loading || !user}
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </Button>
+
+              {!user && !loading && (
+                <p className="text-red-500 mt-2">
+                  Please log in to submit the form
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -1339,25 +1631,42 @@ export default function ConsolidatedDispatchForm() {
                   />
                 </div>
 
-                <div className="absolute left-6 flex gap-2 items-center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    id="sig-upload"
-                    onChange={handleFileUpload}
-                  />
-                  <label htmlFor="sig-upload">
-                    <Button size="sm" variant="secondary">
-                      Upload
+                <div className="flex justify-between items-center">
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="sig-upload"
+                      onChange={handleFileUpload}
+                    />
+                    <label htmlFor="sig-upload">
+                      <Button size="sm" variant="secondary" type="button">
+                        Upload
+                      </Button>
+                    </label>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={clearSig}
+                      type="button"
+                    >
+                      Clear
                     </Button>
-                  </label>
-                  <Button size="sm" variant="secondary" onClick={clearSig}>
-                    Clear
-                  </Button>
-                  <Button size="sm" onClick={uploadSig}>
-                    Save
-                  </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setActiveSig(null)}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={uploadSig} type="button">
+                      Save
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Dialog.Content>

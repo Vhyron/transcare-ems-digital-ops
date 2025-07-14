@@ -1,13 +1,20 @@
-"use client";
+'use client';
 
-import { useRef, useEffect, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Input } from "@/components/ui/input";
-import { ConductionRefusalFormData } from "@/types/conduction-refusal-form";
+import { useRef, useEffect, useState } from 'react';
+import SignatureCanvas from 'react-signature-canvas';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Button } from '@/components/ui/button';
+import { Plus, X } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Input } from '@/components/ui/input';
+import { ConductionRefusalFormData } from '@/types/conduction-refusal-form';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider'; // Import your auth provider
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function ConductionRefusalForm() {
   const witnessSignature = useRef<SignatureCanvas | null>(null);
@@ -20,57 +27,58 @@ export default function ConductionRefusalForm() {
     width: 950,
     height: 750,
   });
+  const { user, loading } = useAuth();
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
-  const [activeSig, setActiveSig] = useState<"witness" | null>(null);
+  const [activeSig, setActiveSig] = useState<'witness' | null>(null);
   const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: "";
+    type: 'success' | 'error';
+    text: '';
   } | null>(null);
 
   const [formData, setFormData] = useState<ConductionRefusalFormData>({
-    id: "",
-    created_at: "",
-    updated_at: "",
+    id: '',
+    created_at: '',
+    updated_at: '',
 
     // Patient General Information
-    patient_first_name: "",
-    patient_middle_name: "",
-    patient_last_name: "",
+    patient_first_name: '',
+    patient_middle_name: '',
+    patient_last_name: '',
     patient_age: 0,
-    patient_sex: "",
-    patient_birthdate: "",
-    patient_citizenship: "",
-    patient_address: "",
-    patient_contact_no: "",
+    patient_sex: '',
+    patient_birthdate: '',
+    patient_citizenship: '',
+    patient_address: '',
+    patient_contact_no: '',
 
     // Next of Kin/Legal Guardian Information
-    kin_name: "",
-    kin_relation: "",
-    kin_contact_no: "",
-    kin_address: "",
-    medical_record: "",
-    date_accomplished: "",
+    kin_name: '',
+    kin_relation: '',
+    kin_contact_no: '',
+    kin_address: '',
+    medical_record: '',
+    date_accomplished: '',
 
     // Vital Signs
-    vital_bp: "",
-    vital_pulse: "",
-    vital_resp: "",
-    vital_skin: "",
-    vital_pupils: "",
-    vital_loc: "",
+    vital_bp: '',
+    vital_pulse: '',
+    vital_resp: '',
+    vital_skin: '',
+    vital_pupils: '',
+    vital_loc: '',
 
     // Narrative
-    narrative_description: "",
+    narrative_description: '',
 
     // Witness Information
-    witness_name: "",
-    witness_date: "",
-    witness_signature_image: "",
+    witness_name: '',
+    witness_date: '',
+    witness_signature_image: '',
 
     // Metadata
-    completed_by: "",
-    form_status: "draft",
+    completed_by: '',
+    form_status: 'draft',
     oriented_person_place_time: false,
     coherent_speech: false,
     hallucinations: false,
@@ -88,12 +96,12 @@ export default function ConductionRefusalForm() {
   ) => {
     const { name, value, type } = e.target;
 
-    if (type === "checkbox") {
+    if (type === 'checkbox') {
       const checkbox = e.target as HTMLInputElement;
       const checked = checkbox.checked;
 
-      if (name.includes(".")) {
-        const keys = name.split(".");
+      if (name.includes('.')) {
+        const keys = name.split('.');
         setFormData((prev) => {
           const newData = { ...prev };
           let current: any = newData;
@@ -111,19 +119,19 @@ export default function ConductionRefusalForm() {
           [name]: checked,
         }));
       }
-    } else if (type === "select-one") {
+    } else if (type === 'select-one') {
       const mentalStatusFields = [
-        "oriented_person_place_time",
-        "coherent_speech",
-        "hallucinations",
-        "suicidal_homicidal_ideation",
-        "understands_refusal_consequences",
+        'oriented_person_place_time',
+        'coherent_speech',
+        'hallucinations',
+        'suicidal_homicidal_ideation',
+        'understands_refusal_consequences',
       ];
 
       if (mentalStatusFields.includes(name)) {
         setFormData((prev) => ({
           ...prev,
-          [name]: value === "yes",
+          [name]: value === 'yes',
         }));
       } else {
         setFormData((prev) => ({
@@ -132,8 +140,8 @@ export default function ConductionRefusalForm() {
         }));
       }
     } else {
-      if (name.includes(".")) {
-        const keys = name.split(".");
+      if (name.includes('.')) {
+        const keys = name.split('.');
         setFormData((prev) => {
           const newData = { ...prev };
           let current: any = newData;
@@ -156,48 +164,48 @@ export default function ConductionRefusalForm() {
 
   const resetForm = () => {
     setFormData({
-      id: "",
-      created_at: "",
-      updated_at: "",
+      id: '',
+      created_at: '',
+      updated_at: '',
 
       // Patient General Information
-      patient_first_name: "",
-      patient_middle_name: "",
-      patient_last_name: "",
+      patient_first_name: '',
+      patient_middle_name: '',
+      patient_last_name: '',
       patient_age: 0,
-      patient_sex: "",
-      patient_birthdate: "",
-      patient_citizenship: "",
-      patient_address: "",
-      patient_contact_no: "",
+      patient_sex: '',
+      patient_birthdate: '',
+      patient_citizenship: '',
+      patient_address: '',
+      patient_contact_no: '',
 
       // Next of Kin/Legal Guardian Information
-      kin_name: "",
-      kin_relation: "",
-      kin_contact_no: "",
-      kin_address: "",
-      medical_record: "",
-      date_accomplished: "",
+      kin_name: '',
+      kin_relation: '',
+      kin_contact_no: '',
+      kin_address: '',
+      medical_record: '',
+      date_accomplished: '',
 
       // Vital Signs
-      vital_bp: "",
-      vital_pulse: "",
-      vital_resp: "",
-      vital_skin: "",
-      vital_pupils: "",
-      vital_loc: "",
+      vital_bp: '',
+      vital_pulse: '',
+      vital_resp: '',
+      vital_skin: '',
+      vital_pupils: '',
+      vital_loc: '',
 
       // Narrative
-      narrative_description: "",
+      narrative_description: '',
 
       // Witness Information
-      witness_name: "",
-      witness_date: "",
-      witness_signature_image: "",
+      witness_name: '',
+      witness_date: '',
+      witness_signature_image: '',
 
       // Metadata
-      completed_by: "",
-      form_status: "draft",
+      completed_by: '',
+      form_status: 'draft',
       oriented_person_place_time: false,
       coherent_speech: false,
       hallucinations: false,
@@ -212,7 +220,7 @@ export default function ConductionRefusalForm() {
 
   const getRefByType = (type: string | null) => {
     switch (type) {
-      case "witness":
+      case 'witness':
         return witnessSignature;
       default:
         return null;
@@ -220,15 +228,20 @@ export default function ConductionRefusalForm() {
   };
 
   const handleSubmit = async () => {
+    if (!user) {
+      alert('Please log in to submit the form');
+      return;
+    }
+
     setIsSubmitting(true);
     console.log(JSON.stringify(formData, null, 2));
 
     try {
       // Step 1: Submit the conduction refusal form
-      const response = await fetch("/api/conduction-refusal-form", {
-        method: "POST",
+      const response = await fetch('/api/conduction-refusal-form', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ formData }),
       });
@@ -237,46 +250,86 @@ export default function ConductionRefusalForm() {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           `HTTP ${response.status}: ${
-            errorData.error || "Failed to submit form"
+            errorData.error || 'Failed to submit form'
           }`
         );
+      }
+      const baseUrl =
+        process.env.NODE_ENV === 'development'
+          ? 'http://localhost:3000'
+          : window.location.origin;
+
+      // Get the current session token
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
       }
 
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
+      console.log('Form submitted successfully, ID:', formId);
+
       if (formId) {
         try {
-          await fetch("/api/form-submissions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              form_type: "condcuction_refusal_form", 
-              reference_id: formId,
-              status: "pending",
-              submitted_by: "current_user_id",
-              reviewed_by: null,
-            }),
-          });
+          console.log('Creating form submission tracking...');
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'conduction_refusal_forms',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
+
+          if (!submissionResponse.ok) {
+            const errorData = await submissionResponse.json().catch(() => ({}));
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
+          }
+
+          const submissionResult = await submissionResponse.json();
+          console.log('Form submission tracking created:', submissionResult);
         } catch (submissionError) {
           console.error(
-            "Failed to create submission tracking:",
+            'Failed to create submission tracking:',
             submissionError
           );
         }
       }
 
-      alert("Saved successfully!");
+      alert('Saved successfully!');
 
       resetForm();
       setSigData({});
     } catch (error) {
-      console.error("Error saving:", error);
+      console.error('Error saving:', error);
       alert(
         `Failed to save: ${
-          error instanceof Error ? error.message : "Unknown error"
+          error instanceof Error ? error.message : 'Unknown error'
         }`
       );
     } finally {
@@ -290,7 +343,7 @@ export default function ConductionRefusalForm() {
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
     if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
+      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
 
       setFormData((prev) => ({
         ...prev,
@@ -301,7 +354,7 @@ export default function ConductionRefusalForm() {
         ...prev,
         [activeSig!]: {
           image: dataUrl,
-          name: prev[activeSig!]?.name || "",
+          name: prev[activeSig!]?.name || '',
         },
       }));
 
@@ -315,11 +368,11 @@ export default function ConductionRefusalForm() {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const imageData = reader.result as "";
+      const imageData = reader.result as '';
       if (witnessSignature.current) {
         const img = new Image();
         img.onload = () => {
-          const ctx = witnessSignature.current!.getCanvas().getContext("2d");
+          const ctx = witnessSignature.current!.getCanvas().getContext('2d');
           ctx?.clearRect(
             0,
             0,
@@ -372,7 +425,7 @@ export default function ConductionRefusalForm() {
   // };
   useEffect(() => {
     const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ""];
+    const dataUrl = sigData[activeSig || ''];
     if (ref?.current && dataUrl) {
       ref.current.clear();
       (ref.current as any).loadFromDataURL(dataUrl);
@@ -401,9 +454,9 @@ export default function ConductionRefusalForm() {
       {message && (
         <div
           className={`mb-4 p-4 rounded-md ${
-            message.type === "success"
-              ? "bg-green-100 border border-green-400 text-green-700"
-              : "bg-red-100 border border-red-400 text-red-700"
+            message.type === 'success'
+              ? 'bg-green-100 border border-green-400 text-green-700'
+              : 'bg-red-100 border border-red-400 text-red-700'
           }`}
         >
           {message.text}
@@ -429,7 +482,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_first_name"
-              value={formData.patient_first_name || ""}
+              value={formData.patient_first_name || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -439,7 +492,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_middle_name"
-              value={formData.patient_middle_name || ""}
+              value={formData.patient_middle_name || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -449,7 +502,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_last_name"
-              value={formData.patient_last_name || ""}
+              value={formData.patient_last_name || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -462,7 +515,7 @@ export default function ConductionRefusalForm() {
               type="number"
               className="w-full"
               name="patient_age"
-              value={formData.patient_age || ""}
+              value={formData.patient_age || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -472,7 +525,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_sex"
-              value={formData.patient_sex || ""}
+              value={formData.patient_sex || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -482,7 +535,7 @@ export default function ConductionRefusalForm() {
               type="date"
               className="w-full"
               name="patient_birthdate"
-              value={formData.patient_birthdate || ""}
+              value={formData.patient_birthdate || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -492,7 +545,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_citizenship"
-              value={formData.patient_citizenship || ""}
+              value={formData.patient_citizenship || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -505,7 +558,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_address"
-              value={formData.patient_address || ""}
+              value={formData.patient_address || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -515,7 +568,7 @@ export default function ConductionRefusalForm() {
               type="text"
               className="w-full"
               name="patient_contact_no"
-              value={formData.patient_contact_no || ""}
+              value={formData.patient_contact_no || ''}
               onChange={handleInputChange}
             />
           </div>
@@ -536,7 +589,7 @@ export default function ConductionRefusalForm() {
                 type="text"
                 className="w-full"
                 name="kin_name"
-                value={formData.kin_name || ""}
+                value={formData.kin_name || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -547,7 +600,7 @@ export default function ConductionRefusalForm() {
                   type="text"
                   className="w-full"
                   name="kin_relation"
-                  value={formData.kin_relation || ""}
+                  value={formData.kin_relation || ''}
                   onChange={handleInputChange}
                 />
               </div>
@@ -557,7 +610,7 @@ export default function ConductionRefusalForm() {
                   type="text"
                   className="w-full"
                   name="kin_contact_no"
-                  value={formData.kin_contact_no || ""}
+                  value={formData.kin_contact_no || ''}
                   onChange={handleInputChange}
                 />
               </div>
@@ -568,7 +621,7 @@ export default function ConductionRefusalForm() {
                 type="text"
                 className="w-full"
                 name="kin_address"
-                value={formData.kin_address || ""}
+                value={formData.kin_address || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -581,7 +634,7 @@ export default function ConductionRefusalForm() {
                 type="text"
                 className="w-full"
                 name="medical_record"
-                value={formData.medical_record || ""}
+                value={formData.medical_record || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -591,7 +644,7 @@ export default function ConductionRefusalForm() {
                 type="date"
                 className="w-full"
                 name="date_accomplished"
-                value={formData.date_accomplished || ""}
+                value={formData.date_accomplished || ''}
                 onChange={handleInputChange}
               />
             </div>
@@ -603,12 +656,12 @@ export default function ConductionRefusalForm() {
       <div className="border rounded-lg p-6 shadow-sm space-y-6">
         <div className="grid grid-cols-6 gap-4">
           {[
-            { label: "BP", field: "vital_bp" },
-            { label: "PULSE", field: "vital_pulse" },
-            { label: "RESP.", field: "vital_resp" },
-            { label: "SKIN", field: "vital_skin" },
-            { label: "PUPILS", field: "vital_pupils" },
-            { label: "LOC", field: "vital_loc" },
+            { label: 'BP', field: 'vital_bp' },
+            { label: 'PULSE', field: 'vital_pulse' },
+            { label: 'RESP.', field: 'vital_resp' },
+            { label: 'SKIN', field: 'vital_skin' },
+            { label: 'PUPILS', field: 'vital_pupils' },
+            { label: 'LOC', field: 'vital_loc' },
           ].map((field, index) => (
             <div key={index} className="flex flex-col">
               <label className="font-semibold text-sm mb-1 text-left">
@@ -621,7 +674,7 @@ export default function ConductionRefusalForm() {
                 value={
                   (formData[
                     field.field as keyof ConductionRefusalFormData
-                  ] as string) || ""
+                  ] as string) || ''
                 }
                 onChange={handleInputChange}
               />
@@ -632,22 +685,22 @@ export default function ConductionRefusalForm() {
         <div className="space-y-3">
           {[
             {
-              question: "Oriented to person, place and time?",
-              field: "oriented_person_place_time",
+              question: 'Oriented to person, place and time?',
+              field: 'oriented_person_place_time',
             },
-            { question: "Coherent speech?", field: "coherent_speech" },
+            { question: 'Coherent speech?', field: 'coherent_speech' },
             {
-              question: "Auditory and/or visual hallucinations?",
-              field: "hallucinations",
+              question: 'Auditory and/or visual hallucinations?',
+              field: 'hallucinations',
             },
             {
-              question: "Suicidal and/or homicidal ideation?",
-              field: "suicidal_homicidal_ideation",
+              question: 'Suicidal and/or homicidal ideation?',
+              field: 'suicidal_homicidal_ideation',
             },
             {
               question:
-                "Able to repeat understanding of their condition and consequences of treatment refusal?",
-              field: "understands_refusal_consequences",
+                'Able to repeat understanding of their condition and consequences of treatment refusal?',
+              field: 'understands_refusal_consequences',
             },
           ].map((item, index) => (
             <div className="grid grid-cols-12 gap-4 items-center" key={index}>
@@ -659,8 +712,8 @@ export default function ConductionRefusalForm() {
                   className="w-full border rounded-md px-2 py-1"
                   value={
                     formData[item.field as keyof ConductionRefusalFormData]
-                      ? "yes"
-                      : "no"
+                      ? 'yes'
+                      : 'no'
                   }
                   onChange={handleInputChange}
                 >
@@ -685,7 +738,7 @@ export default function ConductionRefusalForm() {
           <textarea
             className="w-full border rounded-md p-2 h-20 resize-none"
             name="narrative_description"
-            value={formData.narrative_description || ""}
+            value={formData.narrative_description || ''}
             onChange={handleInputChange}
             placeholder="Enter narrative description..."
           />
@@ -773,7 +826,7 @@ export default function ConductionRefusalForm() {
               </label>
               <div
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[156px] hover:bg-gray-100 cursor-pointer"
-                onClick={() => setActiveSig("witness")}
+                onClick={() => setActiveSig('witness')}
               >
                 {formData.witness_signature_image ? (
                   <img
@@ -796,7 +849,7 @@ export default function ConductionRefusalForm() {
                   type="text"
                   className="w-full"
                   name="witness_name"
-                  value={formData.witness_name || ""}
+                  value={formData.witness_name || ''}
                   onChange={handleInputChange}
                 />
               </div>
@@ -806,7 +859,7 @@ export default function ConductionRefusalForm() {
                   type="date"
                   className="w-full"
                   name="witness_date"
-                  value={formData.witness_date || ""}
+                  value={formData.witness_date || ''}
                   onChange={handleInputChange}
                 />
               </div>
@@ -819,7 +872,7 @@ export default function ConductionRefusalForm() {
           >
             <Dialog.Portal>
               <Dialog.Title>
-                <VisuallyHidden> {activeSig === "witness"}</VisuallyHidden>
+                <VisuallyHidden> {activeSig === 'witness'}</VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
               <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -840,7 +893,7 @@ export default function ConductionRefusalForm() {
                       canvasProps={{
                         width: sigCanvasSize.width,
                         height: sigCanvasSize.height,
-                        className: "bg-gray-100 rounded shadow",
+                        className: 'bg-gray-100 rounded shadow',
                       }}
                     />
                   </div>
@@ -869,15 +922,21 @@ export default function ConductionRefusalForm() {
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting ? "Submitting..." : "Submit Form"}
-          </Button>
+          <div className="flex gap-4 mt-6">
+            <Button
+              className="mt-6"
+              onClick={handleSubmit}
+              disabled={isSubmitting || loading || !user}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </Button>
+
+            {!user && !loading && (
+              <p className="text-red-500 mt-2">
+                Please log in to submit the form
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

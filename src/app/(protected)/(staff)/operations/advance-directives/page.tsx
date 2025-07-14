@@ -1,16 +1,24 @@
-"use client";
+'use client';
 
-import { useRef, useEffect, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Input } from "@/components/ui/input";
+import { useRef, useEffect, useState } from 'react';
+import SignatureCanvas from 'react-signature-canvas';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Button } from '@/components/ui/button';
+import { Plus, X } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Input } from '@/components/ui/input';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function AdvanceDirectivesForm() {
   const decisionMakerSignature = useRef<SignatureCanvas | null>(null);
   const physicianSignature = useRef<SignatureCanvas | null>(null);
+  const { user, loading } = useAuth();
 
   const [sigCanvasSize, setSigCanvasSize] = useState({
     width: 950,
@@ -19,7 +27,7 @@ export default function AdvanceDirectivesForm() {
 
   const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
-    "decisionMaker" | "physician" | null
+    'decisionMaker' | 'physician' | null
   >(null);
 
   const [sigData, setSigData] = useState<{
@@ -34,7 +42,7 @@ export default function AdvanceDirectivesForm() {
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
     if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL("image/png");
+      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
 
       setFormData((prev) => ({
         ...prev,
@@ -48,7 +56,7 @@ export default function AdvanceDirectivesForm() {
         ...prev,
         [activeSig!]: {
           image: dataUrl,
-          name: prev[activeSig!]?.name || "",
+          name: prev[activeSig!]?.name || '',
         },
       }));
 
@@ -57,25 +65,25 @@ export default function AdvanceDirectivesForm() {
   };
   const [formData, setFormData] = useState({
     patient: {
-      firstName: "",
-      middleName: "",
-      lastName: "",
-      age: "",
-      sex: "",
-      birthdate: "",
-      citizenship: "",
-      address: "",
-      contactNo: "",
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      age: '',
+      sex: '',
+      birthdate: '',
+      citizenship: '',
+      address: '',
+      contactNo: '',
     },
     nextOfKin: {
-      name: "",
-      relation: "",
-      contactNo: "",
-      address: "",
+      name: '',
+      relation: '',
+      contactNo: '',
+      address: '',
     },
     medicalRecord: {
-      recordNumber: "",
-      dateAccomplished: "",
+      recordNumber: '',
+      dateAccomplished: '',
     },
     carePreferences: {
       attemptCPR: false,
@@ -84,35 +92,37 @@ export default function AdvanceDirectivesForm() {
       limitedInterventionOptions: {
         ivFluid: false,
         ngTube: false,
+        gtTube: false,
         o2Therapy: false,
         cpapBipap: false,
         antibiotics: false,
+        laboratory: false,
         diagnostics: false,
       },
       fullTreatment: false,
     },
-    additionalOrders: "",
+    additionalOrders: '',
     discussedWith: {
       withPatient: false,
       withKin: false,
     },
     decisionMaker: {
-      name: "",
-      relation: "",
-      dateSigned: "",
+      name: '',
+      relation: '',
+      dateSigned: '',
       signature: null as string | null,
     },
     physician: {
-      name: "",
-      prcLicenseNumber: "",
-      dateSigned: "",
+      name: '',
+      prcLicenseNumber: '',
+      dateSigned: '',
       signature: null as string | null,
     },
   });
 
   const getRefByType = (type: string | null) => {
-    if (type === "decisionMaker") return decisionMakerSignature;
-    if (type === "physician") return physicianSignature;
+    if (type === 'decisionMaker') return decisionMakerSignature;
+    if (type === 'physician') return physicianSignature;
     return null;
   };
 
@@ -127,7 +137,7 @@ export default function AdvanceDirectivesForm() {
       if (ref?.current) {
         const img = new Image();
         img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext("2d");
+          const ctx = ref.current!.getCanvas().getContext('2d');
           ctx?.clearRect(
             0,
             0,
@@ -149,7 +159,7 @@ export default function AdvanceDirectivesForm() {
   };
   useEffect(() => {
     const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ""];
+    const dataUrl = sigData[activeSig || ''];
     if (ref?.current && dataUrl) {
       ref.current.clear();
       (ref.current as any).loadFromDataURL(dataUrl);
@@ -169,12 +179,13 @@ export default function AdvanceDirectivesForm() {
     keyof typeof formData.carePreferences.limitedInterventionOptions;
 
   const limitedOptions: { key: LimitedInterventionKey; label: string }[] = [
-    { key: "ivFluid", label: "IV Fluid therapy" },
-    { key: "ngTube", label: "Nasogastric tube feeding" },
-    { key: "o2Therapy", label: "O2 therapy" },
-    { key: "cpapBipap", label: "Use of CPAP/BiPAP" },
-    { key: "antibiotics", label: "Antibiotics therapy" },
-    { key: "diagnostics", label: "Diagnostics work up" },
+    { key: 'ivFluid', label: 'IV Fluid therapy' },
+    { key: 'ngTube', label: 'Nasogastric tube feeding' },
+    { key: 'gtTube', label: 'Gastrostomy tube feeding' },
+    { key: 'cpapBipap', label: 'Use of CPAP/BiPAP' },
+    { key: 'antibiotics', label: 'Antibiotics therapy' },
+    { key: 'laboratory', label: 'Laboratory work up' },
+    { key: 'diagnostics', label: 'Diagnostics work up' },
   ];
 
   const handleInputChange = (
@@ -184,76 +195,59 @@ export default function AdvanceDirectivesForm() {
   ) => {
     const { name, value, type } = e.target;
 
-    if (type === "checkbox") {
+    let processedValue: string | boolean = value;
+
+    if (type === 'checkbox') {
       const checkbox = e.target as HTMLInputElement;
-      const checked = checkbox.checked;
+      processedValue = checkbox.checked;
+    }
 
-      // Handle nested object updates
-      if (name.includes(".")) {
-        const keys = name.split(".");
-        setFormData((prev) => {
-          const newData = { ...prev };
-          let current: any = newData;
+    if (value === 'yes') processedValue = true;
+    else if (value === 'no') processedValue = false;
 
-          for (let i = 0; i < keys.length - 1; i++) {
-            current = current[keys[i]];
-          }
+    if (name.includes('.')) {
+      const keys = name.split('.');
+      setFormData((prev) => {
+        const newData = { ...prev };
+        let current: any = newData;
 
-          current[keys[keys.length - 1]] = checked;
-          return newData;
-        });
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: checked,
-        }));
-      }
+        for (let i = 0; i < keys.length - 1; i++) {
+          current = current[keys[i]];
+        }
+
+        current[keys[keys.length - 1]] = processedValue;
+        return newData;
+      });
     } else {
-      // Handle nested object updates for regular inputs
-      if (name.includes(".")) {
-        const keys = name.split(".");
-        setFormData((prev) => {
-          const newData = { ...prev };
-          let current: any = newData;
-
-          for (let i = 0; i < keys.length - 1; i++) {
-            current = current[keys[i]];
-          }
-
-          current[keys[keys.length - 1]] = value;
-          return newData;
-        });
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: processedValue,
+      }));
     }
   };
 
   const resetForm = () => {
     setFormData({
       patient: {
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        age: "",
-        sex: "",
-        birthdate: "",
-        citizenship: "",
-        address: "",
-        contactNo: "",
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        age: '',
+        sex: '',
+        birthdate: '',
+        citizenship: '',
+        address: '',
+        contactNo: '',
       },
       nextOfKin: {
-        name: "",
-        relation: "",
-        contactNo: "",
-        address: "",
+        name: '',
+        relation: '',
+        contactNo: '',
+        address: '',
       },
       medicalRecord: {
-        recordNumber: "",
-        dateAccomplished: "",
+        recordNumber: '',
+        dateAccomplished: '',
       },
       carePreferences: {
         attemptCPR: false,
@@ -262,28 +256,30 @@ export default function AdvanceDirectivesForm() {
         limitedInterventionOptions: {
           ivFluid: false,
           ngTube: false,
+          gtTube: false,
           o2Therapy: false,
           cpapBipap: false,
           antibiotics: false,
+          laboratory: false,
           diagnostics: false,
         },
         fullTreatment: false,
       },
-      additionalOrders: "",
+      additionalOrders: '',
       discussedWith: {
         withPatient: false,
         withKin: false,
       },
       decisionMaker: {
-        name: "",
-        relation: "",
-        dateSigned: "",
+        name: '',
+        relation: '',
+        dateSigned: '',
         signature: null,
       },
       physician: {
-        name: "",
-        prcLicenseNumber: "",
-        dateSigned: "",
+        name: '',
+        prcLicenseNumber: '',
+        dateSigned: '',
         signature: null,
       },
     });
@@ -291,64 +287,113 @@ export default function AdvanceDirectivesForm() {
   };
 
   const handleSubmit = async () => {
-  setIsSubmitting(true);
-  try {
-    // Step 1: Submit the advance directives form
-    const response = await fetch("/api/advance-directives", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ formData }),
-    });
+    if (!user) {
+      alert('Please log in to submit the form');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const baseUrl =
+        process.env.NODE_ENV === 'development'
+          ? 'http://localhost:3000'
+          : window.location.origin;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        `HTTP ${response.status}: ${
-          errorData.error || "Failed to submit form"
+      // Get the current session token
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      // Add authorization header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
+      }
+
+      console.log('Submitting form with user:', user.id);
+      console.log('Session token available:', !!session?.access_token);
+
+      const response = await fetch('/api/advance-directives', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          `HTTP ${response.status}: ${
+            errorData.error || 'Failed to submit form'
+          }`
+        );
+      }
+
+      const result = await response.json();
+      const formId = result.id || result.data?.id;
+
+      console.log('Form submitted successfully, ID:', formId);
+
+      if (formId) {
+        try {
+          console.log('Creating form submission tracking...');
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'advance_directives',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
+
+          if (!submissionResponse.ok) {
+            const errorData = await submissionResponse.json().catch(() => ({}));
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
+          }
+
+          const submissionResult = await submissionResponse.json();
+          console.log('Form submission tracking created:', submissionResult);
+        } catch (submissionError) {
+          console.error(
+            'Failed to create submission tracking:',
+            submissionError
+          );
+        }
+      }
+
+      alert('Saved successfully!');
+
+      resetForm();
+      setSigData({});
+    } catch (error) {
+      console.error('Error saving:', error);
+      alert(
+        `Failed to save: ${
+          error instanceof Error ? error.message : 'Unknown error'
         }`
       );
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const result = await response.json();
-    const formId = result.id || result.data?.id;
-
-    if (formId) {
-      try {
-        await fetch("/api/form-submissions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            form_type: "advance_directives",
-            reference_id: formId,
-            status: "pending",
-            submitted_by: "current_user_id", 
-            reviewed_by: null,
-          }),
-        });
-      } catch (submissionError) {
-        console.error("Failed to create submission tracking:", submissionError);
-      }
-    }
-
-    alert("Saved successfully!");
-
-    resetForm();
-    setSigData({});
-  } catch (error) {
-    console.error("Error saving:", error);
-    alert(
-      `Failed to save: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="p-10 w-full">
@@ -541,90 +586,145 @@ export default function AdvanceDirectivesForm() {
         </div>
       </div>
 
-      <div className="border rounded-lg p-6 shadow-sm space-y-8 mb-6">
-        <h2 className="text-lg font-semibold mb-4">PREFERRED LEVEL OF CARE</h2>
+      <div className="border rounded-lg p-6 space-y-6">
+        <h2 className="text-xl font-bold border-b pb-2">
+          PREFERRED LEVEL OF CARE
+        </h2>
 
-        {/* CPR */}
-        <div className="mb-4">
+        {/* CPR Section */}
+        <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">CARDIOPULMONARY RESUSCITATION</h3>
-          <label className="flex items-center mt-2">
-            <input
-              type="checkbox"
-              name="carePreferences.attemptCPR"
-              className="mr-2"
-              checked={formData.carePreferences.attemptCPR}
-              onChange={handleInputChange}
-            />
-            ATTEMPT RESUSCITATION / CPR
-          </label>
-          <p className="text-sm mt-2">
-            May be done if a person has no pulse and is not breathing...
-          </p>
-        </div>
-
-        {/* Medical Intervention */}
-        <div>
-          <h3 className="font-bold">MEDICAL INTERVENTION</h3>
-
-          {/* Comfort Measures */}
-          <label className="flex items-center mt-2">
-            <input
-              type="checkbox"
-              name="carePreferences.comfortOnly"
-              className="mr-2"
-              checked={formData.carePreferences.comfortOnly}
-              onChange={handleInputChange}
-            />
-            COMFORT MEASURES ONLY
-          </label>
-          <p className="text-sm mt-1">Relieve pain and suffering...</p>
-
-          {/* Limited Interventions */}
-          <div className="mt-4">
-            <label className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                name="carePreferences.limitedIntervention"
-                className="mr-2"
-                checked={formData.carePreferences.limitedIntervention}
+          <div className="grid grid-cols-6 gap-4 items-start">
+            <div className="col-span-1">
+              <select
+                name="carePreferences.attemptCPR"
+                value={formData.carePreferences.attemptCPR ? 'yes' : 'no'}
                 onChange={handleInputChange}
-              />
-              LIMITED ADDITIONAL INTERVENTIONS
-            </label>
-            <p className="text-sm">In addition to Comfort Measures Only...</p>
-
-            {/* Sub-options */}
-            <div className="grid grid-cols-2 gap-2 mt-2 pl-4">
-              {limitedOptions.map(({ key, label }) => (
-                <label key={key} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name={`carePreferences.limitedInterventionOptions.${key}`}
-                    className="mr-2"
-                    checked={
-                      formData.carePreferences.limitedInterventionOptions[key]
-                    }
-                    onChange={handleInputChange}
-                  />
-                  {label}
-                </label>
-              ))}
+                className="border rounded px-2 py-1 w-full"
+              >
+                <option value="yes" className="text-gray-700">
+                  yes
+                </option>
+                <option value="no" className="text-gray-700">
+                  no
+                </option>
+              </select>
+            </div>
+            <div className="col-span-5">
+              <p className="text-sm ">
+                May be done if a person has no pulse and is not breathing to
+                prolong the life of the patient. This procedure entails pushing
+                on the chest with great force and use of IV medications in
+                attempt to restart the heart.
+              </p>
             </div>
           </div>
+        </div>
 
-          <label className="flex items-center mt-4">
-            <input
-              type="checkbox"
-              name="carePreferences.fullTreatment"
-              className="mr-2"
-              checked={formData.carePreferences.fullTreatment}
-              onChange={handleInputChange}
-            />
-            FULL TREATMENT
-          </label>
-          <p className="text-sm mt-1">
-            Includes intubation, mechanical ventilation, etc.
-          </p>
+        {/* Comfort Measures */}
+        <div className="border p-4 rounded-lg space-y-2">
+          <h3 className="font-bold">COMFORT MEASURES ONLY</h3>
+          <div className="grid grid-cols-6 gap-4 items-start">
+            <div className="col-span-1">
+              <select
+                name="carePreferences.comfortOnly"
+                value={formData.carePreferences.comfortOnly ? 'yes' : 'no'}
+                onChange={handleInputChange}
+                className="border rounded px-2 py-1 w-full"
+              >
+                <option value="yes" className="text-gray-700">
+                  yes
+                </option>
+                <option value="no" className="text-gray-700">
+                  no
+                </option>
+              </select>
+            </div>
+            <div className="col-span-5">
+              <p className="text-sm ">
+                Relieve pain and suffering through the use of medication by
+                non-invasive route, positioning, wound care and other
+                conservative treatment. No hospitalization unless revoked.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Limited Additional Interventions */}
+        <div className="border p-4 rounded-lg space-y-2">
+          <h3 className="font-bold">LIMITED ADDITIONAL INTERVENTIONS</h3>
+          <div className="grid grid-cols-6 gap-4 items-start">
+            <div className="col-span-1">
+              <select
+                name="carePreferences.limitedIntervention"
+                value={
+                  formData.carePreferences.limitedIntervention ? 'yes' : 'no'
+                }
+                onChange={handleInputChange}
+                className="border rounded px-2 py-1 w-full"
+              >
+                <option value="yes" className="text-gray-700">
+                  yes
+                </option>
+                <option value="no" className="text-gray-700">
+                  no
+                </option>
+              </select>
+            </div>
+            <div className="col-span-5">
+              <p className="text-sm mb-2">
+                In addition to care described in Comfort Measures Only, use
+                medical treatment as indicated. DO NOT intubate. May transfer to
+                hospital ONLY if care is not met in current location.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {limitedOptions.map(({ key, label }) => (
+                  <label key={key} className="flex items-center text-sm">
+                    <input
+                      type="checkbox"
+                      name={`carePreferences.limitedInterventionOptions.${key}`}
+                      className="mr-2"
+                      checked={
+                        formData.carePreferences.limitedInterventionOptions[key]
+                      }
+                      onChange={handleInputChange}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Full Treatment */}
+        <div className="border p-4 rounded-lg space-y-2">
+          <h3 className="font-bold">FULL TREATMENT</h3>
+          <div className="grid grid-cols-6 gap-4 items-start">
+            <div className="col-span-1">
+              <select
+                name="carePreferences.fullTreatment"
+                value={formData.carePreferences.fullTreatment ? 'yes' : 'no'}
+                onChange={handleInputChange}
+                className="border rounded px-2 py-1 w-full"
+              >
+                <option value="yes" className="text-gray-700">
+                  yes
+                </option>
+                <option value="no" className="text-gray-700">
+                  no
+                </option>
+              </select>
+            </div>
+            <div className="col-span-5">
+              <p className="text-sm ">
+                In addition to above mentioned care, use of intubation, advanced
+                airway intervention, mechanical ventilation,
+                defibrillation/cardioversion as indicated. TRANSFER TO HOSPITAL
+                if indicated.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -678,7 +778,7 @@ export default function AdvanceDirectivesForm() {
             </label>
             <div
               className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[170px] hover:bg-gray-100 cursor-pointer"
-              onClick={() => setActiveSig("decisionMaker")}
+              onClick={() => setActiveSig('decisionMaker')}
             >
               {formData.decisionMaker.signature ? (
                 <img
@@ -743,7 +843,7 @@ export default function AdvanceDirectivesForm() {
             </label>
             <div
               className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[170px] hover:bg-gray-100 cursor-pointer"
-              onClick={() => setActiveSig("physician")}
+              onClick={() => setActiveSig('physician')}
             >
               {formData.physician.signature ? (
                 <img
@@ -807,9 +907,9 @@ export default function AdvanceDirectivesForm() {
         <Dialog.Portal>
           <Dialog.Title>
             <VisuallyHidden>
-              {activeSig === "decisionMaker"
-                ? "Decision Maker Signature"
-                : "Physician Signature"}
+              {activeSig === 'decisionMaker'
+                ? 'Decision Maker Signature'
+                : 'Physician Signature'}
             </VisuallyHidden>
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
@@ -828,7 +928,7 @@ export default function AdvanceDirectivesForm() {
                   canvasProps={{
                     width: sigCanvasSize.width,
                     height: sigCanvasSize.height,
-                    className: "bg-gray-100 rounded shadow",
+                    className: 'bg-gray-100 rounded shadow',
                   }}
                 />
               </div>
@@ -858,14 +958,18 @@ export default function AdvanceDirectivesForm() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <div className="mt-6">
+      <div className="flex gap-4 mt-6">
         <Button
+          className="mt-6"
           onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="w-full"
+          disabled={isSubmitting || loading || !user}
         >
-          {isSubmitting ? "Submitting..." : "Submit Form"}
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
+
+        {!user && !loading && (
+          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+        )}
       </div>
     </div>
   );
