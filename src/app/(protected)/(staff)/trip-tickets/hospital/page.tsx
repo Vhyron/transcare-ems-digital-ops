@@ -10,22 +10,20 @@ import { Plus, X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/components/provider/auth-provider';
-import type SignatureCanvas from 'react-signature-canvas';
+import type SignatureCanvasType from 'react-signature-canvas';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Dynamically import SignatureCanvas with no SSR
 
-const SignatureCanvasWithRef = dynamic(
+const SignatureCanvas = dynamic(
   async () => {
     const mod = await import('react-signature-canvas');
+    const Component = mod.default;
 
-    const Forwarded = forwardRef<SignatureCanvas, any>((props, ref) => (
-      <mod.default {...props} ref={ref} />
+    const Forwarded = forwardRef<SignatureCanvasType, any>((props, ref) => (
+      <Component {...props} ref={ref} />
     ));
 
-    Forwarded.displayName = 'SignatureCanvasWithRef';
+    Forwarded.displayName = 'SignatureCanvasWithRef'; // ✅ This is the fix
     return Forwarded;
   },
   {
@@ -38,10 +36,15 @@ const SignatureCanvasWithRef = dynamic(
   }
 );
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function HospitalTripForm() {
-  const nurseSigRef = useRef<SignatureCanvas | null>(null);
-  const billingSigRef = useRef<SignatureCanvas | null>(null);
-  const ambulanceSigRef = useRef<SignatureCanvas | null>(null);
+  const nurseSigRef = useRef<SignatureCanvasType | null>(null);
+  const billingSigRef = useRef<SignatureCanvasType | null>(null);
+  const ambulanceSigRef = useRef<SignatureCanvasType | null>(null);
   const [sigCanvasSize, setSigCanvasSize] = useState({
     width: 950,
     height: 750,
@@ -52,9 +55,14 @@ export default function HospitalTripForm() {
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const { user, loading } = useAuth();
-  const [sigReady, setSigReady] = useState(false);
+
+  // Ensure component is mounted on client side
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const getRefByType = (type: string | null) => {
     if (type === 'nurse') return nurseSigRef;
@@ -73,90 +81,66 @@ export default function HospitalTripForm() {
       }
     }
   };
+
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
-    if (!ref?.current) {
-      alert('Signature pad is not ready yet.');
-      return;
+    if (ref?.current && !ref.current.isEmpty()) {
+      try {
+        const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
+        setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
+      } catch (error) {
+        console.error('Error uploading signature:', error);
+      }
     }
-
-    if (!sigReady) {
-      alert('Signature pad is still loading. Please wait.');
-      return;
-    }
-
-    if (typeof ref.current.getTrimmedCanvas !== 'function') {
-      console.error('getTrimmedCanvas is not a function:', ref.current);
-      alert('Signature pad failed to initialize.');
-      return;
-    }
-
-    if (ref.current.isEmpty && ref.current.isEmpty()) {
-      alert('Please draw a signature first');
-      return;
-    }
-
-    try {
-      const canvas = ref.current.getTrimmedCanvas();
-      const dataUrl = canvas.toDataURL('image/png');
-      setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
-      setActiveSig(null);
-    } catch (error) {
-      console.error('Error saving signature:', error);
-      alert('Error saving signature. Please try again.');
-    }
+    setActiveSig(null);
   };
 
-  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-  //   const reader = new FileReader();
-  //   reader.onload = () => {
-  //     const imageData = reader.result as string;
-  //     const ref = getRefByType(activeSig);
-  //     if (ref?.current) {
-  //       const img = new Image();
-  //       img.onload = () => {
-  //         const ctx = ref.current!.getCanvas().getContext('2d');
-  //         ctx?.clearRect(
-  //           0,
-  //           0,
-  //           ref.current!.getCanvas().width,
-  //           ref.current!.getCanvas().height
-  //         );
-  //         ctx?.drawImage(
-  //           img,
-  //           0,
-  //           0,
-  //           ref.current!.getCanvas().width,
-  //           ref.current!.getCanvas().height
-  //         );
-  //       };
-  //       img.src = imageData;
-  //     }
-  //   };
-  //   reader.readAsDataURL(file);
-  // };
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  // Then in uploadSig:
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageData = reader.result as string;
+      const ref = getRefByType(activeSig);
+      if (ref?.current) {
+        try {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = ref.current!.getCanvas();
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+          };
+          img.src = imageData;
+        } catch (error) {
+          console.error('Error loading image:', error);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && typeof ref.current.getTrimmedCanvas === 'function') {
-      setSigReady(true);
-    } else {
-      setSigReady(false);
-    }
-  }, [activeSig]);
+    if (!mounted) return;
 
-  useEffect(() => {
     const ref = getRefByType(activeSig);
     const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl);
+    if (
+      ref?.current &&
+      dataUrl &&
+      typeof ref.current.fromDataURL === 'function'
+    ) {
+      try {
+        ref.current.clear();
+        ref.current.fromDataURL(dataUrl);
+      } catch (error) {
+        console.error('Error loading signature from data URL:', error);
+      }
     }
-  }, [activeSig, sigData]);
+  }, [activeSig, sigData, mounted]);
 
   useEffect(() => {
     if (modalCanvasRef.current) {
@@ -206,10 +190,9 @@ export default function HospitalTripForm() {
         sig_ambulance: sigData.ambulance || null,
       };
 
+      // Use window.location.origin for both development and production
       const baseUrl =
-        process.env.NODE_ENV === 'development'
-          ? 'http://localhost:3000'
-          : window.location.origin;
+        typeof window !== 'undefined' ? window.location.origin : '';
 
       // Get the current session token
       const {
@@ -220,15 +203,6 @@ export default function HospitalTripForm() {
       if (sessionError) {
         console.error('Error getting session:', sessionError);
         throw new Error('Authentication error');
-      }
-
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      // Add authorization header if user is logged in
-      if (session?.access_token) {
-        headers.Authorization = `Bearer ${session.access_token}`;
       }
 
       console.log('Submitting form with user:', user.id);
@@ -259,6 +233,14 @@ export default function HospitalTripForm() {
       if (formId) {
         try {
           console.log('Creating form submission tracking...');
+
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+
+          if (session?.access_token) {
+            headers.Authorization = `Bearer ${session.access_token}`;
+          }
 
           const submissionResponse = await fetch(
             `${baseUrl}/api/form-submissions`,
@@ -332,6 +314,11 @@ export default function HospitalTripForm() {
       setIsSubmitting(false);
     }
   };
+
+  // Don't render signature components until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-10 w-full">
@@ -646,13 +633,9 @@ export default function HospitalTripForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {[
-            { label: 'Nurse', ref: nurseSigRef, key: 'nurse' },
-            { label: 'Admitting/Billing', ref: billingSigRef, key: 'billing' },
-            {
-              label: 'Ambulance Staff',
-              ref: ambulanceSigRef,
-              key: 'ambulance',
-            },
+            { label: 'Nurse', key: 'nurse' },
+            { label: 'Admitting/Billing', key: 'billing' },
+            { label: 'Ambulance Staff', key: 'ambulance' },
           ].map(({ label, key }) => (
             <div key={key}>
               <label className="block mb-1 font-medium">
@@ -695,25 +678,30 @@ export default function HospitalTripForm() {
                     </button>
                   </Dialog.Close>
                   <div ref={modalCanvasRef} className="flex-1">
-                    {activeSig && (
-                      <SignatureCanvasWithRef
-                        ref={getRefByType(activeSig)}
-                        penColor="black"
-                        canvasProps={{
-                          width: sigCanvasSize.width,
-                          height: sigCanvasSize.height,
-                          className: 'bg-gray-100 rounded shadow',
-                        }}
-                      />
-                    )}
+                    <SignatureCanvas
+                      ref={getRefByType(activeSig)}
+                      penColor="black"
+                      canvasProps={{
+                        width: sigCanvasSize.width,
+                        height: sigCanvasSize.height,
+                        className: 'bg-gray-100 rounded shadow',
+                      }}
+                    />
                   </div>
 
                   <div className="absolute left-6 flex gap-2 items-center">
-                    {/* <label htmlFor="sig-upload">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="sig-upload"
+                      onChange={handleFileUpload}
+                    />
+                    <label htmlFor="sig-upload">
                       <Button size="sm" variant="secondary">
                         Upload
                       </Button>
-                    </label> */}
+                    </label>
                     <Button size="sm" variant="secondary" onClick={clearSig}>
                       Clear
                     </Button>
