@@ -29,6 +29,7 @@ import { capitalizeString } from '../../utils';
 import { generatePdf } from '../../utils/pdf_util';
 import { useAuth } from '../provider/auth-provider';
 import { Separator } from '../ui/separator';
+import { sendEmailWithPdf } from '../../actions/email.action';
 interface Props {
   formSubmission: FormSubmission;
   formData: any;
@@ -74,6 +75,24 @@ const PendingFormAction = ({ formSubmission, formData }: Props) => {
     toast.success('Deleted form submission successfully!');
   };
 
+  const handleSendEmail = async () => {
+    try {
+      const pdfBuffer = await generatePdf(
+        formSubmission.form_type,
+        formData,
+        true
+      );
+
+      await sendEmailWithPdf(pdfBuffer!, formData);
+      toast.success('Email sent successfully with PDF attachment!');
+    } catch (error) {
+      console.error('Error sending email with PDF:', error);
+      toast.error('Failed to send email', {
+        description: 'There was an error sending the email with the PDF.',
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -86,6 +105,9 @@ const PendingFormAction = ({ formSubmission, formData }: Props) => {
           onClick={() => generatePdf(formSubmission.form_type, formData)}
         >
           View Form Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSendEmail()}>
+          Email
         </DropdownMenuItem>
 
         <AlertDialog>

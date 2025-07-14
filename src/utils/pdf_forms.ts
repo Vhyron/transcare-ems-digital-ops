@@ -10,7 +10,10 @@ import {
   setFieldsReadOnly,
 } from './pdf_util';
 
-export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
+export const hospitalTripTicketsPdf = async (
+  data: HospitalTripTicket,
+  returnBuffer: boolean = false
+) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
   }
@@ -126,11 +129,19 @@ export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
 
-export const conductionRefusalFormPdf = async (data: ConductionRefusalForm) => {
+export const conductionRefusalFormPdf = async (
+  data: ConductionRefusalForm,
+  returnBuffer: boolean = false
+) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
   }
@@ -259,11 +270,19 @@ export const conductionRefusalFormPdf = async (data: ConductionRefusalForm) => {
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
 
-export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
+export const advanceDirectivesFormPdf = async (
+  data: AdvanceDirectiveForm,
+  returnBuffer: boolean = false
+) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
   }
@@ -389,12 +408,18 @@ export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
 
 export const refusalForTreatmentOrTransportFormPdf = async (
-  data: RefusalForm
+  data: RefusalForm,
+  returnBuffer: boolean = false
 ) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
@@ -523,6 +548,11 @@ export const refusalForTreatmentOrTransportFormPdf = async (
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };

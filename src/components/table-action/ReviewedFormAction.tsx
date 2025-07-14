@@ -22,6 +22,7 @@ import { deleteFormSubmission } from '../../actions/form_submissions.action';
 import { FormSubmission } from '../../db/schema/form_submissions.schema';
 import { generatePdf } from '../../utils/pdf_util';
 import { Separator } from '../ui/separator';
+import { sendEmailWithPdf } from '../../actions/email.action';
 
 interface Props {
   formSubmission: FormSubmission;
@@ -42,6 +43,24 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
     toast.success('Deleted form submission successfully!');
   };
 
+  const handleSendEmail = async () => {
+    try {
+      const pdfBuffer = await generatePdf(
+        formSubmission.form_type,
+        formData,
+        true
+      );
+
+      await sendEmailWithPdf(pdfBuffer!, formData);
+      toast.success('Email sent successfully with PDF attachment!');
+    } catch (error) {
+      console.error('Error sending email with PDF:', error);
+      toast.error('Failed to send email', {
+        description: 'There was an error sending the email with the PDF.',
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -54,6 +73,9 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
           onClick={() => generatePdf(formSubmission.form_type, formData)}
         >
           View Form Details
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleSendEmail()}>
+          Email
         </DropdownMenuItem>
 
         <Separator />
