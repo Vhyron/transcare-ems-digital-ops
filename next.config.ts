@@ -1,30 +1,30 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // Enable experimental features if needed
-    serverComponentsExternalPackages: ['react-signature-canvas'],
-  },
+  // Move serverComponentsExternalPackages to root level as serverExternalPackages
+  serverExternalPackages: ['react-signature-canvas'],
+  
   webpack: (config, { isServer }) => {
     // Handle canvas library issues in server-side rendering
     if (isServer) {
       config.externals.push('canvas');
     }
-
+    
     // Optimize bundle for signature canvas
     config.resolve.alias = {
       ...config.resolve.alias,
       canvas: false,
     };
-
+    
     return config;
   },
-  // Ensure proper transpilation
-  transpilePackages: ['react-signature-canvas'],
-
-  // Production optimizations
-  swcMinify: true,
-
+  
+  // Remove transpilePackages since it conflicts with serverExternalPackages
+  // transpilePackages: ['react-signature-canvas'], // REMOVED - conflicts with serverExternalPackages
+  
+  // Remove swcMinify as it's deprecated (SWC is now default)
+  // swcMinify: true, // REMOVED - deprecated option
+  
   // Headers for better caching
   async headers() {
     return [
@@ -39,7 +39,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  /* config options here */
 };
 
 export default nextConfig;
