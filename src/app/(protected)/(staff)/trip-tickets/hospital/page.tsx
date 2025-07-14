@@ -1,19 +1,41 @@
 'use client';
 
-import { useRef, useEffect, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { createClient } from "@supabase/supabase-js";
-import { useAuth } from "@/components/provider/auth-provider"; 
+import { useRef, useEffect, useState, forwardRef } from 'react';
+import dynamic from 'next/dynamic';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Plus, X } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider';
+import type SignatureCanvas from 'react-signature-canvas';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+const SignatureCanvasWithRef = dynamic(
+  async () => {
+    const mod = await import('react-signature-canvas');
+
+    const Forwarded = forwardRef<SignatureCanvas, any>((props, ref) => (
+      <mod.default {...props} ref={ref} />
+    ));
+
+    Forwarded.displayName = 'SignatureCanvasWithRef';
+    return Forwarded;
+  },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-gray-100 rounded shadow flex items-center justify-center h-[750px]">
+        Loading signature pad...
+      </div>
+    ),
+  }
 );
 
 export default function HospitalTripForm() {
@@ -30,7 +52,7 @@ export default function HospitalTripForm() {
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { user, loading } = useAuth();
 
   const getRefByType = (type: string | null) => {
@@ -42,48 +64,74 @@ export default function HospitalTripForm() {
 
   const clearSig = () => {
     const ref = getRefByType(activeSig);
-    ref?.current?.clear();
+    if (ref?.current) {
+      try {
+        ref.current.clear();
+      } catch (error) {
+        console.error('Error clearing signature:', error);
+      }
+    }
   };
 
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
-      setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
-    }
-    setActiveSig(null);
-  };
+    if (ref?.current) {
+      try {
+        // Check if canvas is empty before trying to get data
+        if (ref.current.isEmpty && ref.current.isEmpty()) {
+          alert('Please draw a signature first');
+          return;
+        }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
+        // Use getTrimmedCanvas with fallback
+        let canvas;
+        if (ref.current.getTrimmedCanvas) {
+          canvas = ref.current.getTrimmedCanvas();
+        } else if (ref.current.getCanvas) {
+          canvas = ref.current.getCanvas();
+        } else {
+          throw new Error('Unable to get canvas from signature component');
+        }
+
+        const dataUrl = canvas.toDataURL('image/png');
+        setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
+        setActiveSig(null);
+      } catch (error) {
+        console.error('Error saving signature:', error);
+        alert('Error saving signature. Please try again.');
       }
-    };
-    reader.readAsDataURL(file);
+    }
   };
+  // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+  //   const reader = new FileReader();
+  //   reader.onload = () => {
+  //     const imageData = reader.result as string;
+  //     const ref = getRefByType(activeSig);
+  //     if (ref?.current) {
+  //       const img = new Image();
+  //       img.onload = () => {
+  //         const ctx = ref.current!.getCanvas().getContext('2d');
+  //         ctx?.clearRect(
+  //           0,
+  //           0,
+  //           ref.current!.getCanvas().width,
+  //           ref.current!.getCanvas().height
+  //         );
+  //         ctx?.drawImage(
+  //           img,
+  //           0,
+  //           0,
+  //           ref.current!.getCanvas().width,
+  //           ref.current!.getCanvas().height
+  //         );
+  //       };
+  //       img.src = imageData;
+  //     }
+  //   };
+  //   reader.readAsDataURL(file);
+  // };
 
   useEffect(() => {
     const ref = getRefByType(activeSig);
@@ -129,7 +177,7 @@ export default function HospitalTripForm() {
 
   const handleSubmit = async () => {
     if (!user) {
-      alert("Please log in to submit the form");
+      alert('Please log in to submit the form');
       return;
     }
 
@@ -148,15 +196,18 @@ export default function HospitalTripForm() {
           : window.location.origin;
 
       // Get the current session token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
-        console.error("Error getting session:", sessionError);
-        throw new Error("Authentication error");
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
       }
 
       const headers: HeadersInit = {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       };
 
       // Add authorization header if user is logged in
@@ -164,8 +215,8 @@ export default function HospitalTripForm() {
         headers.Authorization = `Bearer ${session.access_token}`;
       }
 
-      console.log("Submitting form with user:", user.id);
-      console.log("Session token available:", !!session?.access_token);
+      console.log('Submitting form with user:', user.id);
+      console.log('Session token available:', !!session?.access_token);
 
       const response = await fetch(`${baseUrl}/api/trip-ticket`, {
         method: 'POST',
@@ -187,35 +238,42 @@ export default function HospitalTripForm() {
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
-      console.log("Form submitted successfully, ID:", formId);
+      console.log('Form submitted successfully, ID:', formId);
 
       if (formId) {
         try {
-          console.log("Creating form submission tracking...");
-          
-          const submissionResponse = await fetch(`${baseUrl}/api/form-submissions`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              form_type: "hospital_trip_tickets",
-              reference_id: formId,
-              status: "pending",
-              submitted_by: user.id,
-              reviewed_by: null,
-            }),
-          });
+          console.log('Creating form submission tracking...');
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'hospital_trip_tickets',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
 
           if (!submissionResponse.ok) {
             const errorData = await submissionResponse.json().catch(() => ({}));
-            console.error("Form submission tracking failed:", errorData);
-            throw new Error(`Failed to create submission tracking: ${errorData.error}`);
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
           }
 
           const submissionResult = await submissionResponse.json();
-          console.log("Form submission tracking created:", submissionResult);
-          
+          console.log('Form submission tracking created:', submissionResult);
         } catch (submissionError) {
-          console.error("Failed to create submission tracking:", submissionError);
+          console.error(
+            'Failed to create submission tracking:',
+            submissionError
+          );
         }
       }
 
@@ -248,8 +306,12 @@ export default function HospitalTripForm() {
       });
       setSigData({});
     } catch (error) {
-      console.error("Error saving:", error);
-      alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error saving:', error);
+      alert(
+        `Failed to save: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -257,8 +319,6 @@ export default function HospitalTripForm() {
 
   return (
     <div className="p-10 w-full">
-    
-
       <h1 className="text-xl font-bold mb-6">
         Transcare Emergency Medical Services - Hospital Trip Ticket
       </h1>
@@ -619,30 +679,25 @@ export default function HospitalTripForm() {
                     </button>
                   </Dialog.Close>
                   <div ref={modalCanvasRef} className="flex-1">
-                    <SignatureCanvas
-                      ref={getRefByType(activeSig)}
-                      penColor="black"
-                      canvasProps={{
-                        width: sigCanvasSize.width,
-                        height: sigCanvasSize.height,
-                        className: 'bg-gray-100 rounded shadow ',
-                      }}
-                    />
+                    {activeSig && (
+                      <SignatureCanvasWithRef
+                        ref={getRefByType(activeSig)}
+                        penColor="black"
+                        canvasProps={{
+                          width: sigCanvasSize.width,
+                          height: sigCanvasSize.height,
+                          className: 'bg-gray-100 rounded shadow',
+                        }}
+                      />
+                    )}
                   </div>
 
                   <div className="absolute left-6 flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor="sig-upload">
+                    {/* <label htmlFor="sig-upload">
                       <Button size="sm" variant="secondary">
                         Upload
                       </Button>
-                    </label>
+                    </label> */}
                     <Button size="sm" variant="secondary" onClick={clearSig}>
                       Clear
                     </Button>
@@ -656,14 +711,14 @@ export default function HospitalTripForm() {
           </Dialog.Root>
         </div>
       </div>
-      <Button 
-        className="mt-6" 
-        onClick={handleSubmit} 
+      <Button
+        className="mt-6"
+        onClick={handleSubmit}
         disabled={isSubmitting || loading || !user}
       >
-        {isSubmitting ? "Submitting..." : "Submit"}
+        {isSubmitting ? 'Submitting...' : 'Submit'}
       </Button>
-      
+
       {!user && !loading && (
         <p className="text-red-500 mt-2">Please log in to submit the form</p>
       )}
