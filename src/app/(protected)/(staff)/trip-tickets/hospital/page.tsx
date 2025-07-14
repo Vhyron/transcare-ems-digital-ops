@@ -75,33 +75,37 @@ export default function HospitalTripForm() {
 
   const uploadSig = () => {
     const ref = getRefByType(activeSig);
-    if (ref?.current) {
-      try {
-        // Check if canvas is empty before trying to get data
-        if (ref.current.isEmpty && ref.current.isEmpty()) {
-          alert('Please draw a signature first');
-          return;
-        }
 
-        // Use getTrimmedCanvas with fallback
-        let canvas;
-        if (ref.current.getTrimmedCanvas) {
-          canvas = ref.current.getTrimmedCanvas();
-        } else if (ref.current.getCanvas) {
-          canvas = ref.current.getCanvas();
-        } else {
-          throw new Error('Unable to get canvas from signature component');
-        }
+    if (!ref?.current) {
+      alert('Signature pad is not ready yet.');
+      return;
+    }
 
-        const dataUrl = canvas.toDataURL('image/png');
-        setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
-        setActiveSig(null);
-      } catch (error) {
-        console.error('Error saving signature:', error);
-        alert('Error saving signature. Please try again.');
+    console.log('[DEBUG] Ref:', ref.current);
+
+    // Extra safeguard: ensure getTrimmedCanvas is a function
+    if (typeof ref.current.getTrimmedCanvas !== 'function') {
+      console.error('[ERROR] getTrimmedCanvas is not a function:', ref.current);
+      alert('Signature pad is not properly loaded yet.');
+      return;
+    }
+
+    try {
+      if (ref.current.isEmpty && ref.current.isEmpty()) {
+        alert('Please draw a signature first');
+        return;
       }
+
+      const canvas = ref.current.getTrimmedCanvas();
+      const dataUrl = canvas.toDataURL('image/png');
+      setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
+      setActiveSig(null);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      alert('Error saving signature. Please try again.');
     }
   };
+
   // const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const file = e.target.files?.[0];
   //   if (!file) return;
