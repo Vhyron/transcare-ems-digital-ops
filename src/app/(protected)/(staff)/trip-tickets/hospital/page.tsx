@@ -9,6 +9,9 @@ import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/components/provider/auth-provider";
+import SignatureForm, { SignatureData } from "@/components/forms/SignatureForm";
+import { uploadFile } from "@/lib/supabase/storage";
+import { toast } from "sonner";
 import * as React from 'react';
 
 const supabase = createClient(
@@ -16,349 +19,14 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Enhanced signature canvas interface
-interface SignatureCanvasRef {
-  clear: () => void;
-  isEmpty: () => boolean;
-  getDataURL: () => string;
-  getTrimmedCanvas: () => HTMLCanvasElement;
-  loadFromDataURL: (dataURL: string) => void;
-}
-
-// Enhanced signature canvas component
-const EnhancedSignatureCanvas: React.ForwardRefExoticComponent<
-  {
-    width: number;
-    height: number;
-    className?: string;
-  } & React.RefAttributes<SignatureCanvasRef>
-> = React.forwardRef<SignatureCanvasRef, {
-  width: number;
-  height: number;
-  className?: string;
-}>(({ width, height, className }, ref) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isDrawing = useRef(false);
-  const hasDrawn = useRef(false);
-  const lastPoint = useRef({ x: 0, y: 0 });
-  const touchIdentifier = useRef<number | null>(null);
-
-  // Initialize canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas properties
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#000000';
-
-    // Clear canvas and set white background
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Handle high DPI displays
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    
-    ctx.scale(dpr, dpr);
-    
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-
-    // Reapply styles after scaling
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#000000';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, rect.width, rect.height);
-
-    hasDrawn.current = false;
-  }, [width, height]);
-
-  // Get coordinates from event
-  const getCoordinates = (e: MouseEvent | TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-    let clientX: number, clientY: number;
-
-    if (e instanceof MouseEvent) {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    } else {
-      // Handle touch events properly
-      const touch = e.changedTouches[0] || e.touches[0];
-      if (!touch) return { x: 0, y: 0 };
-      clientX = touch.clientX;
-      clientY = touch.clientY;
-    }
-
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
-    };
-  };
-
-  // Start drawing
-  const startDrawing = (e: MouseEvent | TouchEvent) => {
-    e.preventDefault();
-    
-    // For touch events, store the touch identifier
-    if (e instanceof TouchEvent) {
-      const touch = e.changedTouches[0];
-      if (touch) {
-        touchIdentifier.current = touch.identifier;
-      }
-    }
-
-    isDrawing.current = true;
-    const { x, y } = getCoordinates(e);
-    lastPoint.current = { x, y };
-  };
-
-  // Draw line
-  const draw = (e: MouseEvent | TouchEvent) => {
-    if (!isDrawing.current) return;
-    e.preventDefault();
-
-    // For touch events, make sure we're tracking the right touch
-    if (e instanceof TouchEvent) {
-      const touch = Array.from(e.changedTouches).find(
-        t => t.identifier === touchIdentifier.current
-      );
-      if (!touch) return;
-    }
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const { x, y } = getCoordinates(e);
-
-    ctx.beginPath();
-    ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-
-    lastPoint.current = { x, y };
-    hasDrawn.current = true;
-  };
-
-  // Stop drawing
-  const stopDrawing = () => {
-    if (isDrawing.current) {
-      isDrawing.current = false;
-      touchIdentifier.current = null;
-    }
-  };
-
-  // Prevent scrolling
-  const preventScroll = (e: TouchEvent) => {
-    if (isDrawing.current) {
-      e.preventDefault();
-    }
-  };
-
-  // Set up event listeners
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Mouse events
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-
-    // Touch events
-    canvas.addEventListener('touchstart', startDrawing, { passive: false });
-    canvas.addEventListener('touchmove', draw, { passive: false });
-    canvas.addEventListener('touchend', stopDrawing);
-    canvas.addEventListener('touchcancel', stopDrawing);
-
-    // Prevent scrolling
-    canvas.addEventListener('touchmove', preventScroll, { passive: false });
-
-    return () => {
-      canvas.removeEventListener('mousedown', startDrawing);
-      canvas.removeEventListener('mousemove', draw);
-      canvas.removeEventListener('mouseup', stopDrawing);
-      canvas.removeEventListener('mouseout', stopDrawing);
-      canvas.removeEventListener('touchstart', startDrawing);
-      canvas.removeEventListener('touchmove', draw);
-      canvas.removeEventListener('touchend', stopDrawing);
-      canvas.removeEventListener('touchcancel', stopDrawing);
-      canvas.removeEventListener('touchmove', preventScroll);
-    };
-  }, []);
-
-  // Expose methods to parent
-  React.useImperativeHandle(ref, () => ({
-    clear: () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      hasDrawn.current = false;
-    },
-
-    isEmpty: () => {
-      return !hasDrawn.current;
-    },
-
-    getDataURL: () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return '';
-      return canvas.toDataURL('image/png');
-    },
-
-    getTrimmedCanvas: () => {
-      const canvas = canvasRef.current;
-      if (!canvas) throw new Error('Canvas not available');
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas context not available');
-
-      // If nothing was drawn, return a minimal canvas
-      if (!hasDrawn.current) {
-        const emptyCanvas = document.createElement('canvas');
-        emptyCanvas.width = 1;
-        emptyCanvas.height = 1;
-        return emptyCanvas;
-      }
-
-      // Get image data
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      let minX = canvas.width;
-      let minY = canvas.height;
-      let maxX = 0;
-      let maxY = 0;
-
-      // Find bounds of non-transparent pixels
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const alpha = data[(y * canvas.width + x) * 4 + 3];
-          if (alpha > 0) {
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-          }
-        }
-      }
-
-      // If no drawing found, return minimal canvas
-      if (minX > maxX || minY > maxY) {
-        const emptyCanvas = document.createElement('canvas');
-        emptyCanvas.width = 1;
-        emptyCanvas.height = 1;
-        return emptyCanvas;
-      }
-
-      // Add padding
-      const padding = 10;
-      minX = Math.max(0, minX - padding);
-      minY = Math.max(0, minY - padding);
-      maxX = Math.min(canvas.width, maxX + padding);
-      maxY = Math.min(canvas.height, maxY + padding);
-
-      // Create trimmed canvas
-      const trimmedCanvas = document.createElement('canvas');
-      trimmedCanvas.width = maxX - minX;
-      trimmedCanvas.height = maxY - minY;
-
-      const trimmedCtx = trimmedCanvas.getContext('2d');
-      if (!trimmedCtx) throw new Error('Could not create trimmed canvas context');
-
-      // Set white background for trimmed canvas
-      trimmedCtx.fillStyle = '#ffffff';
-      trimmedCtx.fillRect(0, 0, trimmedCanvas.width, trimmedCanvas.height);
-
-      // Draw the trimmed portion
-      trimmedCtx.drawImage(
-        canvas,
-        minX, minY, maxX - minX, maxY - minY,
-        0, 0, maxX - minX, maxY - minY
-      );
-
-      return trimmedCanvas;
-    },
-
-    loadFromDataURL: (dataURL: string) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const img = new Image();
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        hasDrawn.current = true;
-      };
-      img.onerror = () => {
-        console.error('Failed to load image from data URL');
-      };
-      img.src = dataURL;
-    }
-  }), []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      className={className}
-      style={{
-        cursor: 'crosshair',
-        touchAction: 'none',
-        userSelect: 'none',
-        display: 'block',
-        border: '1px solid #ccc'
-      }}
-    />
-  );
-});
-
-EnhancedSignatureCanvas.displayName = 'EnhancedSignatureCanvas';
-
 export default function HospitalTripForm() {
-  const nurseSigRef = useRef<SignatureCanvasRef | null>(null);
-  const billingSigRef = useRef<SignatureCanvasRef | null>(null);
-  const ambulanceSigRef = useRef<SignatureCanvasRef | null>(null);
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     'nurse' | 'billing' | 'ambulance' | null
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigLoading, setIsSigLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   
   const { user, loading } = useAuth();
@@ -367,99 +35,6 @@ export default function HospitalTripForm() {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const getRefByType = (type: string | null) => {
-    if (type === 'nurse') return nurseSigRef;
-    if (type === 'billing') return billingSigRef;
-    if (type === 'ambulance') return ambulanceSigRef;
-    return null;
-  };
-
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current) {
-      try {
-        ref.current.clear();
-      } catch (error) {
-        console.error('Error clearing signature:', error);
-      }
-    }
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (!ref?.current) {
-      console.error('No signature canvas reference found');
-      return;
-    }
-
-    try {
-      // Check if the signature canvas is empty
-      if (ref.current.isEmpty()) {
-        console.log('Signature canvas is empty');
-        setActiveSig(null);
-        return;
-      }
-
-      // Get the data URL directly from the canvas
-      const dataUrl = ref.current.getDataURL();
-
-      if (dataUrl) {
-        setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
-        console.log('Signature saved successfully');
-      } else {
-        console.error('Could not generate signature data URL');
-      }
-    } catch (error) {
-      console.error('Error uploading signature:', error);
-      alert('Error saving signature. Please try again.');
-    }
-    
-    setActiveSig(null);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        try {
-          ref.current.loadFromDataURL(imageData);
-        } catch (error) {
-          console.error('Error loading image:', error);
-          alert('Error loading image. Please try again.');
-        }
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  useEffect(() => {
-    if (!mounted) return;
-    
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      try {
-        ref.current.clear();
-        ref.current.loadFromDataURL(dataUrl);
-      } catch (error) {
-        console.error('Error loading signature from data URL:', error);
-      }
-    }
-  }, [activeSig, sigData, mounted]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
 
   const [formData, setFormData] = useState({
     date: '',
@@ -486,6 +61,54 @@ export default function HospitalTripForm() {
     remarks: '',
   });
 
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
+
+    setIsSigLoading(true);
+    
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `trip_tickets/${activeSig}_signature_${timestamp}.png`;
+      
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        
+        // Update state with both display data and storage path
+        setSigData(prev => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths(prev => ({ ...prev, [activeSig]: upload.path }));
+        
+        toast.success(`${activeSig} signature saved successfully`);
+        setActiveSig(null);
+      };
+      reader.readAsDataURL(data.signature);
+
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       alert("Please log in to submit the form");
@@ -496,9 +119,14 @@ export default function HospitalTripForm() {
     try {
       const submitData = {
         ...formData,
+        // Store signature data as base64 text in the database
         sig_nurse: sigData.nurse || null,
         sig_billing: sigData.billing || null,
         sig_ambulance: sigData.ambulance || null,
+        // Also store the file paths for accessing images later
+        sig_nurse_path: sigPaths.nurse || null,
+        sig_billing_path: sigPaths.billing || null,
+        sig_ambulance_path: sigPaths.ambulance || null,
       };
 
       // Use window.location.origin for both development and production
@@ -575,7 +203,7 @@ export default function HospitalTripForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Trip ticket saved successfully!');
 
       // Reset form
       setFormData({
@@ -603,38 +231,27 @@ export default function HospitalTripForm() {
         remarks: '',
       });
       setSigData({});
+      setSigPaths({});
     } catch (error) {
       console.error("Error saving:", error);
-      alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error('Failed to save trip ticket', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Add a function to safely create signature canvas with error handling
-  const createSignatureCanvas = (ref: React.RefObject<SignatureCanvasRef | null> | null) => {
-    if (!mounted || !ref) return null;
-    
-    try {
-      return (
-        <EnhancedSignatureCanvas
-          ref={ref}
-          width={sigCanvasSize.width}
-          height={sigCanvasSize.height}
-          className="bg-gray-100 rounded shadow"
-        />
-      );
-    } catch (error) {
-      console.error('Error creating signature canvas:', error);
-      return (
-        <div className="bg-red-100 rounded shadow flex items-center justify-center h-[750px]">
-          <p className="text-red-600">Error loading signature pad. Please refresh the page.</p>
-        </div>
-      );
-    }
+  const getSignatureTitle = (key: string) => {
+    const titles = {
+      nurse: 'Nurse',
+      billing: 'Admitting/Billing',
+      ambulance: 'Ambulance Staff'
+    };
+    return titles[key as keyof typeof titles] || key;
   };
 
-  // Don't render signature components until mounted
+  // Don't render until mounted
   if (!mounted) {
     return <div>Loading...</div>;
   }
@@ -968,7 +585,7 @@ export default function HospitalTripForm() {
                   <img
                     src={sigData[key]}
                     alt={`${label} signature`}
-                    className="max-h-[100px]"
+                    className="max-h-[100px] max-w-full object-contain"
                   />
                 ) : (
                   <Plus className="h-8 w-8 text-gray-500" />
@@ -983,42 +600,33 @@ export default function HospitalTripForm() {
           >
             <Dialog.Portal>
               <Dialog.Title>
-                <VisuallyHidden>Signature Dialog</VisuallyHidden>
+                <VisuallyHidden>
+                  {activeSig ? `${getSignatureTitle(activeSig)} Signature` : 'Signature Dialog'}
+                </VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
               <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-                  <Dialog.Close asChild>
-                    <button
-                      className="absolute right-6 text-gray-700 hover:text-black"
-                      onClick={() => setActiveSig(null)}
-                    >
-                      <X className="w-10 h-10" />
-                    </button>
-                  </Dialog.Close>
-                  <div ref={modalCanvasRef} className="flex-1">
-                    {createSignatureCanvas(getRefByType(activeSig))}
+                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <h2 className="text-lg font-semibold">
+                      {activeSig ? `${getSignatureTitle(activeSig)} E-Signature` : 'E-Signature'}
+                    </h2>
+                    <Dialog.Close asChild>
+                      <button
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={() => setActiveSig(null)}
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </Dialog.Close>
                   </div>
-
-                  <div className="absolute left-6 flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
+                  
+                  <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                    <SignatureForm
+                      onSubmit={handleSignatureSubmit}
+                      defaultSignature={sigPaths[activeSig || '']}
+                      loading={isSigLoading}
                     />
-                    <label htmlFor="sig-upload">
-                      <Button size="sm" variant="secondary">
-                        Upload
-                      </Button>
-                    </label>
-                    <Button size="sm" variant="secondary" onClick={clearSig}>
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={uploadSig}>
-                      Save
-                    </Button>
                   </div>
                 </div>
               </Dialog.Content>
@@ -1026,12 +634,13 @@ export default function HospitalTripForm() {
           </Dialog.Root>
         </div>
       </div>
+      
       <Button 
         className="mt-6" 
         onClick={handleSubmit} 
         disabled={isSubmitting || loading || !user}
       >
-        {isSubmitting ? "Submitting..." : "Submit"}
+        {isSubmitting ? "Submitting..." : "Submit Trip Ticket"}
       </Button>
       
       {!user && !loading && (

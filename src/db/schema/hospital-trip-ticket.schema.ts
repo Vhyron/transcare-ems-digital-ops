@@ -40,6 +40,11 @@ export const hospitalTripTickets = pgTable(HOSPITAL_TRIP_TICKETS_TABLE, {
   sig_billing: varchar({ length: 10000 }),
   sig_ambulance: varchar({ length: 10000 }),
 
+
+   sig_nurse_path: varchar({ length: 10000 }),
+   sig_billing_path: varchar({ length: 10000 }),
+   sig_ambulance_path: varchar({ length: 10000 }),
+
   created_at: timestamp().notNull().defaultNow(),
   updated_at: timestamp().notNull().defaultNow(),
 }).enableRLS();
