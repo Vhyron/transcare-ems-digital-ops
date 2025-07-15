@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,32 +10,222 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/components/provider/auth-provider";
 
-// Dynamically import SignatureCanvas with no SSR
-const SignatureCanvas = dynamic(() => import("react-signature-canvas"), {
-  ssr: false,
-  loading: () => <div className="bg-gray-100 rounded shadow flex items-center justify-center h-[750px]">Loading signature pad...</div>
-}) as React.ComponentType<{
-  ref?: React.RefObject<SignatureCanvasRef | null>;
-  penColor?: string;
-  canvasProps?: {
-    width: number;
-    height: number;
-    className: string;
-  };
-}>;
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Simple signature canvas interface
 interface SignatureCanvasRef {
   clear: () => void;
   isEmpty: () => boolean;
-  getTrimmedCanvas: () => HTMLCanvasElement;
-  getCanvas: () => HTMLCanvasElement;
-  loadFromDataURL?: (dataURL: string) => void;
+  getDataURL: () => string;
+  loadFromDataURL: (dataURL: string) => void;
 }
+
+// Simple signature canvas component
+const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
+  {
+    width: number;
+    height: number;
+    className?: string;
+  } & React.RefAttributes<SignatureCanvasRef>
+> = React.forwardRef<SignatureCanvasRef, {
+  width: number;
+  height: number;
+  className?: string;
+}>(({ width, height, className }, ref) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawing = useRef(false);
+  const hasDrawn = useRef(false);
+  const lastPoint = useRef({ x: 0, y: 0 });
+
+  // Initialize canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas properties
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000000';
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    hasDrawn.current = false;
+  }, [width, height]);
+
+  // Get coordinates from event
+  const getCoordinates = (e: MouseEvent | TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    let clientX: number, clientY: number;
+
+    if (e instanceof MouseEvent) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    } else {
+      const touch = e.touches[0] || e.changedTouches[0];
+      if (!touch) return { x: 0, y: 0 };
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    }
+
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  };
+
+  // Start drawing
+  const startDrawing = (e: MouseEvent | TouchEvent) => {
+    e.preventDefault();
+    isDrawing.current = true;
+    const { x, y } = getCoordinates(e);
+    lastPoint.current = { x, y };
+  };
+
+  // Draw line
+  const draw = (e: MouseEvent | TouchEvent) => {
+    if (!isDrawing.current) return;
+    e.preventDefault();
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const { x, y } = getCoordinates(e);
+
+    ctx.beginPath();
+    ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    lastPoint.current = { x, y };
+    hasDrawn.current = true;
+  };
+
+  // Stop drawing
+  const stopDrawing = () => {
+    isDrawing.current = false;
+  };
+
+  // Prevent scrolling
+  const preventScroll = (e: TouchEvent) => {
+    if (isDrawing.current) {
+      e.preventDefault();
+    }
+  };
+
+  // Set up event listeners
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Mouse events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    // Touch events
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+
+    // Prevent scrolling
+    canvas.addEventListener('touchmove', preventScroll, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('mousedown', startDrawing);
+      canvas.removeEventListener('mousemove', draw);
+      canvas.removeEventListener('mouseup', stopDrawing);
+      canvas.removeEventListener('mouseout', stopDrawing);
+      canvas.removeEventListener('touchstart', startDrawing);
+      canvas.removeEventListener('touchmove', draw);
+      canvas.removeEventListener('touchend', stopDrawing);
+      canvas.removeEventListener('touchcancel', stopDrawing);
+      canvas.removeEventListener('touchmove', preventScroll);
+    };
+  }, []);
+
+  // Expose methods to parent
+  React.useImperativeHandle(ref, () => ({
+    clear: () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      hasDrawn.current = false;
+    },
+
+    isEmpty: () => {
+      return !hasDrawn.current;
+    },
+
+    getDataURL: () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return '';
+      return canvas.toDataURL('image/png');
+    },
+
+    loadFromDataURL: (dataURL: string) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        hasDrawn.current = true;
+      };
+      img.onerror = () => {
+        console.error('Failed to load image from data URL');
+      };
+      img.src = dataURL;
+    }
+  }), []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={width}
+      height={height}
+      className={className}
+      style={{
+        cursor: 'crosshair',
+        touchAction: 'none',
+        userSelect: 'none',
+        display: 'block',
+        border: '1px solid #ccc'
+      }}
+    />
+  );
+});
+
+SimpleSignatureCanvas.displayName = 'SimpleSignatureCanvas';
 
 export default function HospitalTripForm() {
   const nurseSigRef = useRef<SignatureCanvasRef | null>(null);
@@ -72,11 +261,7 @@ export default function HospitalTripForm() {
     const ref = getRefByType(activeSig);
     if (ref?.current) {
       try {
-        if (typeof ref.current.clear === 'function') {
-          ref.current.clear();
-        } else {
-          console.error('Clear method not available on signature canvas');
-        }
+        ref.current.clear();
       } catch (error) {
         console.error('Error clearing signature:', error);
       }
@@ -92,32 +277,14 @@ export default function HospitalTripForm() {
 
     try {
       // Check if the signature canvas is empty
-      if (typeof ref.current.isEmpty === 'function' && ref.current.isEmpty()) {
+      if (ref.current.isEmpty()) {
         console.log('Signature canvas is empty');
         setActiveSig(null);
         return;
       }
 
-      // Try to get the canvas and create data URL
-      let dataUrl: string | null = null;
-
-      if (typeof ref.current.getTrimmedCanvas === 'function') {
-        try {
-          const canvas = ref.current.getTrimmedCanvas();
-          dataUrl = canvas.toDataURL('image/png');
-        } catch (trimError) {
-          console.warn('getTrimmedCanvas failed, trying getCanvas:', trimError);
-          
-          // Fallback to getCanvas if getTrimmedCanvas fails
-          if (typeof ref.current.getCanvas === 'function') {
-            const canvas = ref.current.getCanvas();
-            dataUrl = canvas.toDataURL('image/png');
-          }
-        }
-      } else if (typeof ref.current.getCanvas === 'function') {
-        const canvas = ref.current.getCanvas();
-        dataUrl = canvas.toDataURL('image/png');
-      }
+      // Get the data URL directly
+      const dataUrl = ref.current.getDataURL();
 
       if (dataUrl) {
         setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
@@ -143,20 +310,10 @@ export default function HospitalTripForm() {
       const ref = getRefByType(activeSig);
       if (ref?.current) {
         try {
-          const img = new Image();
-          img.onload = () => {
-            if (typeof ref.current!.getCanvas === 'function') {
-              const canvas = ref.current!.getCanvas();
-              const ctx = canvas.getContext('2d');
-              if (ctx) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-              }
-            }
-          };
-          img.src = imageData;
+          ref.current.loadFromDataURL(imageData);
         } catch (error) {
           console.error('Error loading image:', error);
+          alert('Error loading image. Please try again.');
         }
       }
     };
@@ -168,11 +325,9 @@ export default function HospitalTripForm() {
     
     const ref = getRefByType(activeSig);
     const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl && typeof ref.current.loadFromDataURL === 'function') {
+    if (ref?.current && dataUrl) {
       try {
-        if (typeof ref.current.clear === 'function') {
-          ref.current.clear();
-        }
+        ref.current.clear();
         ref.current.loadFromDataURL(dataUrl);
       } catch (error) {
         console.error('Error loading signature from data URL:', error);
@@ -344,14 +499,11 @@ export default function HospitalTripForm() {
     
     try {
       return (
-        <SignatureCanvas
-          ref={ref as React.RefObject<SignatureCanvasRef | null>}
-          penColor="black"
-          canvasProps={{
-            width: sigCanvasSize.width,
-            height: sigCanvasSize.height,
-            className: 'bg-gray-100 rounded shadow',
-          }}
+        <SimpleSignatureCanvas
+          ref={ref}
+          width={sigCanvasSize.width}
+          height={sigCanvasSize.height}
+          className="bg-gray-100 rounded shadow"
         />
       );
     } catch (error) {
