@@ -7,10 +7,12 @@ import { DataTableColumnHeader } from '@/components/table/data-table-column-head
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX, ClockFading } from 'lucide-react';
+import { statuses } from './data';
 
 export const columns: ColumnDef<AllFormType>[] = [
   {
-    id: 'Form Type',
+    id: 'form_type',
+    enableColumnFilter: true,
     accessorFn: (row) =>
       `${row.form_submissions.form_type.split('_').join(' ')}`,
     header: ({ column }) => (
@@ -22,6 +24,9 @@ export const columns: ColumnDef<AllFormType>[] = [
           {row.original.form_submissions.form_type.split('_').join(' ')}
         </span>
       );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
     },
   },
   {
@@ -35,13 +40,22 @@ export const columns: ColumnDef<AllFormType>[] = [
     },
   },
   {
-    id: 'Status',
+    id: 'status',
     accessorFn: (row) => `${row.form_submissions.status}`,
     enableGlobalFilter: false,
+    enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
+      const status = statuses.find(
+        (status) => status.value === row.getValue('status')
+      );
+
+      if (!status) {
+        return null;
+      }
+
       return (
         <span className="capitalize flex items-center gap-1.5">
           {row.original.form_submissions.status === 'approved' ? (
@@ -54,6 +68,9 @@ export const columns: ColumnDef<AllFormType>[] = [
           {row.original.form_submissions.status}
         </span>
       );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
     },
   },
   {

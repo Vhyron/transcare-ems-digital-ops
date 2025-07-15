@@ -1,6 +1,7 @@
 import { listAllForms } from '@/actions/form_submissions.action';
 import { DataTable } from '@/components/table/data-table';
 import { columns } from './columns';
+import { formTypes, statuses } from './data';
 
 const AllFormsPage = async () => {
   const data = await listAllForms();
@@ -19,6 +20,10 @@ const AllFormsPage = async () => {
         columns={columns}
         data={data}
         searchPlaceholder="Filter form types and submitted by..."
+        filters={[
+          { columnKey: 'status', title: 'Status', options: statuses },
+          { columnKey: 'form_type', title: 'Form Type', options: formTypes },
+        ]}
       />
     </>
   );
