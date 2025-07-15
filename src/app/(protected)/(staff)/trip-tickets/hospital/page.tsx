@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
