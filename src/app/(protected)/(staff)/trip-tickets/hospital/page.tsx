@@ -16,16 +16,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Simple signature canvas interface
+// Enhanced signature canvas interface
 interface SignatureCanvasRef {
   clear: () => void;
   isEmpty: () => boolean;
   getDataURL: () => string;
+  getTrimmedCanvas: () => HTMLCanvasElement;
   loadFromDataURL: (dataURL: string) => void;
 }
 
-// Simple signature canvas component
-const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
+// Enhanced signature canvas component
+const EnhancedSignatureCanvas: React.ForwardRefExoticComponent<
   {
     width: number;
     height: number;
@@ -40,6 +41,7 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
   const isDrawing = useRef(false);
   const hasDrawn = useRef(false);
   const lastPoint = useRef({ x: 0, y: 0 });
+  const touchIdentifier = useRef<number | null>(null);
 
   // Initialize canvas
   useEffect(() => {
@@ -55,10 +57,30 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#000000';
 
-    // Clear canvas
+    // Clear canvas and set white background
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Handle high DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    ctx.scale(dpr, dpr);
+    
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+
+    // Reapply styles after scaling
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000000';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, rect.width, rect.height);
 
     hasDrawn.current = false;
   }, [width, height]);
@@ -75,7 +97,8 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
       clientX = e.clientX;
       clientY = e.clientY;
     } else {
-      const touch = e.touches[0] || e.changedTouches[0];
+      // Handle touch events properly
+      const touch = e.changedTouches[0] || e.touches[0];
       if (!touch) return { x: 0, y: 0 };
       clientX = touch.clientX;
       clientY = touch.clientY;
@@ -90,6 +113,15 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
   // Start drawing
   const startDrawing = (e: MouseEvent | TouchEvent) => {
     e.preventDefault();
+    
+    // For touch events, store the touch identifier
+    if (e instanceof TouchEvent) {
+      const touch = e.changedTouches[0];
+      if (touch) {
+        touchIdentifier.current = touch.identifier;
+      }
+    }
+
     isDrawing.current = true;
     const { x, y } = getCoordinates(e);
     lastPoint.current = { x, y };
@@ -99,6 +131,14 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
   const draw = (e: MouseEvent | TouchEvent) => {
     if (!isDrawing.current) return;
     e.preventDefault();
+
+    // For touch events, make sure we're tracking the right touch
+    if (e instanceof TouchEvent) {
+      const touch = Array.from(e.changedTouches).find(
+        t => t.identifier === touchIdentifier.current
+      );
+      if (!touch) return;
+    }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -119,7 +159,10 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
 
   // Stop drawing
   const stopDrawing = () => {
-    isDrawing.current = false;
+    if (isDrawing.current) {
+      isDrawing.current = false;
+      touchIdentifier.current = null;
+    }
   };
 
   // Prevent scrolling
@@ -187,6 +230,80 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
       return canvas.toDataURL('image/png');
     },
 
+    getTrimmedCanvas: () => {
+      const canvas = canvasRef.current;
+      if (!canvas) throw new Error('Canvas not available');
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context not available');
+
+      // If nothing was drawn, return a minimal canvas
+      if (!hasDrawn.current) {
+        const emptyCanvas = document.createElement('canvas');
+        emptyCanvas.width = 1;
+        emptyCanvas.height = 1;
+        return emptyCanvas;
+      }
+
+      // Get image data
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      let minX = canvas.width;
+      let minY = canvas.height;
+      let maxX = 0;
+      let maxY = 0;
+
+      // Find bounds of non-transparent pixels
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const alpha = data[(y * canvas.width + x) * 4 + 3];
+          if (alpha > 0) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+
+      // If no drawing found, return minimal canvas
+      if (minX > maxX || minY > maxY) {
+        const emptyCanvas = document.createElement('canvas');
+        emptyCanvas.width = 1;
+        emptyCanvas.height = 1;
+        return emptyCanvas;
+      }
+
+      // Add padding
+      const padding = 10;
+      minX = Math.max(0, minX - padding);
+      minY = Math.max(0, minY - padding);
+      maxX = Math.min(canvas.width, maxX + padding);
+      maxY = Math.min(canvas.height, maxY + padding);
+
+      // Create trimmed canvas
+      const trimmedCanvas = document.createElement('canvas');
+      trimmedCanvas.width = maxX - minX;
+      trimmedCanvas.height = maxY - minY;
+
+      const trimmedCtx = trimmedCanvas.getContext('2d');
+      if (!trimmedCtx) throw new Error('Could not create trimmed canvas context');
+
+      // Set white background for trimmed canvas
+      trimmedCtx.fillStyle = '#ffffff';
+      trimmedCtx.fillRect(0, 0, trimmedCanvas.width, trimmedCanvas.height);
+
+      // Draw the trimmed portion
+      trimmedCtx.drawImage(
+        canvas,
+        minX, minY, maxX - minX, maxY - minY,
+        0, 0, maxX - minX, maxY - minY
+      );
+
+      return trimmedCanvas;
+    },
+
     loadFromDataURL: (dataURL: string) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -226,7 +343,7 @@ const SimpleSignatureCanvas: React.ForwardRefExoticComponent<
   );
 });
 
-SimpleSignatureCanvas.displayName = 'SimpleSignatureCanvas';
+EnhancedSignatureCanvas.displayName = 'EnhancedSignatureCanvas';
 
 export default function HospitalTripForm() {
   const nurseSigRef = useRef<SignatureCanvasRef | null>(null);
@@ -284,7 +401,7 @@ export default function HospitalTripForm() {
         return;
       }
 
-      // Get the data URL directly
+      // Get the data URL directly from the canvas
       const dataUrl = ref.current.getDataURL();
 
       if (dataUrl) {
@@ -500,7 +617,7 @@ export default function HospitalTripForm() {
     
     try {
       return (
-        <SimpleSignatureCanvas
+        <EnhancedSignatureCanvas
           ref={ref}
           width={sigCanvasSize.width}
           height={sigCanvasSize.height}
