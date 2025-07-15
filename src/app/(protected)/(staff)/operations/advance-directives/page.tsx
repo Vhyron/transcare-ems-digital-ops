@@ -4,11 +4,14 @@ import { useRef, useEffect, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, RotateCcw } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/components/provider/auth-provider';
+import { uploadFile } from '@/lib/supabase/storage';
+import { toast } from 'sonner';
+import SignatureForm, { SignatureData } from '@/components/forms/SignatureForm';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,53 +19,87 @@ const supabase = createClient(
 );
 
 export default function AdvanceDirectivesForm() {
-  const decisionMakerSignature = useRef<SignatureCanvas | null>(null);
-  const physicianSignature = useRef<SignatureCanvas | null>(null);
   const { user, loading } = useAuth();
+  const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
 
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
-
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     'decisionMaker' | 'physician' | null
   >(null);
 
-  const [sigData, setSigData] = useState<{
-    [key: string]: { image: string; name: string };
-  }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    ref?.current?.clear();
-  };
+  const [isSigLoading, setIsSigLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
 
-      setFormData((prev) => ({
-        ...prev,
-        [activeSig!]: {
-          ...((prev[activeSig! as keyof typeof prev] || {}) as object),
-          signature: dataUrl,
-        },
-      }));
+    setIsSigLoading(true);
 
-      setSigData((prev) => ({
-        ...prev,
-        [activeSig!]: {
-          image: dataUrl,
-          name: prev[activeSig!]?.name || '',
-        },
-      }));
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `trip_tickets/${activeSig}_signature_${timestamp}.png`;
 
-      setActiveSig(null);
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+
+        // Update state with both display data and storage path
+        setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
+
+        // Update formData to display the signature in the form
+        setFormData((prev) => ({
+          ...prev,
+          [activeSig]: {
+            signature: base64String,
+            signatureBlob: data.signature,
+            signaturePath: upload.path,
+          },
+        }));
+
+        toast.success(`${activeSig} signature saved successfully`);
+        setActiveSig(null);
+      };
+      reader.readAsDataURL(data.signature);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
     }
   };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const getSignatureTitle = (key: string) => {
+    const titles = {
+      decisionMaker: 'decisionMaker',
+      physicianSignature: 'physicianSignature',
+    };
+    return titles[key as keyof typeof titles] || key;
+  };
+
   const [formData, setFormData] = useState({
     patient: {
       firstName: '',
@@ -111,70 +148,19 @@ export default function AdvanceDirectivesForm() {
       relation: '',
       dateSigned: '',
       signature: null as string | null,
+      signatureBlob: null as Blob | null,
+      signaturePath: null as string | null,
     },
     physician: {
       name: '',
       prcLicenseNumber: '',
       dateSigned: '',
       signature: null as string | null,
+      signatureBlob: null as Blob | null,
+      signaturePath: null as string | null,
     },
   });
 
-  const getRefByType = (type: string | null) => {
-    if (type === 'decisionMaker') return decisionMakerSignature;
-    if (type === 'physician') return physicianSignature;
-    return null;
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  useEffect(() => {
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl);
-    }
-  }, [activeSig, sigData]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
-
-  // Fixed type definition
   type LimitedInterventionKey =
     keyof typeof formData.carePreferences.limitedInterventionOptions;
 
@@ -275,15 +261,20 @@ export default function AdvanceDirectivesForm() {
         relation: '',
         dateSigned: '',
         signature: null,
+        signatureBlob: null,
+        signaturePath: null,
       },
       physician: {
         name: '',
         prcLicenseNumber: '',
         dateSigned: '',
         signature: null,
+        signatureBlob: null,
+        signaturePath: null,
       },
     });
     setSigData({});
+    setSigPaths({});
   };
 
   const handleSubmit = async () => {
@@ -320,14 +311,31 @@ export default function AdvanceDirectivesForm() {
 
       console.log('Submitting form with user:', user.id);
       console.log('Session token available:', !!session?.access_token);
+      console.log('Form data with signatures:', {
+        ...formData,
+        decision_maker_signatuer: sigData.decisionMaker || null,
+        physician_signature: sigData.physicianSignature || null,
+      });
 
       const response = await fetch('/api/advance-directives', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          // Include signature paths for database storage
+          decisionMaker: {
+            ...formData.decisionMaker,
+            signatureImagePath: formData.decisionMaker.signaturePath,
+          },
+          physician: {
+            ...formData.physician,
+            signatureImagePath: formData.physician.signaturePath,
+          },
+        }),
       });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
@@ -380,9 +388,7 @@ export default function AdvanceDirectivesForm() {
       }
 
       alert('Saved successfully!');
-
       resetForm();
-      setSigData({});
     } catch (error) {
       console.error('Error saving:', error);
       alert(
@@ -394,6 +400,10 @@ export default function AdvanceDirectivesForm() {
       setIsSubmitting(false);
     }
   };
+
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-10 w-full">
@@ -907,51 +917,36 @@ export default function AdvanceDirectivesForm() {
         <Dialog.Portal>
           <Dialog.Title>
             <VisuallyHidden>
-              {activeSig === 'decisionMaker'
-                ? 'Decision Maker Signature'
-                : 'Physician Signature'}
+              {activeSig
+                ? `${getSignatureTitle(activeSig)} Signature`
+                : 'Signature Dialog'}
             </VisuallyHidden>
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-[1000px] h-[800px] flex flex-col relative">
-              <Dialog.Close asChild>
-                <button className="absolute right-6 text-gray-700 hover:text-black">
-                  <X className="w-8 h-8" />
-                </button>
-              </Dialog.Close>
-
-              <div ref={modalCanvasRef} className="flex-1 overflow-hidden">
-                <SignatureCanvas
-                  ref={getRefByType(activeSig)}
-                  penColor="black"
-                  canvasProps={{
-                    width: sigCanvasSize.width,
-                    height: sigCanvasSize.height,
-                    className: 'bg-gray-100 rounded shadow',
-                  }}
-                />
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="text-lg font-semibold">
+                  {activeSig
+                    ? `${getSignatureTitle(activeSig)} E-Signature`
+                    : 'E-Signature'}
+                </h2>
+                <Dialog.Close asChild>
+                  <button
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() => setActiveSig(null)}
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </Dialog.Close>
               </div>
 
-              <div className="absolute left-6 flex gap-2 items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="sig-upload"
-                  onChange={handleFileUpload}
+              <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <SignatureForm
+                  onSubmit={handleSignatureSubmit}
+                  defaultSignature={sigPaths[activeSig || '']}
+                  loading={isSigLoading}
                 />
-                <label htmlFor="sig-upload">
-                  <Button type="button" size="sm" variant="secondary">
-                    Upload
-                  </Button>
-                </label>
-                <Button size="sm" variant="secondary" onClick={clearSig}>
-                  Clear
-                </Button>
-                <Button size="sm" onClick={uploadSig}>
-                  Save
-                </Button>
               </div>
             </div>
           </Dialog.Content>
