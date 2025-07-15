@@ -9,6 +9,7 @@ import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { createClient } from "@supabase/supabase-js";
 import { useAuth } from "@/components/provider/auth-provider";
+import * as React from 'react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
