@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
+import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { createClient } from "@supabase/supabase-js";
-import { useAuth } from "@/components/provider/auth-provider"; 
+import { useAuth } from "@/components/provider/auth-provider";
+import SignatureForm, { SignatureData } from "@/components/forms/SignatureForm";
+import { uploadFile } from "@/lib/supabase/storage";
+import { toast } from "sonner";
+import * as React from 'react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,90 +20,21 @@ const supabase = createClient(
 );
 
 export default function HospitalTripForm() {
-  const nurseSigRef = useRef<SignatureCanvas | null>(null);
-  const billingSigRef = useRef<SignatureCanvas | null>(null);
-  const ambulanceSigRef = useRef<SignatureCanvas | null>(null);
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     'nurse' | 'billing' | 'ambulance' | null
   >(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigLoading, setIsSigLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   const { user, loading } = useAuth();
 
-  const getRefByType = (type: string | null) => {
-    if (type === 'nurse') return nurseSigRef;
-    if (type === 'billing') return billingSigRef;
-    if (type === 'ambulance') return ambulanceSigRef;
-    return null;
-  };
-
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    ref?.current?.clear();
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
-      setSigData((prev) => ({ ...prev, [activeSig!]: dataUrl }));
-    }
-    setActiveSig(null);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
+  // Ensure component is mounted on client side
   useEffect(() => {
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl);
-    }
-  }, [activeSig, sigData]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState({
     date: '',
@@ -127,6 +61,54 @@ export default function HospitalTripForm() {
     remarks: '',
   });
 
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
+
+    setIsSigLoading(true);
+    
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `trip_tickets/${activeSig}_signature_${timestamp}.png`;
+      
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        
+        // Update state with both display data and storage path
+        setSigData(prev => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths(prev => ({ ...prev, [activeSig]: upload.path }));
+        
+        toast.success(`${activeSig} signature saved successfully`);
+        setActiveSig(null);
+      };
+      reader.readAsDataURL(data.signature);
+
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!user) {
       alert("Please log in to submit the form");
@@ -137,15 +119,18 @@ export default function HospitalTripForm() {
     try {
       const submitData = {
         ...formData,
+        // Store signature data as base64 text in the database
         sig_nurse: sigData.nurse || null,
         sig_billing: sigData.billing || null,
         sig_ambulance: sigData.ambulance || null,
+        // Also store the file paths for accessing images later
+        sig_nurse_path: sigPaths.nurse || null,
+        sig_billing_path: sigPaths.billing || null,
+        sig_ambulance_path: sigPaths.ambulance || null,
       };
 
-      const baseUrl =
-        process.env.NODE_ENV === 'development'
-          ? 'http://localhost:3000'
-          : window.location.origin;
+      // Use window.location.origin for both development and production
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
       // Get the current session token
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -153,15 +138,6 @@ export default function HospitalTripForm() {
       if (sessionError) {
         console.error("Error getting session:", sessionError);
         throw new Error("Authentication error");
-      }
-
-      const headers: HeadersInit = {
-        "Content-Type": "application/json",
-      };
-
-      // Add authorization header if user is logged in
-      if (session?.access_token) {
-        headers.Authorization = `Bearer ${session.access_token}`;
       }
 
       console.log("Submitting form with user:", user.id);
@@ -193,6 +169,14 @@ export default function HospitalTripForm() {
         try {
           console.log("Creating form submission tracking...");
           
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+
+          if (session?.access_token) {
+            headers.Authorization = `Bearer ${session.access_token}`;
+          }
+          
           const submissionResponse = await fetch(`${baseUrl}/api/form-submissions`, {
             method: "POST",
             headers,
@@ -219,7 +203,7 @@ export default function HospitalTripForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Trip ticket saved successfully!');
 
       // Reset form
       setFormData({
@@ -247,18 +231,33 @@ export default function HospitalTripForm() {
         remarks: '',
       });
       setSigData({});
+      setSigPaths({});
     } catch (error) {
       console.error("Error saving:", error);
-      alert(`Failed to save: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error('Failed to save trip ticket', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const getSignatureTitle = (key: string) => {
+    const titles = {
+      nurse: 'Nurse',
+      billing: 'Admitting/Billing',
+      ambulance: 'Ambulance Staff'
+    };
+    return titles[key as keyof typeof titles] || key;
+  };
+
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="p-10 w-full">
-    
-
       <h1 className="text-xl font-bold mb-6">
         Transcare Emergency Medical Services - Hospital Trip Ticket
       </h1>
@@ -570,13 +569,9 @@ export default function HospitalTripForm() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {[
-            { label: 'Nurse', ref: nurseSigRef, key: 'nurse' },
-            { label: 'Admitting/Billing', ref: billingSigRef, key: 'billing' },
-            {
-              label: 'Ambulance Staff',
-              ref: ambulanceSigRef,
-              key: 'ambulance',
-            },
+            { label: 'Nurse', key: 'nurse' },
+            { label: 'Admitting/Billing', key: 'billing' },
+            { label: 'Ambulance Staff', key: 'ambulance' },
           ].map(({ label, key }) => (
             <div key={key}>
               <label className="block mb-1 font-medium">
@@ -590,7 +585,7 @@ export default function HospitalTripForm() {
                   <img
                     src={sigData[key]}
                     alt={`${label} signature`}
-                    className="max-h-[100px]"
+                    className="max-h-[100px] max-w-full object-contain"
                   />
                 ) : (
                   <Plus className="h-8 w-8 text-gray-500" />
@@ -605,50 +600,33 @@ export default function HospitalTripForm() {
           >
             <Dialog.Portal>
               <Dialog.Title>
-                <VisuallyHidden>Signature Dialog</VisuallyHidden>
+                <VisuallyHidden>
+                  {activeSig ? `${getSignatureTitle(activeSig)} Signature` : 'Signature Dialog'}
+                </VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
               <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-                  <Dialog.Close asChild>
-                    <button
-                      className="absolute right-6 text-gray-700 hover:text-black"
-                      onClick={() => setActiveSig(null)}
-                    >
-                      <X className="w-10 h-10" />
-                    </button>
-                  </Dialog.Close>
-                  <div ref={modalCanvasRef} className="flex-1">
-                    <SignatureCanvas
-                      ref={getRefByType(activeSig)}
-                      penColor="black"
-                      canvasProps={{
-                        width: sigCanvasSize.width,
-                        height: sigCanvasSize.height,
-                        className: 'bg-gray-100 rounded shadow ',
-                      }}
-                    />
+                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <h2 className="text-lg font-semibold">
+                      {activeSig ? `${getSignatureTitle(activeSig)} E-Signature` : 'E-Signature'}
+                    </h2>
+                    <Dialog.Close asChild>
+                      <button
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={() => setActiveSig(null)}
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </Dialog.Close>
                   </div>
-
-                  <div className="absolute left-6 flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
+                  
+                  <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                    <SignatureForm
+                      onSubmit={handleSignatureSubmit}
+                      defaultSignature={sigPaths[activeSig || '']}
+                      loading={isSigLoading}
                     />
-                    <label htmlFor="sig-upload">
-                      <Button size="sm" variant="secondary">
-                        Upload
-                      </Button>
-                    </label>
-                    <Button size="sm" variant="secondary" onClick={clearSig}>
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={uploadSig}>
-                      Save
-                    </Button>
                   </div>
                 </div>
               </Dialog.Content>
@@ -656,12 +634,13 @@ export default function HospitalTripForm() {
           </Dialog.Root>
         </div>
       </div>
+      
       <Button 
         className="mt-6" 
         onClick={handleSubmit} 
         disabled={isSubmitting || loading || !user}
       >
-        {isSubmitting ? "Submitting..." : "Submit"}
+        {isSubmitting ? "Submitting..." : "Submit Trip Ticket"}
       </Button>
       
       {!user && !loading && (
