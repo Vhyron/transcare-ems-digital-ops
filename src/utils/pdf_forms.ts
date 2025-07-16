@@ -33,6 +33,10 @@ export const hospitalTripTicketsPdf = async (
     'room',
     'vehicle',
     'plate',
+    'bls',
+    'bls_er',
+    'als',
+    'als1',
     'pt_name',
     'age_sex',
     'purpose',
@@ -91,7 +95,7 @@ export const hospitalTripTicketsPdf = async (
   if (data.trip_type) {
     checkFormCheckbox(form, data.trip_type, {
       BLS: 'bls',
-      'BLS-ER': 'bls-er',
+      'BLS-ER': 'bls_er',
       ALS: 'als',
       ALS1: 'als1',
     });
