@@ -1,6 +1,6 @@
 'use server';
 
-import { eq, or, sql } from 'drizzle-orm';
+import { desc, eq, or, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   FormSubmission,
@@ -76,6 +76,7 @@ export async function listPendingForms(): Promise<PendingFormType[]> {
     .select()
     .from(formSubmissionsTable)
     .where(eq(formSubmissionsTable.status, 'pending'))
+    .orderBy(desc(formSubmissionsTable.created_at))
     .innerJoinLateral(submittedByQuery, sql`true`);
 
   const forms = [];
@@ -118,6 +119,7 @@ export async function listReviewedForms(): Promise<ReviewedFormType[]> {
         eq(formSubmissionsTable.status, 'rejected')
       )
     )
+    .orderBy(desc(formSubmissionsTable.created_at))
     .innerJoinLateral(submittedByQuery, sql`true`)
     .innerJoinLateral(reviewedByQuery, sql`true`);
 
@@ -155,6 +157,7 @@ export async function listAllForms(): Promise<AllFormType[]> {
   const pendingSubmissions = await db
     .select()
     .from(formSubmissionsTable)
+    .orderBy(desc(formSubmissionsTable.created_at))
     .innerJoinLateral(submittedByQuery, sql`true`)
     .leftJoinLateral(reviewedByQuery, sql`true`);
 

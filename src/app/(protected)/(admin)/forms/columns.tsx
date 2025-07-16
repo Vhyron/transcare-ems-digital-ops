@@ -7,10 +7,12 @@ import { DataTableColumnHeader } from '@/components/table/data-table-column-head
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX, ClockFading } from 'lucide-react';
+import { allFormStatus } from './data';
 
 export const columns: ColumnDef<AllFormType>[] = [
   {
-    id: 'Form Type',
+    id: 'form_type',
+    enableColumnFilter: true,
     accessorFn: (row) =>
       `${row.form_submissions.form_type.split('_').join(' ')}`,
     header: ({ column }) => (
@@ -23,10 +25,13 @@ export const columns: ColumnDef<AllFormType>[] = [
         </span>
       );
     },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
   },
   {
     id: 'Submitted By',
-    accessorFn: (row) => `${row.submitted_by.email}`,
+    accessorFn: (row) => row.submitted_by.email,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Submitted By" />
     ),
@@ -35,13 +40,22 @@ export const columns: ColumnDef<AllFormType>[] = [
     },
   },
   {
-    id: 'Status',
-    accessorFn: (row) => `${row.form_submissions.status}`,
+    id: 'status',
+    accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
+    enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
+      const status = allFormStatus.find(
+        (status) => status.value === row.getValue('status')
+      );
+
+      if (!status) {
+        return null;
+      }
+
       return (
         <span className="capitalize flex items-center gap-1.5">
           {row.original.form_submissions.status === 'approved' ? (
@@ -55,10 +69,13 @@ export const columns: ColumnDef<AllFormType>[] = [
         </span>
       );
     },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
   },
   {
     id: 'Date Submitted',
-    accessorFn: (row) => `${row.form_submissions.created_at}`,
+    accessorFn: (row) => row.form_submissions.created_at,
     enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Date Submitted" />
@@ -66,7 +83,22 @@ export const columns: ColumnDef<AllFormType>[] = [
     cell: ({ row }) => {
       const date = row.original.form_submissions.created_at;
 
-      return formatDate(date, 'MMMM dd, yyyy');
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
+    },
+  },
+  {
+    id: 'Date Reviewed',
+    accessorFn: (row) => row.form_submissions.updated_at,
+    enableGlobalFilter: false,
+    enableSorting: false,
+    header: 'Date Reviewed',
+    cell: ({ row }) => {
+      const isPending = row.original.form_submissions.status === 'pending';
+      if (isPending) return '-';
+
+      const date = row.original.form_submissions.updated_at;
+
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
     },
   },
   {
