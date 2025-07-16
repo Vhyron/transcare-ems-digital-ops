@@ -10,6 +10,9 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import SignatureCanvas from 'react-signature-canvas';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/components/provider/auth-provider';
+import SignatureForm, { SignatureData } from '@/components/forms/SignatureForm';
+import { uploadFile } from '@/lib/supabase/storage';
+import { toast } from 'sonner';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,23 +82,15 @@ export default function ConsolidatedDispatchForm() {
 
   const [numberOfRows, setNumberOfRows] = useState(10);
   const maxRows = 20;
-
-  const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
-  const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
-  const emsSupervisorSigRef = useRef<SignatureCanvas | null>(null);
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
+  const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigLoading, setIsSigLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
   >(null);
-  const [sigData, setSigData] = useState<{
-    [key: string]: { image: string; name: string };
-  }>({});
 
   const showNotificationMessage = (
     message: string,
@@ -105,6 +100,66 @@ export default function ConsolidatedDispatchForm() {
     setNotificationType(type);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
+  };
+  // Ensure component is mounted on client side
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
+
+    setIsSigLoading(true);
+
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `trip_tickets/${activeSig}_signature_${timestamp}.png`;
+
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+
+        // Update state with both display data and storage path
+        setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
+
+        toast.success(`${activeSig} signature saved successfully`);
+        setActiveSig(null);
+      };
+      reader.readAsDataURL(data.signature);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
+    }
+  };
+
+  const getSignatureTitle = (key: string) => {
+    const titles = {
+      nurse: 'Nurse',
+      billing: 'Admitting/Billing',
+      ambulance: 'Ambulance Staff',
+    };
+    return titles[key as keyof typeof titles] || key;
   };
 
   const [formData, setFormData] = useState({
@@ -214,35 +269,12 @@ export default function ConsolidatedDispatchForm() {
     current_page: '',
   });
 
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current) {
-      ref.current.clear();
-    }
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty() && activeSig) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
-
-      setSigData((prev) => ({
-        ...prev,
-        [activeSig]: {
-          image: dataUrl,
-          name: prev[activeSig]?.name || '',
-        },
-      }));
-
-      setActiveSig(null);
-    }
-  };
-
   const addRow = () => {
     if (numberOfRows < maxRows) {
       setNumberOfRows((prev) => prev + 1);
     }
   };
+
   const handleCrewDataChange = (
     rowIndex: number,
     field: string,
@@ -255,14 +287,7 @@ export default function ConsolidatedDispatchForm() {
       ),
     }));
   };
-  const getRefByType = (
-    type: 'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
-  ) => {
-    if (type === 'teamLeader') return teamLeaderSigRef;
-    if (type === 'clientRepresentative') return clientRepresentativeSigRef;
-    if (type === 'EMSSupervisor') return emsSupervisorSigRef;
-    return null;
-  };
+
   const handleNumberOfCrewChange = (value: string) => {
     const numCrew = parseInt(value) || 0;
     setFormData((prev) => ({
@@ -282,36 +307,6 @@ export default function ConsolidatedDispatchForm() {
             }
         ),
     }));
-  };
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleInputChange = (
@@ -473,10 +468,9 @@ export default function ConsolidatedDispatchForm() {
         ...formData,
         form_status: 'draft',
         current_page: currentPage.toString(),
-        team_leader_signature: sigData.teamLeader?.image || '',
-        client_representative_signature:
-          sigData.clientRepresentative?.image || '',
-        ems_supervisor_signature: sigData.EMSSupervisor?.image || '',
+        team_leader_signature: sigData.teamLeader || '', // Remove .image
+        client_representative_signature: sigData.clientRepresentative || '', // Remove .image
+        ems_supervisor_signature: sigData.EMSSupervisor || '', // Remove .image
         type_of_service_other:
           formData.type_of_service === 'Others' ? typeOfServiceOther : '',
         crew_credential_other:
@@ -586,41 +580,10 @@ export default function ConsolidatedDispatchForm() {
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl);
-    }
-  }, [activeSig, sigData]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
-
-  useEffect(() => {
-    if (activeSig && sigData[activeSig]) {
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = ref.current!.getCanvas();
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-          }
-        };
-        img.src = sigData[activeSig].image;
-      }
-    }
-  }, [activeSig]);
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   const renderPage1 = () => (
     <div className="space-y-8">
@@ -758,6 +721,7 @@ export default function ConsolidatedDispatchForm() {
           <select
             value={formData.type_of_events}
             name="type_of_events"
+            onChange={handleInputChange}
             className="w-full h-10 border rounded px-3 text-base"
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
@@ -785,6 +749,7 @@ export default function ConsolidatedDispatchForm() {
           <select
             value={formData.venue_type}
             name="venue_type"
+            onChange={handleInputChange}
             className="w-full h-10 border rounded px-3 text-base"
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
@@ -1485,7 +1450,7 @@ export default function ConsolidatedDispatchForm() {
             >
               {sigData[key] ? (
                 <img
-                  src={sigData[key]?.image}
+                  src={sigData[key]}
                   alt={`${label} signature`}
                   className="max-h-[100px]"
                 />
@@ -1591,82 +1556,43 @@ export default function ConsolidatedDispatchForm() {
           <div className="mt-12 pt-8 border-t">{renderSignatures()}</div>
         </div>
 
-        {/* Signature Modal */}
         <Dialog.Root
           open={!!activeSig}
           onOpenChange={(open) => !open && setActiveSig(null)}
         >
           <Dialog.Portal>
             <Dialog.Title>
-              <VisuallyHidden>Signature Dialog</VisuallyHidden>
+              <VisuallyHidden>
+                {activeSig
+                  ? `${getSignatureTitle(activeSig)} Signature`
+                  : 'Signature Dialog'}
+              </VisuallyHidden>
             </Dialog.Title>
             <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
             <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className=" p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-                <Dialog.Close asChild>
-                  <button
-                    className="absolute right-6 top-6 text-gray-700 hover:text-black"
-                    onClick={() => setActiveSig(null)}
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </Dialog.Close>
-
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">Add Signature</h3>
-                  <p className="text-gray-600">
-                    Draw your signature or upload an image
-                  </p>
-                </div>
-
-                <div ref={modalCanvasRef} className="flex-1 mb-4">
-                  <SignatureCanvas
-                    ref={getRefByType(activeSig)}
-                    penColor="black"
-                    canvasProps={{
-                      width: sigCanvasSize.width,
-                      height: sigCanvasSize.height,
-                      className: 'bg-gray-100 rounded shadow ',
-                    }}
-                  />
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor="sig-upload">
-                      <Button size="sm" variant="secondary" type="button">
-                        Upload
-                      </Button>
-                    </label>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={clearSig}
-                      type="button"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
+              <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="text-lg font-semibold">
+                    {activeSig
+                      ? `${getSignatureTitle(activeSig)} E-Signature`
+                      : 'E-Signature'}
+                  </h2>
+                  <Dialog.Close asChild>
+                    <button
+                      className="text-gray-500 hover:text-gray-700"
                       onClick={() => setActiveSig(null)}
-                      type="button"
                     >
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={uploadSig} type="button">
-                      Save
-                    </Button>
-                  </div>
+                      <X className="w-6 h-6" />
+                    </button>
+                  </Dialog.Close>
+                </div>
+
+                <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                  <SignatureForm
+                    onSubmit={handleSignatureSubmit}
+                    defaultSignature={sigPaths[activeSig || '']}
+                    loading={isSigLoading}
+                  />
                 </div>
               </div>
             </Dialog.Content>
