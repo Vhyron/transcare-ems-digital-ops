@@ -7,7 +7,7 @@ import { DataTableColumnHeader } from '@/components/table/data-table-column-head
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX, ClockFading } from 'lucide-react';
-import { statuses } from './data';
+import { allFormStatus } from './data';
 
 export const columns: ColumnDef<AllFormType>[] = [
   {
@@ -31,7 +31,7 @@ export const columns: ColumnDef<AllFormType>[] = [
   },
   {
     id: 'Submitted By',
-    accessorFn: (row) => `${row.submitted_by.email}`,
+    accessorFn: (row) => row.submitted_by.email,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Submitted By" />
     ),
@@ -41,14 +41,14 @@ export const columns: ColumnDef<AllFormType>[] = [
   },
   {
     id: 'status',
-    accessorFn: (row) => `${row.form_submissions.status}`,
+    accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
     enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
+      const status = allFormStatus.find(
         (status) => status.value === row.getValue('status')
       );
 
@@ -75,7 +75,7 @@ export const columns: ColumnDef<AllFormType>[] = [
   },
   {
     id: 'Date Submitted',
-    accessorFn: (row) => `${row.form_submissions.created_at}`,
+    accessorFn: (row) => row.form_submissions.created_at,
     enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Date Submitted" />
@@ -83,7 +83,22 @@ export const columns: ColumnDef<AllFormType>[] = [
     cell: ({ row }) => {
       const date = row.original.form_submissions.created_at;
 
-      return formatDate(date, 'MMMM dd, yyyy');
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
+    },
+  },
+  {
+    id: 'Date Reviewed',
+    accessorFn: (row) => row.form_submissions.updated_at,
+    enableGlobalFilter: false,
+    enableSorting: false,
+    header: 'Date Reviewed',
+    cell: ({ row }) => {
+      const isPending = row.original.form_submissions.status === 'pending';
+      if (isPending) return '-';
+
+      const date = row.original.form_submissions.updated_at;
+
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
     },
   },
   {

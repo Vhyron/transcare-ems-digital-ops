@@ -1,6 +1,6 @@
 import { FORM_TYPE_TABLES } from '@/db/schema/form_submissions.schema';
 
-export const statuses = [
+export const allFormStatus = [
   {
     value: 'approved',
     label: 'Approved',
@@ -10,6 +10,19 @@ export const statuses = [
     value: 'pending',
     label: 'Pending',
     icon: 'ClockFading',
+  },
+  {
+    value: 'rejected',
+    label: 'Rejected',
+    icon: 'CircleX',
+  },
+];
+
+export const reviewedFormStatus = [
+  {
+    value: 'approved',
+    label: 'Approved',
+    icon: 'Check',
   },
   {
     value: 'rejected',
