@@ -1,10 +1,9 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
-import { Plus, X, RotateCcw } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@supabase/supabase-js';

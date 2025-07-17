@@ -11,7 +11,7 @@ import { uploadFile } from '@/lib/supabase/storage';
 import { toast } from 'sonner';
 import * as React from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -71,14 +71,20 @@ export default function OperationCensusForm() {
 
   // Remove patient record
   const removePatientRecord = (id: string) => {
-    setPatientRecords(patientRecords.filter(record => record.id !== id));
+    setPatientRecords(patientRecords.filter((record) => record.id !== id));
   };
 
   // Update patient record
-  const updatePatientRecord = (id: string, field: keyof PatientRecord, value: string) => {
-    setPatientRecords(patientRecords.map(record => 
-      record.id === id ? { ...record, [field]: value } : record
-    ));
+  const updatePatientRecord = (
+    id: string,
+    field: keyof PatientRecord,
+    value: string
+  ) => {
+    setPatientRecords(
+      patientRecords.map((record) =>
+        record.id === id ? { ...record, [field]: value } : record
+      )
+    );
   };
 
   const handleSignatureSubmit = async (data: SignatureData) => {
@@ -119,7 +125,7 @@ export default function OperationCensusForm() {
           // Update form signature (preparedBy/conformedBy)
           setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
         }
-        
+
         setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
 
         toast.success('Signature saved successfully');
@@ -296,46 +302,56 @@ export default function OperationCensusForm() {
 
       <div className="space-y-4 mb-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input 
-            placeholder="Date" 
-            type="date" 
+          <Input
+            placeholder="Date"
+            type="date"
             value={formData.date}
-            onChange={(e) => setFormData({...formData, date: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
           />
-          <Input 
-            placeholder="Event Owner" 
+          <Input
+            placeholder="Event Owner"
             value={formData.event_owner}
-            onChange={(e) => setFormData({...formData, event_owner: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, event_owner: e.target.value })
+            }
           />
-          <Input 
-            placeholder="Time In" 
+          <Input
+            placeholder="Time In"
             type="time"
             value={formData.time_in}
-            onChange={(e) => setFormData({...formData, time_in: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, time_in: e.target.value })
+            }
           />
-          <Input 
-            placeholder="Time Out" 
+          <Input
+            placeholder="Time Out"
             type="time"
             value={formData.time_out}
-            onChange={(e) => setFormData({...formData, time_out: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, time_out: e.target.value })
+            }
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input 
-            placeholder="Activity" 
+          <Input
+            placeholder="Activity"
             value={formData.activity}
-            onChange={(e) => setFormData({...formData, activity: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, activity: e.target.value })
+            }
           />
-          <Input 
-            placeholder="Location" 
+          <Input
+            placeholder="Location"
             value={formData.location}
-            onChange={(e) => setFormData({...formData, location: e.target.value})}
+            onChange={(e) =>
+              setFormData({ ...formData, location: e.target.value })
+            }
           />
         </div>
       </div>
 
       <div className="mb-4">
-        <Button 
+        <Button
           onClick={addPatientRecord}
           className="flex items-center gap-2"
           type="button"
@@ -366,7 +382,9 @@ export default function OperationCensusForm() {
                 <td className="border p-2">
                   <Input
                     value={record.name}
-                    onChange={(e) => updatePatientRecord(record.id, 'name', e.target.value)}
+                    onChange={(e) =>
+                      updatePatientRecord(record.id, 'name', e.target.value)
+                    }
                     placeholder="Enter name"
                     className="border-none p-0 h-8"
                   />
@@ -374,7 +392,9 @@ export default function OperationCensusForm() {
                 <td className="border p-2">
                   <Input
                     value={record.age_sex}
-                    onChange={(e) => updatePatientRecord(record.id, 'age_sex', e.target.value)}
+                    onChange={(e) =>
+                      updatePatientRecord(record.id, 'age_sex', e.target.value)
+                    }
                     placeholder="e.g., 25/M"
                     className="border-none p-0 h-8"
                   />
@@ -382,7 +402,13 @@ export default function OperationCensusForm() {
                 <td className="border p-2">
                   <Input
                     value={record.chief_complaint}
-                    onChange={(e) => updatePatientRecord(record.id, 'chief_complaint', e.target.value)}
+                    onChange={(e) =>
+                      updatePatientRecord(
+                        record.id,
+                        'chief_complaint',
+                        e.target.value
+                      )
+                    }
                     placeholder="Chief complaint"
                     className="border-none p-0 h-8"
                   />
@@ -390,7 +416,13 @@ export default function OperationCensusForm() {
                 <td className="border p-2">
                   <Input
                     value={record.vital_signs}
-                    onChange={(e) => updatePatientRecord(record.id, 'vital_signs', e.target.value)}
+                    onChange={(e) =>
+                      updatePatientRecord(
+                        record.id,
+                        'vital_signs',
+                        e.target.value
+                      )
+                    }
                     placeholder="Vital signs"
                     className="border-none p-0 h-8"
                   />
@@ -398,7 +430,13 @@ export default function OperationCensusForm() {
                 <td className="border p-2">
                   <Input
                     value={record.management}
-                    onChange={(e) => updatePatientRecord(record.id, 'management', e.target.value)}
+                    onChange={(e) =>
+                      updatePatientRecord(
+                        record.id,
+                        'management',
+                        e.target.value
+                      )
+                    }
                     placeholder="Management"
                     className="border-none p-0 h-8"
                   />
@@ -438,8 +476,11 @@ export default function OperationCensusForm() {
             ))}
             {patientRecords.length === 0 && (
               <tr>
-                <td colSpan={8} className="border p-4 text-center text-gray-500">
-                  No patient records added. Click "Add Patient Record" to start.
+                <td
+                  colSpan={8}
+                  className="border p-4 text-center text-gray-500"
+                >
+                  No patient records added. Click Add Patient Record to start.
                 </td>
               </tr>
             )}
@@ -485,9 +526,9 @@ export default function OperationCensusForm() {
       </div>
 
       <div className="mt-8 flex">
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isSubmitting}
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting || loading || !user}
           className="px-8 py-2"
         >
           {isSubmitting ? 'Submitting...' : 'Submit Form'}

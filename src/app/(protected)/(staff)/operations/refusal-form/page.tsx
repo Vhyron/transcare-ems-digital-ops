@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
@@ -460,6 +459,10 @@ export default function RefusalTreatmentTransportationForm() {
       setIsSubmitting(false);
     }
   };
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-10 w-full">

@@ -10,7 +10,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 
-export const OPERATION_CENSUS_RECORDS_TABLE = 'operation_census_records';
+export const 
+OPERATION_CENSUS_RECORDS_TABLE = 'operation_census_records';
 
 export const operationCensusRecords = pgTable(OPERATION_CENSUS_RECORDS_TABLE, {
   id: uuid().primaryKey().defaultRandom(),

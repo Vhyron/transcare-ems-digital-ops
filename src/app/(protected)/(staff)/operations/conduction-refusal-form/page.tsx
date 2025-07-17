@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
@@ -22,7 +21,7 @@ interface FormData {
   id: string;
   created_at: string;
   updated_at: string;
-  
+
   // Patient General Information
   patient_first_name: string;
   patient_middle_name: string;
@@ -82,7 +81,7 @@ export default function ConductionRefusalForm() {
   const { user, loading } = useAuth();
 
   const [activeSig, setActiveSig] = useState<'witnessSignature' | null>(null);
-  
+
   const handleSignatureSubmit = async (data: SignatureData) => {
     if (!activeSig) return;
 
@@ -302,7 +301,10 @@ export default function ConductionRefusalForm() {
     setIsSubmitting(true);
 
     // Add debugging to see what's being sent
-    console.log('Form data before submission:', JSON.stringify(formData, null, 2));
+    console.log(
+      'Form data before submission:',
+      JSON.stringify(formData, null, 2)
+    );
     console.log('Signature data:', sigData);
     console.log('Signature paths:', sigPaths);
 
@@ -405,6 +407,10 @@ export default function ConductionRefusalForm() {
       setIsSubmitting(false);
     }
   };
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-10 w-full">
@@ -616,7 +622,9 @@ export default function ConductionRefusalForm() {
                 type="text"
                 name={field.field}
                 className="w-full"
-                value={formData[field.field as keyof FormData] as string || ''}
+                value={
+                  (formData[field.field as keyof FormData] as string) || ''
+                }
                 onChange={handleInputChange}
               />
             </div>
@@ -809,9 +817,7 @@ export default function ConductionRefusalForm() {
           >
             <Dialog.Portal>
               <Dialog.Title>
-                <VisuallyHidden>
-                  Witness Signature
-                </VisuallyHidden>
+                <VisuallyHidden>Witness Signature</VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
               <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
