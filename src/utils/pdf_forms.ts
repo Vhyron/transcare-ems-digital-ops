@@ -18,7 +18,7 @@ export const hospitalTripTicketsPdf = async (
     throw new Error('Invalid data provided for PDF generation');
   }
 
-  const response = await fetch('/pdf/hospital_trip_tickets_fill.pdf');
+  const response = await fetch('/pdf/hospital_trip_ticket_fill.pdf');
   if (!response.ok) {
     throw new Error('Failed to fetch PDF file');
   }
