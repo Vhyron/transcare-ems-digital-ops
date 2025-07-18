@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState,  useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,12 @@ function getCrowdOptions(category: string): string[] {
 }
 
 export default function ConsolidatedDispatchForm() {
+  const [destinationRows, setDestinationRows] = useState(1);
+  const maxDestinationRows = 4;
+  const [ambulanceRows, setAmbulanceRows] = useState(1);
+  const maxAmbulanceRows = 8;
+  const [typeOfEventsOther, setTypeOfEventsOther] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -90,6 +96,52 @@ export default function ConsolidatedDispatchForm() {
   const [activeSig, setActiveSig] = useState<
     'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
   >(null);
+
+  const addDestinationRow = () => {
+    if (destinationRows < maxDestinationRows) {
+      setDestinationRows((prev) => prev + 1);
+    }
+  };
+
+  const removeDestinationRow = (indexToRemove: number) => {
+    if (destinationRows > 1) {
+      setDestinationRows((prev) => prev - 1);
+      // Remove the specific destination from the data
+      const lines = formData.point_of_destinations.split('\n');
+      lines.splice(indexToRemove, 1);
+      setFormData((prev) => ({
+        ...prev,
+        point_of_destinations: lines.join('\n'),
+      }));
+    }
+  };
+
+  const addAmbulanceRow = () => {
+    if (ambulanceRows < maxAmbulanceRows) {
+      setAmbulanceRows((prev) => prev + 1);
+      // Extend the ambulance_models array to accommodate new row
+      setFormData((prev) => ({
+        ...prev,
+        ambulance_models: [
+          ...prev.ambulance_models,
+          { model: '', plate_number: '', type: '' },
+        ],
+      }));
+    }
+  };
+
+  const removeAmbulanceRow = (indexToRemove: number) => {
+    if (ambulanceRows > 1) {
+      setAmbulanceRows((prev) => prev - 1);
+      // Remove the specific ambulance model from the array
+      setFormData((prev) => ({
+        ...prev,
+        ambulance_models: prev.ambulance_models.filter(
+          (_, index) => index !== indexToRemove
+        ),
+      }));
+    }
+  };
 
   const showNotificationMessage = (
     message: string,
@@ -195,14 +247,9 @@ export default function ConsolidatedDispatchForm() {
     crew_credential: 'EMT',
     crew_credential_other: '',
     number_of_crew: '',
-    ambulance_models: [
-      { model: '', plate_number: '', type: '' },
-      { model: '', plate_number: '', type: '' },
-      { model: '', plate_number: '', type: '' },
-      { model: '', plate_number: '', type: '' },
-    ],
-    md_names: '',
-    point_of_destinations: '',
+    ambulance_models: [{ model: '', plate_number: '', type: '' }],
+    md_names: '', // Single field instead of multi-line
+    point_of_destinations: '', // Will be managed by dynamic inputs
     special_consideration: '',
 
     // Patient Census
@@ -355,12 +402,8 @@ export default function ConsolidatedDispatchForm() {
       crew_credential: 'EMT',
       crew_credential_other: '',
       number_of_crew: '',
-      ambulance_models: [
-        { model: '', plate_number: '', type: '' },
-        { model: '', plate_number: '', type: '' },
-        { model: '', plate_number: '', type: '' },
-        { model: '', plate_number: '', type: '' },
-      ],
+      ambulance_models: [{ model: '', plate_number: '', type: '' }],
+
       md_names: '',
       point_of_destinations: '',
       special_consideration: '',
@@ -429,9 +472,12 @@ export default function ConsolidatedDispatchForm() {
       current_page: '',
     });
     setSigData({});
+    setTypeOfEventsOther(''); 
     setTypeOfServiceOther('');
     setCrewCredentialOther('');
     setCurrentPage(1);
+    setDestinationRows(1); 
+    setAmbulanceRows(1); 
   };
 
   interface AmbulanceModel {
@@ -474,6 +520,10 @@ export default function ConsolidatedDispatchForm() {
           formData.type_of_service === 'Others' ? typeOfServiceOther : '',
         crew_credential_other:
           formData.crew_credential === 'Others' ? crewCredentialOther : '',
+        type_of_events:
+          formData.type_of_events === 'Others'
+            ? typeOfEventsOther
+            : formData.type_of_events,
       };
 
       // Remove id field if it exists and is empty
@@ -742,6 +792,20 @@ export default function ConsolidatedDispatchForm() {
               </option>
             ))}
           </select>
+
+          {/* Conditional input field for "Others" */}
+          {formData.type_of_events === 'Others' && (
+            <div className="mt-2">
+              <input
+                type="text"
+                placeholder="Please specify the type of event"
+                value={typeOfEventsOther}
+                onChange={(e) => setTypeOfEventsOther(e.target.value)}
+                className="w-full h-10 border rounded px-3 text-base"
+                style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+              />
+            </div>
+          )}
         </div>
         <div>
           <label className="block font-medium mb-2">Venue Type</label>
@@ -905,40 +969,72 @@ export default function ConsolidatedDispatchForm() {
       </div>
 
       <div>
-        <label className="block mb-2 font-medium">Ambulance Model</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block font-medium">Ambulance Model</label>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              {ambulanceRows} / {maxAmbulanceRows}
+            </span>
+            <Button
+              type="button"
+              onClick={addAmbulanceRow}
+              disabled={ambulanceRows >= maxAmbulanceRows}
+              size="sm"
+              variant="outline"
+              className="h-8 px-2"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
         <div className="space-y-2">
-          {formData.ambulance_models.map((model, index) => (
-            <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                placeholder="Ambulance Model"
-                className="h-10 text-base"
-                value={model.model}
-                onChange={(e) =>
-                  handleAmbulanceModelChange(index, 'model', e.target.value)
-                }
-              />
-              <Input
-                placeholder="Plate Number"
-                className="h-10 text-base"
-                value={model.plate_number}
-                onChange={(e) =>
-                  handleAmbulanceModelChange(
-                    index,
-                    'plate_number',
-                    e.target.value
-                  )
-                }
-              />
-              <Input
-                placeholder="Type"
-                className="h-10 text-base"
-                value={model.type}
-                onChange={(e) =>
-                  handleAmbulanceModelChange(index, 'type', e.target.value)
-                }
-              />
-            </div>
-          ))}
+          {formData.ambulance_models
+            .slice(0, ambulanceRows)
+            .map((model, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                  <Input
+                    placeholder="Ambulance Model"
+                    className="h-10 text-base"
+                    value={model.model}
+                    onChange={(e) =>
+                      handleAmbulanceModelChange(index, 'model', e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Plate Number"
+                    className="h-10 text-base"
+                    value={model.plate_number}
+                    onChange={(e) =>
+                      handleAmbulanceModelChange(
+                        index,
+                        'plate_number',
+                        e.target.value
+                      )
+                    }
+                  />
+                  <Input
+                    placeholder="Type"
+                    className="h-10 text-base"
+                    value={model.type}
+                    onChange={(e) =>
+                      handleAmbulanceModelChange(index, 'type', e.target.value)
+                    }
+                  />
+                </div>
+                {ambulanceRows > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeAmbulanceRow(index)}
+                    size="sm"
+                    variant="outline"
+                    className="h-10 px-2 text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
         </div>
       </div>
 
@@ -972,47 +1068,63 @@ export default function ConsolidatedDispatchForm() {
           <label className="block mb-2 font-medium">
             Full Name and Signature of MD
           </label>
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((num, i) => (
+          <Input
+            placeholder="MD Name"
+            className="h-10 text-base"
+            name="md_names"
+            value={formData.md_names}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block font-medium">Point of Destination</label>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              {destinationRows} / {maxDestinationRows}
+            </span>
+            <Button
+              type="button"
+              onClick={addDestinationRow}
+              disabled={destinationRows >= maxDestinationRows}
+              size="sm"
+              variant="outline"
+              className="h-8 px-2"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: destinationRows }, (_, i) => (
+            <div key={i} className="flex items-center gap-2">
               <Input
-                key={i}
-                placeholder={`MD ${num}`}
-                className="h-10 text-base"
-                name={`md_name_${i}`}
-                value={formData.md_names.split('\n')[i] || ''}
+                placeholder={`${i + 1})`}
+                className="h-10 text-base flex-1"
+                name={`destination_${i}`}
+                value={formData.point_of_destinations.split('\n')[i] || ''}
                 onChange={(e) => {
-                  const lines = formData.md_names.split('\n');
+                  const lines = formData.point_of_destinations.split('\n');
                   lines[i] = e.target.value;
                   setFormData((prev) => ({
                     ...prev,
-                    md_names: lines.join('\n'),
+                    point_of_destinations: lines.join('\n'),
                   }));
                 }}
               />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label className="block mb-2 font-medium">Point of Destination</label>
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((num, i) => (
-            <Input
-              key={i}
-              placeholder={`${num})`}
-              className="h-10 text-base"
-              name={`destination_${i}`}
-              value={formData.point_of_destinations.split('\n')[i] || ''}
-              onChange={(e) => {
-                const lines = formData.point_of_destinations.split('\n');
-                lines[i] = e.target.value;
-                setFormData((prev) => ({
-                  ...prev,
-                  point_of_destinations: lines.join('\n'),
-                }));
-              }}
-            />
+              {destinationRows > 1 && (
+                <Button
+                  type="button"
+                  onClick={() => removeDestinationRow(i)}
+                  size="sm"
+                  variant="outline"
+                  className="h-10 px-2 text-red-500 hover:text-red-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -1415,58 +1527,107 @@ export default function ConsolidatedDispatchForm() {
           </div>
         </div>
       </div>
-    </div>
-  );
 
-  const renderSignatures = () => (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold  border-b pb-2">Signatures</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          {
-            label: 'Team Leader',
-            signatureLabel: 'Prepared and Filled by',
-            key: 'teamLeader',
-          },
-          {
-            label: 'Client Representative',
-            signatureLabel: 'Conformed by',
-            key: 'clientRepresentative',
-          },
-          {
-            label: 'EMS Supervisor',
-            signatureLabel: 'Noted by',
-            key: 'EMSSupervisor',
-          },
-        ].map(({ label, signatureLabel, key }) => (
-          <div key={key}>
-            <label className="block mb-2 font-medium">
-              {signatureLabel} ({label})
-            </label>
-            <div
-              className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
-              onClick={() => setActiveSig(key as typeof activeSig)}
-            >
-              {sigData[key] ? (
-                <img
-                  src={sigData[key]}
-                  alt={`${label} signature`}
-                  className="max-h-[100px]"
-                />
-              ) : (
-                <div className="text-center">
-                  <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <span className="text-sm text-gray-500">
-                    Click to add signature
-                  </span>
-                </div>
-              )}
+      {/* Signatures section - only appears on Page 3 */}
+      <div className="space-y-6 mt-12 pt-8 border-t">
+        <h3 className="text-lg font-semibold border-b pb-2">Signatures</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              label: 'Team Leader',
+              signatureLabel: 'Prepared and Filled by',
+              key: 'teamLeader',
+            },
+            {
+              label: 'Client Representative',
+              signatureLabel: 'Conformed by',
+              key: 'clientRepresentative',
+            },
+            {
+              label: 'EMS Supervisor',
+              signatureLabel: 'Noted by',
+              key: 'EMSSupervisor',
+            },
+          ].map(({ label, signatureLabel, key }) => (
+            <div key={key}>
+              <label className="block mb-2 font-medium">
+                {signatureLabel} ({label})
+              </label>
+              <div
+                className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => setActiveSig(key as typeof activeSig)}
+              >
+                {sigData[key] ? (
+                  <img
+                    src={sigData[key]}
+                    alt={`${label} signature`}
+                    className="max-h-[100px]"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <span className="text-sm text-gray-500">
+                      Click to add signature
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
+
+  // const renderSignatures = () => (
+  //   <div className="space-y-6">
+  //     <h3 className="text-lg font-semibold  border-b pb-2">Signatures</h3>
+  //     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  //       {[
+  //         {
+  //           label: 'Team Leader',
+  //           signatureLabel: 'Prepared and Filled by',
+  //           key: 'teamLeader',
+  //         },
+  //         {
+  //           label: 'Client Representative',
+  //           signatureLabel: 'Conformed by',
+  //           key: 'clientRepresentative',
+  //         },
+  //         {
+  //           label: 'EMS Supervisor',
+  //           signatureLabel: 'Noted by',
+  //           key: 'EMSSupervisor',
+  //         },
+  //       ].map(({ label, signatureLabel, key }) => (
+  //         <div key={key}>
+  //           <label className="block mb-2 font-medium">
+  //             {signatureLabel} ({label})
+  //           </label>
+  //           <div
+  //             className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
+  //             onClick={() => setActiveSig(key as typeof activeSig)}
+  //           >
+  //             {sigData[key] ? (
+  //               <img
+  //                 src={sigData[key]}
+  //                 alt={`${label} signature`}
+  //                 className="max-h-[100px]"
+  //               />
+  //             ) : (
+  //               <div className="text-center">
+  //                 <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+  //                 <span className="text-sm text-gray-500">
+  //                   Click to add signature
+  //                 </span>
+  //               </div>
+  //             )}
+  //           </div>
+  //         </div>
+  //       ))}
+  //     </div>
+  //   </div>
+  // );
 
   return (
     <div className="min-h-screen">
@@ -1501,6 +1662,15 @@ export default function ConsolidatedDispatchForm() {
           </div>
         </div>
 
+        {/* Form Content */}
+        <div className=" rounded-lg shadow-sm p-8">
+          {currentPage === 1 && renderPage1()}
+          {currentPage === 2 && renderPage2()}
+          {currentPage === 3 && renderPage3()}
+
+          {/* Signatures section appears on all pages */}
+          {/* <div className="mt-12 pt-8 border-t">{renderSignatures()}</div> */}
+        </div>
         {/* Action Buttons */}
         <div className=" rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -1544,17 +1714,6 @@ export default function ConsolidatedDispatchForm() {
             </div>
           </div>
         </div>
-
-        {/* Form Content */}
-        <div className=" rounded-lg shadow-sm p-8">
-          {currentPage === 1 && renderPage1()}
-          {currentPage === 2 && renderPage2()}
-          {currentPage === 3 && renderPage3()}
-
-          {/* Signatures section appears on all pages */}
-          <div className="mt-12 pt-8 border-t">{renderSignatures()}</div>
-        </div>
-
         <Dialog.Root
           open={!!activeSig}
           onOpenChange={(open) => !open && setActiveSig(null)}

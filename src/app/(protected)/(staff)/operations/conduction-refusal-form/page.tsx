@@ -415,15 +415,14 @@ export default function ConductionRefusalForm() {
   return (
     <div className="p-10 w-full">
       {/* Form Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">CONDUCTION REFUSAL FORM (RF-01)</h1>
+      <div className="flex justify-between items-center ">
+        <h1 className="text-xl font-bold mb-6">
+          Transcare Emergency Medical Services - Conduction Refusal Form
+        </h1>{' '}
       </div>
 
       {/* Patient's General Information */}
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
-        <h1 className="text-xl font-bold mb-6">
-          Transcare Emergency Medical Services - Conduction Refusal Form
-        </h1>
         <h3 className="font-bold text-lg mb-3">PATIENT GENERAL INFORMATION</h3>
 
         <div className="grid grid-cols-12 gap-2 mb-2">
@@ -527,7 +526,7 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Next of Kin/Legal Guardian Information */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-4">
+      <div className="border rounded-lg p-6 shadow-sm space-y-4 mt-6">
         <h3 className="font-bold text-sm mb-3">
           NEXT OF KIN/LEGAL GUARDIAN INFORMATION
         </h3>
@@ -604,7 +603,7 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Vital Signs */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-6">
+      <div className="border rounded-lg p-6 shadow-sm space-y-6 mt-6">
         <div className="grid grid-cols-6 gap-4">
           {[
             { label: 'BP', field: 'vital_bp' },
@@ -691,7 +690,7 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Main Content */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8">
+      <div className="border rounded-lg p-6 shadow-sm space-y-8 mt-6">
         <div className="mb-4">
           <p className="mb-2">
             It is sometimes impossible to recognize actual or potential medical
@@ -847,23 +846,20 @@ export default function ConductionRefusalForm() {
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-
-          <div className="flex gap-4 mt-6">
-            <Button
-              className="mt-6"
-              onClick={handleSubmit}
-              disabled={isSubmitting || loading || !user}
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </Button>
-
-            {!user && !loading && (
-              <p className="text-red-500 mt-2">
-                Please log in to submit the form
-              </p>
-            )}
-          </div>
         </div>
+      </div>
+      <div className="flex gap-4 mt-6">
+        <Button
+          className="mt-6"
+          onClick={handleSubmit}
+          disabled={isSubmitting || loading || !user}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit'}
+        </Button>
+
+        {!user && !loading && (
+          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+        )}
       </div>
     </div>
   );

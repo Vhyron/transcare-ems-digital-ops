@@ -640,7 +640,7 @@ export default function HospitalTripForm() {
         onClick={handleSubmit} 
         disabled={isSubmitting || loading || !user}
       >
-        {isSubmitting ? "Submitting..." : "Submit Trip Ticket"}
+        {isSubmitting ? "Submitting..." : "Submit "}
       </Button>
       
       {!user && !loading && (

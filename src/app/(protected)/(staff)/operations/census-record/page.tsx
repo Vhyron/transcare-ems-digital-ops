@@ -296,8 +296,8 @@ export default function OperationCensusForm() {
 
   return (
     <div className="p-10 w-full">
-      <h1 className="text-xl font-bold mb-6 text-center">
-        TRANSCare Emergency Medical Service - Operation Census Record Form
+      <h1 className="text-xl font-bold mb-6">
+        Transcare Emergency Medical Service - Operation Census Record Form
       </h1>
 
       <div className="space-y-4 mb-8">
@@ -531,7 +531,7 @@ export default function OperationCensusForm() {
           disabled={isSubmitting || loading || !user}
           className="px-8 py-2"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Form'}
+          {isSubmitting ? 'Submitting...' : 'Submit '}
         </Button>
       </div>
 
