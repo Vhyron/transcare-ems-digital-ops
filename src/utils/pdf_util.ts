@@ -38,8 +38,15 @@ export const fillPdfTextFields = (
   fieldMap: Record<string, any>
 ) => {
   Object.entries(fieldMap).forEach(([field, value]) => {
+    const textField = form.getFieldMaybe(field);
+
+    if (!textField) {
+      console.error(`Error field not found: ${field}`);
+      return;
+    }
+
     form.getTextField(field).setText(value ? String(value) : '');
-    form.getField(field).enableReadOnly();
+    textField.enableReadOnly();
   });
 };
 
@@ -65,8 +72,12 @@ export const checkFormCheckbox = (
 
 export const setFieldsReadOnly = (form: PDFForm, fieldNames: string[]) => {
   fieldNames.forEach((name) => {
-    const field = form.getField(name);
-    if (field) field.enableReadOnly();
+    const field = form.getFieldMaybe(name);
+    if (!field) {
+      console.error(`Error field not found: ${name}`);
+      return;
+    }
+    field.enableReadOnly();
   });
 };
 
