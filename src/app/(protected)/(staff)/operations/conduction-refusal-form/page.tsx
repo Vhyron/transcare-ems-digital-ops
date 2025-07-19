@@ -1,42 +1,145 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Input } from '@/components/ui/input';
-import { ConductionRefusalFormData } from '@/types/conduction-refusal-form';
 import { createClient } from '@supabase/supabase-js';
-import { useAuth } from '@/components/provider/auth-provider'; // Import your auth provider
+import { useAuth } from '@/components/provider/auth-provider';
+import { uploadFile } from '@/lib/supabase/storage';
+import { toast } from 'sonner';
+import SignatureForm, { SignatureData } from '@/components/forms/SignatureForm';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function ConductionRefusalForm() {
-  const witnessSignature = useRef<SignatureCanvas | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sigData, setSigData] = useState<{
-    [key: string]: { image: string; name: string };
-  }>({});
+interface FormData {
+  id: string;
+  created_at: string;
+  updated_at: string;
 
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
+  // Patient General Information
+  patient_first_name: string;
+  patient_middle_name: string;
+  patient_last_name: string;
+  patient_age: number;
+  patient_sex: string;
+  patient_birthdate: string;
+  patient_citizenship: string;
+  patient_address: string;
+  patient_contact_no: string;
+
+  // Next of Kin/Legal Guardian Information
+  kin_name: string;
+  kin_relation: string;
+  kin_contact_no: string;
+  kin_address: string;
+  medical_record: string;
+  date_accomplished: string;
+
+  // Vital Signs
+  vital_bp: string;
+  vital_pulse: string;
+  vital_resp: string;
+  vital_skin: string;
+  vital_pupils: string;
+  vital_loc: string;
+
+  // Narrative
+  narrative_description: string;
+
+  // Witness Information
+  witness_name: string;
+  witness_date: string;
+  witness_signature_image: string;
+
+  // Metadata
+  completed_by: string;
+  form_status: string;
+  oriented_person_place_time: boolean;
+  coherent_speech: boolean;
+  hallucinations: boolean;
+  suicidal_homicidal_ideation: boolean;
+  understands_refusal_consequences: boolean;
+  refused_treatment_and_transport: boolean;
+  refused_treatment_willing_transport: boolean;
+  wants_treatment_refused_transport: boolean;
+}
+
+export default function ConductionRefusalForm() {
+  const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigLoading, setIsSigLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
   const { user, loading } = useAuth();
 
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
-  const [activeSig, setActiveSig] = useState<'witness' | null>(null);
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error';
-    text: '';
-  } | null>(null);
+  const [activeSig, setActiveSig] = useState<'witnessSignature' | null>(null);
 
-  const [formData, setFormData] = useState<ConductionRefusalFormData>({
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
+
+    setIsSigLoading(true);
+
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `conduction_refusal_form/witness_signature_${timestamp}.png`;
+
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+
+        // Update signature display data
+        setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
+
+        // FIXED: Update formData with the correct signature path
+        setFormData((prev) => ({
+          ...prev,
+          witness_signature_image: upload.path, // Store the path directly
+        }));
+
+        toast.success('Witness signature saved successfully');
+        setActiveSig(null);
+      };
+      reader.readAsDataURL(data.signature);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const [formData, setFormData] = useState<FormData>({
     id: '',
     created_at: '',
     updated_at: '',
@@ -71,7 +174,7 @@ export default function ConductionRefusalForm() {
     // Narrative
     narrative_description: '',
 
-    // Witness Information
+    // Witness Information - FIXED: Flattened structure
     witness_name: '',
     witness_date: '',
     witness_signature_image: '',
@@ -100,25 +203,10 @@ export default function ConductionRefusalForm() {
       const checkbox = e.target as HTMLInputElement;
       const checked = checkbox.checked;
 
-      if (name.includes('.')) {
-        const keys = name.split('.');
-        setFormData((prev) => {
-          const newData = { ...prev };
-          let current: any = newData;
-
-          for (let i = 0; i < keys.length - 1; i++) {
-            current = current[keys[i]];
-          }
-
-          current[keys[keys.length - 1]] = checked;
-          return newData;
-        });
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: checked,
-        }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+      }));
     } else if (type === 'select-one') {
       const mentalStatusFields = [
         'oriented_person_place_time',
@@ -140,25 +228,10 @@ export default function ConductionRefusalForm() {
         }));
       }
     } else {
-      if (name.includes('.')) {
-        const keys = name.split('.');
-        setFormData((prev) => {
-          const newData = { ...prev };
-          let current: any = newData;
-
-          for (let i = 0; i < keys.length - 1; i++) {
-            current = current[keys[i]];
-          }
-
-          current[keys[keys.length - 1]] = value;
-          return newData;
-        });
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
@@ -216,15 +289,7 @@ export default function ConductionRefusalForm() {
       wants_treatment_refused_transport: false,
     });
     setSigData({});
-  };
-
-  const getRefByType = (type: string | null) => {
-    switch (type) {
-      case 'witness':
-        return witnessSignature;
-      default:
-        return null;
-    }
+    setSigPaths({});
   };
 
   const handleSubmit = async () => {
@@ -234,7 +299,14 @@ export default function ConductionRefusalForm() {
     }
 
     setIsSubmitting(true);
-    console.log(JSON.stringify(formData, null, 2));
+
+    // Add debugging to see what's being sent
+    console.log(
+      'Form data before submission:',
+      JSON.stringify(formData, null, 2)
+    );
+    console.log('Signature data:', sigData);
+    console.log('Signature paths:', sigPaths);
 
     try {
       // Step 1: Submit the conduction refusal form
@@ -254,6 +326,7 @@ export default function ConductionRefusalForm() {
           }`
         );
       }
+
       const baseUrl =
         process.env.NODE_ENV === 'development'
           ? 'http://localhost:3000'
@@ -322,9 +395,7 @@ export default function ConductionRefusalForm() {
       }
 
       alert('Saved successfully!');
-
       resetForm();
-      setSigData({});
     } catch (error) {
       console.error('Error saving:', error);
       alert(
@@ -336,143 +407,22 @@ export default function ConductionRefusalForm() {
       setIsSubmitting(false);
     }
   };
-  const clearSig = () => {
-    witnessSignature.current?.clear();
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
-
-      setFormData((prev) => ({
-        ...prev,
-        [`${activeSig}_signature_image`]: dataUrl,
-      }));
-
-      setSigData((prev) => ({
-        ...prev,
-        [activeSig!]: {
-          image: dataUrl,
-          name: prev[activeSig!]?.name || '',
-        },
-      }));
-
-      setActiveSig(null);
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as '';
-      if (witnessSignature.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = witnessSignature.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            witnessSignature.current!.getCanvas().width,
-            witnessSignature.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            witnessSignature.current!.getCanvas().width,
-            witnessSignature.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // const exportForm = async () => {
-  //   if (!formData.id) {
-  //     setMessage({
-  //       type: "error",
-  //       text: "Please save the form first before exporting.",
-  //     });
-  //     return;
-  //   }
-
-  //   try {
-  //     const blob = await conductionRefusalFormAPI.exportForm(
-  //       formData.id,
-  //       "pdf"
-  //     );
-  //     const url = window.URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = `conduction-refusal-form-${formData.id}.pdf`;
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     window.URL.revokeObjectURL(url);
-  //     document.body.removeChild(a);
-  //   } catch (error) {
-  //     setMessage({
-  //       type: "error",
-  //       text: "Failed to export form. Please try again.",
-  //     });
-  //     console.error("Export error:", error);
-  //   }
-  // };
-  useEffect(() => {
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl);
-    }
-  }, [activeSig, sigData]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
-
-  // Auto-hide messages after 3 seconds
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-10 w-full">
-      {/* Message Display */}
-      {message && (
-        <div
-          className={`mb-4 p-4 rounded-md ${
-            message.type === 'success'
-              ? 'bg-green-100 border border-green-400 text-green-700'
-              : 'bg-red-100 border border-red-400 text-red-700'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
       {/* Form Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">CONDUCTION REFUSAL FORM (RF-01)</h1>
+      <div className="flex justify-between items-center ">
+        <h1 className="text-xl font-bold mb-6">
+          Transcare Emergency Medical Services - Conduction Refusal Form
+        </h1>{' '}
       </div>
 
       {/* Patient's General Information */}
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
-        <h1 className="text-xl font-bold mb-6">
-          Transcare Emergency Medical Services - Conduction Refusal Form
-        </h1>
         <h3 className="font-bold text-lg mb-3">PATIENT GENERAL INFORMATION</h3>
 
         <div className="grid grid-cols-12 gap-2 mb-2">
@@ -576,7 +526,7 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Next of Kin/Legal Guardian Information */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-4">
+      <div className="border rounded-lg p-6 shadow-sm space-y-4 mt-6">
         <h3 className="font-bold text-sm mb-3">
           NEXT OF KIN/LEGAL GUARDIAN INFORMATION
         </h3>
@@ -653,7 +603,7 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Vital Signs */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-6">
+      <div className="border rounded-lg p-6 shadow-sm space-y-6 mt-6">
         <div className="grid grid-cols-6 gap-4">
           {[
             { label: 'BP', field: 'vital_bp' },
@@ -669,12 +619,10 @@ export default function ConductionRefusalForm() {
               </label>
               <Input
                 type="text"
-                name={field.field} // <- THIS IS CRUCIAL
+                name={field.field}
                 className="w-full"
                 value={
-                  (formData[
-                    field.field as keyof ConductionRefusalFormData
-                  ] as string) || ''
+                  (formData[field.field as keyof FormData] as string) || ''
                 }
                 onChange={handleInputChange}
               />
@@ -708,13 +656,9 @@ export default function ConductionRefusalForm() {
               <div className="col-span-8">{item.question}</div>
               <div className="col-span-3">
                 <select
-                  name={item.field} // <-- Add this!
+                  name={item.field}
                   className="w-full border rounded-md px-2 py-1"
-                  value={
-                    formData[item.field as keyof ConductionRefusalFormData]
-                      ? 'yes'
-                      : 'no'
-                  }
+                  value={formData[item.field as keyof FormData] ? 'yes' : 'no'}
                   onChange={handleInputChange}
                 >
                   <option value="yes" className="text-gray-700">
@@ -746,7 +690,7 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Main Content */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8">
+      <div className="border rounded-lg p-6 shadow-sm space-y-8 mt-6">
         <div className="mb-4">
           <p className="mb-2">
             It is sometimes impossible to recognize actual or potential medical
@@ -826,11 +770,11 @@ export default function ConductionRefusalForm() {
               </label>
               <div
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[156px] hover:bg-gray-100 cursor-pointer"
-                onClick={() => setActiveSig('witness')}
+                onClick={() => setActiveSig('witnessSignature')}
               >
-                {formData.witness_signature_image ? (
+                {sigData['witnessSignature'] ? (
                   <img
-                    src={formData.witness_signature_image}
+                    src={sigData['witnessSignature']}
                     alt="Witness signature"
                     className="max-h-[100px]"
                   />
@@ -872,72 +816,50 @@ export default function ConductionRefusalForm() {
           >
             <Dialog.Portal>
               <Dialog.Title>
-                <VisuallyHidden> {activeSig === 'witness'}</VisuallyHidden>
+                <VisuallyHidden>Witness Signature</VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
               <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-                  <Dialog.Close asChild>
-                    <button
-                      className="absolute right-6 text-gray-700 hover:text-black"
-                      onClick={() => setActiveSig(null)}
-                    >
-                      <X className="w-10 h-10" />
-                    </button>
-                  </Dialog.Close>
-
-                  <div ref={modalCanvasRef} className="flex-1">
-                    <SignatureCanvas
-                      ref={witnessSignature}
-                      penColor="black"
-                      canvasProps={{
-                        width: sigCanvasSize.width,
-                        height: sigCanvasSize.height,
-                        className: 'bg-gray-100 rounded shadow',
-                      }}
-                    />
+                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <h2 className="text-lg font-semibold">
+                      Witness E-Signature
+                    </h2>
+                    <Dialog.Close asChild>
+                      <button
+                        className="text-gray-500 hover:text-gray-700"
+                        onClick={() => setActiveSig(null)}
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </Dialog.Close>
                   </div>
 
-                  <div className="absolute left-6 flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
+                  <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                    <SignatureForm
+                      onSubmit={handleSignatureSubmit}
+                      defaultSignature={sigPaths[activeSig || '']}
+                      loading={isSigLoading}
                     />
-                    <label htmlFor="sig-upload">
-                      <Button size="sm" variant="secondary">
-                        Upload
-                      </Button>
-                    </label>
-                    <Button size="sm" variant="secondary" onClick={clearSig}>
-                      Clear
-                    </Button>
-                    <Button size="sm" onClick={uploadSig}>
-                      Save
-                    </Button>
                   </div>
                 </div>
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
-          <div className="flex gap-4 mt-6">
-            <Button
-              className="mt-6"
-              onClick={handleSubmit}
-              disabled={isSubmitting || loading || !user}
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit'}
-            </Button>
-
-            {!user && !loading && (
-              <p className="text-red-500 mt-2">
-                Please log in to submit the form
-              </p>
-            )}
-          </div>
         </div>
+      </div>
+      <div className="flex gap-4 mt-6">
+        <Button
+          className="mt-6"
+          onClick={handleSubmit}
+          disabled={isSubmitting || loading || !user}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit'}
+        </Button>
+
+        {!user && !loading && (
+          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import SignatureCanvas from 'react-signature-canvas';
+import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
@@ -9,6 +8,10 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/components/provider/auth-provider';
+import SignatureForm, { SignatureData } from '@/components/forms/SignatureForm';
+import { uploadFile } from '@/lib/supabase/storage';
+import { toast } from 'sonner';
+import * as React from 'react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,25 +19,130 @@ const supabase = createClient(
 );
 
 export default function RefusalTreatmentTransportationForm() {
-  const patientGuardianSignature = useRef<SignatureCanvas | null>(null);
-  const eventsOrganizerSignature = useRef<SignatureCanvas | null>(null);
-  const witnessSignature = useRef<SignatureCanvas | null>(null);
-  const medicPersonnelSignature = useRef<SignatureCanvas | null>(null);
+  const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigLoading, setIsSigLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { user, loading } = useAuth();
 
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
-
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     'patientGuardian' | 'eventsOrganizer' | 'witness' | 'medicPersonnel' | null
   >(null);
-  const [sigData, setSigData] = useState<{
-    [key: string]: { image: string; name: string };
-  }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
+
+    console.log('handleSignatureSubmit called with:', { activeSig, data });
+
+    setIsSigLoading(true);
+
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `conduction_refusal_form/${activeSig}_signature_${timestamp}.png`;
+
+      console.log('Uploading file:', { filename, activeSig });
+
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      console.log('Upload result:', upload);
+
+      if (upload instanceof Error || !upload) {
+        console.error('Upload failed:', upload);
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+
+        console.log('FileReader completed:', {
+          activeSig,
+          uploadPath: upload.path,
+          base64Length: base64String.length,
+        });
+
+        // Update signature display data
+        setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
+
+        // IMPROVED: More explicit and type-safe approach with better error handling
+        setFormData((prev) => {
+          const updatedFormData = { ...prev };
+
+          console.log('Before updating formData:', {
+            activeSig,
+            currentFormData: prev[activeSig as keyof typeof prev],
+            uploadPath: upload.path,
+          });
+
+          // Type-safe property updates with preservation of existing data
+          if (activeSig === 'patientGuardian') {
+            updatedFormData.patientGuardian = {
+              ...updatedFormData.patientGuardian, // Preserve existing name
+              patient_guardian_signature_image: upload.path,
+            };
+          } else if (activeSig === 'eventsOrganizer') {
+            updatedFormData.eventsOrganizer = {
+              ...updatedFormData.eventsOrganizer, // Preserve existing name
+              events_organizer_signature_image: upload.path,
+            };
+          } else if (activeSig === 'witness') {
+            updatedFormData.witness = {
+              ...updatedFormData.witness, // Preserve existing name
+              witness_signature_image: upload.path,
+            };
+          } else if (activeSig === 'medicPersonnel') {
+            updatedFormData.medicPersonnel = {
+              ...updatedFormData.medicPersonnel, // Preserve existing name
+              medic_personnel_signature_image: upload.path,
+            };
+          }
+
+          console.log('After updating formData:', {
+            activeSig,
+            updatedSection:
+              updatedFormData[activeSig as keyof typeof updatedFormData],
+            fullFormData: updatedFormData,
+          });
+
+          return updatedFormData;
+        });
+
+        toast.success(`${activeSig} signature saved successfully`);
+        setActiveSig(null);
+      };
+
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        toast.error('Failed to process signature image');
+      };
+
+      reader.readAsDataURL(data.signature);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState({
     leagueEvent: '',
@@ -57,6 +165,22 @@ export default function RefusalTreatmentTransportationForm() {
     pcr: '',
     date: '',
     time: '',
+    patientGuardian: {
+      patient_guardian_signature_image: '',
+      patient_guardian_signature_name: '',
+    },
+    eventsOrganizer: {
+      events_organizer_signature_image: '',
+      events_organizer_signature_name: '',
+    },
+    witness: {
+      witness_signature_image: '',
+      witness_signature_name: '',
+    },
+    medicPersonnel: {
+      medic_personnel_signature_image: '',
+      medic_personnel_signature_name: '',
+    },
     refusalReasons: {
       treatmentNotNecessary: false,
       refusesTransportAgainstAdvice: false,
@@ -66,68 +190,6 @@ export default function RefusalTreatmentTransportationForm() {
     },
     company: '',
   });
-
-  const getRefByType = (type: string | null) => {
-    if (type === 'patientGuardian') return patientGuardianSignature;
-    if (type === 'eventsOrganizer') return eventsOrganizerSignature;
-    if (type === 'witness') return witnessSignature;
-    if (type === 'medicPersonnel') return medicPersonnelSignature;
-    return null;
-  };
-
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    ref?.current?.clear();
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty()) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
-
-      setSigData((prev) => ({
-        ...prev,
-        [activeSig!]: {
-          image: dataUrl,
-          name: prev[activeSig!]?.name || '',
-        },
-      }));
-
-      setActiveSig(null);
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -145,13 +207,37 @@ export default function RefusalTreatmentTransportationForm() {
         },
       }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      // Handle nested names like 'witness.witness_signature_name'
+      const keys = name.split('.'); // e.g. ['witness', 'witness_signature_name']
+      if (keys.length === 2) {
+        const [section, field] = keys;
+        setFormData((prev) => ({
+          ...prev,
+          [section]: {
+            // FIXED: Preserve existing properties in the nested object
+            ...(prev as any)[section],
+            [field]: value,
+          },
+        }));
+      } else {
+        // Fallback for top-level fields
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
     }
   };
 
+  const getSignatureTitle = (key: string) => {
+    const titles = {
+      patientGuardian: 'patientGuardian',
+      eventsOrganizer: 'eventsOrganizer',
+      witness: 'witness',
+      medicPersonnel: 'medicPersonnel',
+    };
+    return titles[key as keyof typeof titles] || key;
+  };
   const resetForm = () => {
     setFormData({
       leagueEvent: '',
@@ -174,6 +260,22 @@ export default function RefusalTreatmentTransportationForm() {
       pcr: '',
       date: '',
       time: '',
+      patientGuardian: {
+        patient_guardian_signature_image: '',
+        patient_guardian_signature_name: '',
+      },
+      eventsOrganizer: {
+        events_organizer_signature_image: '',
+        events_organizer_signature_name: '',
+      },
+      witness: {
+        witness_signature_image: '',
+        witness_signature_name: '',
+      },
+      medicPersonnel: {
+        medic_personnel_signature_image: '',
+        medic_personnel_signature_name: '',
+      },
       refusalReasons: {
         treatmentNotNecessary: false,
         refusesTransportAgainstAdvice: false,
@@ -191,15 +293,60 @@ export default function RefusalTreatmentTransportationForm() {
       alert('Please log in to submit the form');
       return;
     }
+
     setIsSubmitting(true);
+
     try {
-      const submitData = {
-        ...formData,
-        patientGuardian: sigData.patientGuardian || null,
-        eventsOrganizer: sigData.eventsOrganizer || null,
-        witness: sigData.witness || null,
-        medicPersonnel: sigData.medicPersonnel || null,
-      };
+      const submitData = { ...formData };
+
+      // ENHANCED DEBUG LOGGING
+      console.log('=== FORM SUBMISSION DEBUG ===');
+      console.log('Full formData:', submitData);
+      console.log('Signature paths state:', sigPaths);
+      console.log('Signature data state:', sigData);
+
+      // Debug each signature section
+      console.log('Individual signature sections:');
+      console.log('patientGuardian:', {
+        image: submitData.patientGuardian?.patient_guardian_signature_image,
+        name: submitData.patientGuardian?.patient_guardian_signature_name,
+        sigPath: sigPaths.patientGuardian,
+      });
+      console.log('eventsOrganizer:', {
+        image: submitData.eventsOrganizer?.events_organizer_signature_image,
+        name: submitData.eventsOrganizer?.events_organizer_signature_name,
+        sigPath: sigPaths.eventsOrganizer,
+      });
+      console.log('witness:', {
+        image: submitData.witness?.witness_signature_image,
+        name: submitData.witness?.witness_signature_name,
+        sigPath: sigPaths.witness,
+      });
+      console.log('medicPersonnel:', {
+        image: submitData.medicPersonnel?.medic_personnel_signature_image,
+        name: submitData.medicPersonnel?.medic_personnel_signature_name,
+        sigPath: sigPaths.medicPersonnel,
+      });
+
+      // Check for missing signature paths
+      const missingSignatures = [];
+      if (!submitData.patientGuardian?.patient_guardian_signature_image) {
+        missingSignatures.push('patientGuardian');
+      }
+      if (!submitData.eventsOrganizer?.events_organizer_signature_image) {
+        missingSignatures.push('eventsOrganizer');
+      }
+      if (!submitData.witness?.witness_signature_image) {
+        missingSignatures.push('witness');
+      }
+      if (!submitData.medicPersonnel?.medic_personnel_signature_image) {
+        missingSignatures.push('medicPersonnel');
+      }
+
+      if (missingSignatures.length > 0) {
+        console.warn('Missing signature images for:', missingSignatures);
+        // You can choose to show a warning or continue with submission
+      }
 
       const baseUrl =
         process.env.NODE_ENV === 'development'
@@ -228,6 +375,10 @@ export default function RefusalTreatmentTransportationForm() {
 
       console.log('Submitting form with user:', user.id);
       console.log('Session token available:', !!session?.access_token);
+      console.log(
+        'Final submit data structure:',
+        JSON.stringify(submitData, null, 2)
+      );
 
       const response = await fetch(`${baseUrl}/api/refusal-form`, {
         method: 'POST',
@@ -237,16 +388,25 @@ export default function RefusalTreatmentTransportationForm() {
         body: JSON.stringify({ formData: submitData }),
       });
 
+      const responseText = await response.text();
+      console.log('Raw server response:', responseText);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse server response:', e);
+        throw new Error('Invalid server response');
+      }
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          `HTTP ${response.status}: ${
-            errorData.error || 'Failed to submit form'
-          }`
+          `HTTP ${response.status}: ${result.error || 'Failed to submit form'}`
         );
       }
 
-      const result = await response.json();
+      console.log('Server response:', result);
+
       const formId = result.id || result.data?.id;
 
       if (formId) {
@@ -299,23 +459,10 @@ export default function RefusalTreatmentTransportationForm() {
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl.image);
-    }
-  }, [activeSig, sigData]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="p-10 w-full">
@@ -670,11 +817,11 @@ export default function RefusalTreatmentTransportationForm() {
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig('patientGuardian')}
               >
-                {sigData['patientGuardian']?.image ? (
+                {sigData['patientGuardian'] ? (
                   <img
-                    src={sigData['patientGuardian'].image}
-                    alt="Patient/Guardian signature"
-                    className="max-h-[60px]"
+                    src={sigData['patientGuardian']}
+                    alt="Witness signature"
+                    className="max-h-[100px]"
                   />
                 ) : (
                   <Plus className="h-6 w-6 text-gray-500" />
@@ -688,19 +835,14 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                name="patientGuardian.patient_guardian_signature_name"
                 type="text"
                 className="w-full"
-                value={sigData['patientGuardian']?.name || ''}
-                onChange={(e) => {
-                  setSigData((prev) => ({
-                    ...prev,
-                    patientGuardian: {
-                      ...prev.patientGuardian,
-                      name: e.target.value,
-                      image: prev.patientGuardian?.image || '',
-                    },
-                  }));
-                }}
+                value={
+                  formData.patientGuardian?.patient_guardian_signature_name ||
+                  ''
+                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -715,9 +857,9 @@ export default function RefusalTreatmentTransportationForm() {
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig('eventsOrganizer')}
               >
-                {sigData['eventsOrganizer']?.image ? (
+                {sigData['eventsOrganizer'] ? (
                   <img
-                    src={sigData['eventsOrganizer'].image}
+                    src={sigData['eventsOrganizer']}
                     alt="Events Organizer signature"
                     className="max-h-[60px]"
                   />
@@ -733,19 +875,14 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                name="eventsOrganizer.events_organizer_signature_name"
                 type="text"
                 className="w-full"
-                value={sigData['eventsOrganizer']?.name || ''}
-                onChange={(e) => {
-                  setSigData((prev) => ({
-                    ...prev,
-                    eventsOrganizer: {
-                      ...prev.eventsOrganizer,
-                      name: e.target.value,
-                      image: prev.eventsOrganizer?.image || '',
-                    },
-                  }));
-                }}
+                value={
+                  formData.eventsOrganizer?.events_organizer_signature_name ||
+                  ''
+                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -760,9 +897,9 @@ export default function RefusalTreatmentTransportationForm() {
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig('witness')}
               >
-                {sigData['witness']?.image ? (
+                {sigData['witness'] ? (
                   <img
-                    src={sigData['witness'].image}
+                    src={sigData['witness']}
                     alt="Witness signature"
                     className="max-h-[60px]"
                   />
@@ -778,19 +915,11 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                name="witness.witness_signature_name"
                 type="text"
                 className="w-full"
-                value={sigData['witness']?.name || ''}
-                onChange={(e) => {
-                  setSigData((prev) => ({
-                    ...prev,
-                    witness: {
-                      ...prev.witness,
-                      name: e.target.value,
-                      image: prev.witness?.image || '',
-                    },
-                  }));
-                }}
+                value={formData.witness?.witness_signature_name || ''}
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -805,9 +934,9 @@ export default function RefusalTreatmentTransportationForm() {
                 className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig('medicPersonnel')}
               >
-                {sigData['medicPersonnel']?.image ? (
+                {sigData['medicPersonnel'] ? (
                   <img
-                    src={sigData['medicPersonnel'].image}
+                    src={sigData['medicPersonnel']}
                     alt="Medic Personnel signature"
                     className="max-h-[60px]"
                   />
@@ -823,19 +952,13 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                name="medicPersonnel.medic_personnel_signature_name"
                 type="text"
                 className="w-full"
-                value={sigData['medicPersonnel']?.name || ''}
-                onChange={(e) => {
-                  setSigData((prev) => ({
-                    ...prev,
-                    medicPersonnel: {
-                      ...prev.medicPersonnel,
-                      name: e.target.value,
-                      image: prev.medicPersonnel?.image || '',
-                    },
-                  }));
-                }}
+                value={
+                  formData.medicPersonnel?.medic_personnel_signature_name || ''
+                }
+                onChange={handleInputChange}
               />
             </div>
           </div>
@@ -875,59 +998,43 @@ export default function RefusalTreatmentTransportationForm() {
           </div>
         </div>
       </div>
-
-      {/* Signature Modal */}
       <Dialog.Root
         open={!!activeSig}
         onOpenChange={(open) => !open && setActiveSig(null)}
       >
         <Dialog.Portal>
           <Dialog.Title>
-            <VisuallyHidden>Signature Dialog</VisuallyHidden>
+            <VisuallyHidden>
+              {activeSig
+                ? `${getSignatureTitle(activeSig)} Signature`
+                : 'Signature Dialog'}
+            </VisuallyHidden>
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-              <Dialog.Close asChild>
-                <button
-                  className="absolute right-6 text-gray-700 hover:text-black"
-                  onClick={() => setActiveSig(null)}
-                >
-                  <X className="w-10 h-10" />
-                </button>
-              </Dialog.Close>
-
-              <div ref={modalCanvasRef} className="flex-1">
-                <SignatureCanvas
-                  ref={getRefByType(activeSig)}
-                  penColor="black"
-                  canvasProps={{
-                    width: sigCanvasSize.width,
-                    height: sigCanvasSize.height,
-                    className: 'bg-gray-100 rounded shadow',
-                  }}
-                />
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h2 className="text-lg font-semibold">
+                  {activeSig
+                    ? `${getSignatureTitle(activeSig)} E-Signature`
+                    : 'E-Signature'}
+                </h2>
+                <Dialog.Close asChild>
+                  <button
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={() => setActiveSig(null)}
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </Dialog.Close>
               </div>
 
-              <div className="absolute left-6 flex gap-2 items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="sig-upload"
-                  onChange={handleFileUpload}
+              <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <SignatureForm
+                  onSubmit={handleSignatureSubmit}
+                  defaultSignature={sigPaths[activeSig || '']}
+                  loading={isSigLoading}
                 />
-                <label htmlFor="sig-upload">
-                  <Button size="sm" variant="secondary">
-                    Upload
-                  </Button>
-                </label>
-                <Button size="sm" variant="secondary" onClick={clearSig}>
-                  Clear
-                </Button>
-                <Button size="sm" onClick={uploadSig}>
-                  Save
-                </Button>
               </div>
             </div>
           </Dialog.Content>

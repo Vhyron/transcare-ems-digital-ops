@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Plus, X, AlertCircle, CheckCircle } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
-import SignatureCanvas from 'react-signature-canvas';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth } from '@/components/provider/auth-provider';
+import SignatureForm, { SignatureData } from '@/components/forms/SignatureForm';
+import { uploadFile } from '@/lib/supabase/storage';
+import { toast } from 'sonner';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -66,6 +68,12 @@ function getCrowdOptions(category: string): string[] {
 }
 
 export default function ConsolidatedDispatchForm() {
+  const [destinationRows, setDestinationRows] = useState(1);
+  const maxDestinationRows = 4;
+  const [ambulanceRows, setAmbulanceRows] = useState(1);
+  const maxAmbulanceRows = 8;
+  const [typeOfEventsOther, setTypeOfEventsOther] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -79,23 +87,61 @@ export default function ConsolidatedDispatchForm() {
 
   const [numberOfRows, setNumberOfRows] = useState(10);
   const maxRows = 20;
-
-  const teamLeaderSigRef = useRef<SignatureCanvas | null>(null);
-  const clientRepresentativeSigRef = useRef<SignatureCanvas | null>(null);
-  const emsSupervisorSigRef = useRef<SignatureCanvas | null>(null);
-  const [sigCanvasSize, setSigCanvasSize] = useState({
-    width: 950,
-    height: 750,
-  });
+  const [sigData, setSigData] = useState<{ [key: string]: string }>({});
+  const [sigPaths, setSigPaths] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSigLoading, setIsSigLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const modalCanvasRef = useRef<HTMLDivElement | null>(null);
   const [activeSig, setActiveSig] = useState<
     'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
   >(null);
-  const [sigData, setSigData] = useState<{
-    [key: string]: { image: string; name: string };
-  }>({});
+
+  const addDestinationRow = () => {
+    if (destinationRows < maxDestinationRows) {
+      setDestinationRows((prev) => prev + 1);
+    }
+  };
+
+  const removeDestinationRow = (indexToRemove: number) => {
+    if (destinationRows > 1) {
+      setDestinationRows((prev) => prev - 1);
+      // Remove the specific destination from the data
+      const lines = formData.point_of_destinations.split('\n');
+      lines.splice(indexToRemove, 1);
+      setFormData((prev) => ({
+        ...prev,
+        point_of_destinations: lines.join('\n'),
+      }));
+    }
+  };
+
+  const addAmbulanceRow = () => {
+    if (ambulanceRows < maxAmbulanceRows) {
+      setAmbulanceRows((prev) => prev + 1);
+      // Extend the ambulance_models array to accommodate new row
+      setFormData((prev) => ({
+        ...prev,
+        ambulance_models: [
+          ...prev.ambulance_models,
+          { model: '', plate_number: '', type: '' },
+        ],
+      }));
+    }
+  };
+
+  const removeAmbulanceRow = (indexToRemove: number) => {
+    if (ambulanceRows > 1) {
+      setAmbulanceRows((prev) => prev - 1);
+      // Remove the specific ambulance model from the array
+      setFormData((prev) => ({
+        ...prev,
+        ambulance_models: prev.ambulance_models.filter(
+          (_, index) => index !== indexToRemove
+        ),
+      }));
+    }
+  };
 
   const showNotificationMessage = (
     message: string,
@@ -105,6 +151,66 @@ export default function ConsolidatedDispatchForm() {
     setNotificationType(type);
     setShowNotification(true);
     setTimeout(() => setShowNotification(false), 3000);
+  };
+  // Ensure component is mounted on client side
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSignatureSubmit = async (data: SignatureData) => {
+    if (!activeSig) return;
+
+    setIsSigLoading(true);
+
+    try {
+      // Generate unique filename for each signature
+      const timestamp = new Date().getTime();
+      const filename = `trip_tickets/${activeSig}_signature_${timestamp}.png`;
+
+      // Upload signature to storage
+      const upload = await uploadFile({
+        storage: 'signatures',
+        path: filename,
+        file: data.signature,
+      });
+
+      if (upload instanceof Error || !upload) {
+        toast.error('Failed to upload signature', {
+          description: 'An error occurred while uploading the signature.',
+        });
+        return;
+      }
+
+      // Convert blob to data URL for display
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+
+        // Update state with both display data and storage path
+        setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
+
+        toast.success(`${activeSig} signature saved successfully`);
+        setActiveSig(null);
+      };
+      reader.readAsDataURL(data.signature);
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
+    } finally {
+      setIsSigLoading(false);
+    }
+  };
+
+  const getSignatureTitle = (key: string) => {
+    const titles = {
+      nurse: 'Nurse',
+      billing: 'Admitting/Billing',
+      ambulance: 'Ambulance Staff',
+    };
+    return titles[key as keyof typeof titles] || key;
   };
 
   const [formData, setFormData] = useState({
@@ -141,14 +247,9 @@ export default function ConsolidatedDispatchForm() {
     crew_credential: 'EMT',
     crew_credential_other: '',
     number_of_crew: '',
-    ambulance_models: [
-      { model: '', plate_number: '', type: '' },
-      { model: '', plate_number: '', type: '' },
-      { model: '', plate_number: '', type: '' },
-      { model: '', plate_number: '', type: '' },
-    ],
-    md_names: '',
-    point_of_destinations: '',
+    ambulance_models: [{ model: '', plate_number: '', type: '' }],
+    md_names: '', // Single field instead of multi-line
+    point_of_destinations: '', // Will be managed by dynamic inputs
     special_consideration: '',
 
     // Patient Census
@@ -214,35 +315,12 @@ export default function ConsolidatedDispatchForm() {
     current_page: '',
   });
 
-  const clearSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current) {
-      ref.current.clear();
-    }
-  };
-
-  const uploadSig = () => {
-    const ref = getRefByType(activeSig);
-    if (ref?.current && !ref.current.isEmpty() && activeSig) {
-      const dataUrl = ref.current.getTrimmedCanvas().toDataURL('image/png');
-
-      setSigData((prev) => ({
-        ...prev,
-        [activeSig]: {
-          image: dataUrl,
-          name: prev[activeSig]?.name || '',
-        },
-      }));
-
-      setActiveSig(null);
-    }
-  };
-
   const addRow = () => {
     if (numberOfRows < maxRows) {
       setNumberOfRows((prev) => prev + 1);
     }
   };
+
   const handleCrewDataChange = (
     rowIndex: number,
     field: string,
@@ -255,14 +333,7 @@ export default function ConsolidatedDispatchForm() {
       ),
     }));
   };
-  const getRefByType = (
-    type: 'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
-  ) => {
-    if (type === 'teamLeader') return teamLeaderSigRef;
-    if (type === 'clientRepresentative') return clientRepresentativeSigRef;
-    if (type === 'EMSSupervisor') return emsSupervisorSigRef;
-    return null;
-  };
+
   const handleNumberOfCrewChange = (value: string) => {
     const numCrew = parseInt(value) || 0;
     setFormData((prev) => ({
@@ -282,36 +353,6 @@ export default function ConsolidatedDispatchForm() {
             }
         ),
     }));
-  };
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const ctx = ref.current!.getCanvas().getContext('2d');
-          ctx?.clearRect(
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-          ctx?.drawImage(
-            img,
-            0,
-            0,
-            ref.current!.getCanvas().width,
-            ref.current!.getCanvas().height
-          );
-        };
-        img.src = imageData;
-      }
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleInputChange = (
@@ -361,12 +402,8 @@ export default function ConsolidatedDispatchForm() {
       crew_credential: 'EMT',
       crew_credential_other: '',
       number_of_crew: '',
-      ambulance_models: [
-        { model: '', plate_number: '', type: '' },
-        { model: '', plate_number: '', type: '' },
-        { model: '', plate_number: '', type: '' },
-        { model: '', plate_number: '', type: '' },
-      ],
+      ambulance_models: [{ model: '', plate_number: '', type: '' }],
+
       md_names: '',
       point_of_destinations: '',
       special_consideration: '',
@@ -435,9 +472,12 @@ export default function ConsolidatedDispatchForm() {
       current_page: '',
     });
     setSigData({});
+    setTypeOfEventsOther(''); 
     setTypeOfServiceOther('');
     setCrewCredentialOther('');
     setCurrentPage(1);
+    setDestinationRows(1); 
+    setAmbulanceRows(1); 
   };
 
   interface AmbulanceModel {
@@ -473,14 +513,17 @@ export default function ConsolidatedDispatchForm() {
         ...formData,
         form_status: 'draft',
         current_page: currentPage.toString(),
-        team_leader_signature: sigData.teamLeader?.image || '',
-        client_representative_signature:
-          sigData.clientRepresentative?.image || '',
-        ems_supervisor_signature: sigData.EMSSupervisor?.image || '',
+        team_leader_signature: sigData.teamLeader || '', // Remove .image
+        client_representative_signature: sigData.clientRepresentative || '', // Remove .image
+        ems_supervisor_signature: sigData.EMSSupervisor || '', // Remove .image
         type_of_service_other:
           formData.type_of_service === 'Others' ? typeOfServiceOther : '',
         crew_credential_other:
           formData.crew_credential === 'Others' ? crewCredentialOther : '',
+        type_of_events:
+          formData.type_of_events === 'Others'
+            ? typeOfEventsOther
+            : formData.type_of_events,
       };
 
       // Remove id field if it exists and is empty
@@ -586,41 +629,10 @@ export default function ConsolidatedDispatchForm() {
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    const ref = getRefByType(activeSig);
-    const dataUrl = sigData[activeSig || ''];
-    if (ref?.current && dataUrl) {
-      ref.current.clear();
-      (ref.current as any).loadFromDataURL(dataUrl);
-    }
-  }, [activeSig, sigData]);
-
-  useEffect(() => {
-    if (modalCanvasRef.current) {
-      const width = modalCanvasRef.current.offsetWidth;
-      const height = 750;
-      setSigCanvasSize({ width, height });
-    }
-  }, [activeSig]);
-
-  useEffect(() => {
-    if (activeSig && sigData[activeSig]) {
-      const ref = getRefByType(activeSig);
-      if (ref?.current) {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = ref.current!.getCanvas();
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-          }
-        };
-        img.src = sigData[activeSig].image;
-      }
-    }
-  }, [activeSig]);
+  // Don't render until mounted
+  if (!mounted) {
+    return <div>Loading...</div>;
+  }
 
   const renderPage1 = () => (
     <div className="space-y-8">
@@ -758,6 +770,7 @@ export default function ConsolidatedDispatchForm() {
           <select
             value={formData.type_of_events}
             name="type_of_events"
+            onChange={handleInputChange}
             className="w-full h-10 border rounded px-3 text-base"
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
@@ -779,12 +792,27 @@ export default function ConsolidatedDispatchForm() {
               </option>
             ))}
           </select>
+
+          {/* Conditional input field for "Others" */}
+          {formData.type_of_events === 'Others' && (
+            <div className="mt-2">
+              <input
+                type="text"
+                placeholder="Please specify the type of event"
+                value={typeOfEventsOther}
+                onChange={(e) => setTypeOfEventsOther(e.target.value)}
+                className="w-full h-10 border rounded px-3 text-base"
+                style={{ backgroundColor: '#0a0a0a', color: 'white' }}
+              />
+            </div>
+          )}
         </div>
         <div>
           <label className="block font-medium mb-2">Venue Type</label>
           <select
             value={formData.venue_type}
             name="venue_type"
+            onChange={handleInputChange}
             className="w-full h-10 border rounded px-3 text-base"
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
@@ -941,40 +969,72 @@ export default function ConsolidatedDispatchForm() {
       </div>
 
       <div>
-        <label className="block mb-2 font-medium">Ambulance Model</label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block font-medium">Ambulance Model</label>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              {ambulanceRows} / {maxAmbulanceRows}
+            </span>
+            <Button
+              type="button"
+              onClick={addAmbulanceRow}
+              disabled={ambulanceRows >= maxAmbulanceRows}
+              size="sm"
+              variant="outline"
+              className="h-8 px-2"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
         <div className="space-y-2">
-          {formData.ambulance_models.map((model, index) => (
-            <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                placeholder="Ambulance Model"
-                className="h-10 text-base"
-                value={model.model}
-                onChange={(e) =>
-                  handleAmbulanceModelChange(index, 'model', e.target.value)
-                }
-              />
-              <Input
-                placeholder="Plate Number"
-                className="h-10 text-base"
-                value={model.plate_number}
-                onChange={(e) =>
-                  handleAmbulanceModelChange(
-                    index,
-                    'plate_number',
-                    e.target.value
-                  )
-                }
-              />
-              <Input
-                placeholder="Type"
-                className="h-10 text-base"
-                value={model.type}
-                onChange={(e) =>
-                  handleAmbulanceModelChange(index, 'type', e.target.value)
-                }
-              />
-            </div>
-          ))}
+          {formData.ambulance_models
+            .slice(0, ambulanceRows)
+            .map((model, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                  <Input
+                    placeholder="Ambulance Model"
+                    className="h-10 text-base"
+                    value={model.model}
+                    onChange={(e) =>
+                      handleAmbulanceModelChange(index, 'model', e.target.value)
+                    }
+                  />
+                  <Input
+                    placeholder="Plate Number"
+                    className="h-10 text-base"
+                    value={model.plate_number}
+                    onChange={(e) =>
+                      handleAmbulanceModelChange(
+                        index,
+                        'plate_number',
+                        e.target.value
+                      )
+                    }
+                  />
+                  <Input
+                    placeholder="Type"
+                    className="h-10 text-base"
+                    value={model.type}
+                    onChange={(e) =>
+                      handleAmbulanceModelChange(index, 'type', e.target.value)
+                    }
+                  />
+                </div>
+                {ambulanceRows > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeAmbulanceRow(index)}
+                    size="sm"
+                    variant="outline"
+                    className="h-10 px-2 text-red-500 hover:text-red-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
         </div>
       </div>
 
@@ -1008,47 +1068,63 @@ export default function ConsolidatedDispatchForm() {
           <label className="block mb-2 font-medium">
             Full Name and Signature of MD
           </label>
-          <div className="space-y-2">
-            {[1, 2, 3, 4].map((num, i) => (
+          <Input
+            placeholder="MD Name"
+            className="h-10 text-base"
+            name="md_names"
+            value={formData.md_names}
+            onChange={handleInputChange}
+          />
+        </div>
+      </div>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block font-medium">Point of Destination</label>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">
+              {destinationRows} / {maxDestinationRows}
+            </span>
+            <Button
+              type="button"
+              onClick={addDestinationRow}
+              disabled={destinationRows >= maxDestinationRows}
+              size="sm"
+              variant="outline"
+              className="h-8 px-2"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: destinationRows }, (_, i) => (
+            <div key={i} className="flex items-center gap-2">
               <Input
-                key={i}
-                placeholder={`MD ${num}`}
-                className="h-10 text-base"
-                name={`md_name_${i}`}
-                value={formData.md_names.split('\n')[i] || ''}
+                placeholder={`${i + 1})`}
+                className="h-10 text-base flex-1"
+                name={`destination_${i}`}
+                value={formData.point_of_destinations.split('\n')[i] || ''}
                 onChange={(e) => {
-                  const lines = formData.md_names.split('\n');
+                  const lines = formData.point_of_destinations.split('\n');
                   lines[i] = e.target.value;
                   setFormData((prev) => ({
                     ...prev,
-                    md_names: lines.join('\n'),
+                    point_of_destinations: lines.join('\n'),
                   }));
                 }}
               />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label className="block mb-2 font-medium">Point of Destination</label>
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((num, i) => (
-            <Input
-              key={i}
-              placeholder={`${num})`}
-              className="h-10 text-base"
-              name={`destination_${i}`}
-              value={formData.point_of_destinations.split('\n')[i] || ''}
-              onChange={(e) => {
-                const lines = formData.point_of_destinations.split('\n');
-                lines[i] = e.target.value;
-                setFormData((prev) => ({
-                  ...prev,
-                  point_of_destinations: lines.join('\n'),
-                }));
-              }}
-            />
+              {destinationRows > 1 && (
+                <Button
+                  type="button"
+                  onClick={() => removeDestinationRow(i)}
+                  size="sm"
+                  variant="outline"
+                  className="h-10 px-2 text-red-500 hover:text-red-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -1349,6 +1425,55 @@ export default function ConsolidatedDispatchForm() {
           </div>
         </div>
       </div>
+
+      {/* Signatures section - also appears on Page 2 */}
+      <div className="space-y-6 mt-12 pt-8 border-t">
+        <h3 className="text-lg font-semibold border-b pb-2">Signatures</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              label: 'Team Leader',
+              signatureLabel: 'Prepared and Filled by',
+              key: 'teamLeader',
+            },
+            {
+              label: 'Client Representative',
+              signatureLabel: 'Conformed by',
+              key: 'clientRepresentative',
+            },
+            {
+              label: 'EMS Supervisor',
+              signatureLabel: 'Noted by',
+              key: 'EMSSupervisor',
+            },
+          ].map(({ label, signatureLabel, key }) => (
+            <div key={key}>
+              <label className="block mb-2 font-medium">
+                {signatureLabel} ({label})
+              </label>
+              <div
+                className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => setActiveSig(key as typeof activeSig)}
+              >
+                {sigData[key] ? (
+                  <img
+                    src={sigData[key]}
+                    alt={`${label} signature`}
+                    className="max-h-[100px]"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <span className="text-sm text-gray-500">
+                      Click to add signature
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 
@@ -1451,58 +1576,107 @@ export default function ConsolidatedDispatchForm() {
           </div>
         </div>
       </div>
-    </div>
-  );
 
-  const renderSignatures = () => (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold  border-b pb-2">Signatures</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          {
-            label: 'Team Leader',
-            signatureLabel: 'Prepared and Filled by',
-            key: 'teamLeader',
-          },
-          {
-            label: 'Client Representative',
-            signatureLabel: 'Conformed by',
-            key: 'clientRepresentative',
-          },
-          {
-            label: 'EMS Supervisor',
-            signatureLabel: 'Noted by',
-            key: 'EMSSupervisor',
-          },
-        ].map(({ label, signatureLabel, key }) => (
-          <div key={key}>
-            <label className="block mb-2 font-medium">
-              {signatureLabel} ({label})
-            </label>
-            <div
-              className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
-              onClick={() => setActiveSig(key as typeof activeSig)}
-            >
-              {sigData[key] ? (
-                <img
-                  src={sigData[key]?.image}
-                  alt={`${label} signature`}
-                  className="max-h-[100px]"
-                />
-              ) : (
-                <div className="text-center">
-                  <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <span className="text-sm text-gray-500">
-                    Click to add signature
-                  </span>
-                </div>
-              )}
+      {/* Signatures section - only appears on Page 3 */}
+      <div className="space-y-6 mt-12 pt-8 border-t">
+        <h3 className="text-lg font-semibold border-b pb-2">Signatures</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              label: 'Team Leader',
+              signatureLabel: 'Prepared and Filled by',
+              key: 'teamLeader',
+            },
+            {
+              label: 'Client Representative',
+              signatureLabel: 'Conformed by',
+              key: 'clientRepresentative',
+            },
+            {
+              label: 'EMS Supervisor',
+              signatureLabel: 'Noted by',
+              key: 'EMSSupervisor',
+            },
+          ].map(({ label, signatureLabel, key }) => (
+            <div key={key}>
+              <label className="block mb-2 font-medium">
+                {signatureLabel} ({label})
+              </label>
+              <div
+                className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => setActiveSig(key as typeof activeSig)}
+              >
+                {sigData[key] ? (
+                  <img
+                    src={sigData[key]}
+                    alt={`${label} signature`}
+                    className="max-h-[100px]"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <span className="text-sm text-gray-500">
+                      Click to add signature
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
+
+  // const renderSignatures = () => (
+  //   <div className="space-y-6">
+  //     <h3 className="text-lg font-semibold  border-b pb-2">Signatures</h3>
+  //     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  //       {[
+  //         {
+  //           label: 'Team Leader',
+  //           signatureLabel: 'Prepared and Filled by',
+  //           key: 'teamLeader',
+  //         },
+  //         {
+  //           label: 'Client Representative',
+  //           signatureLabel: 'Conformed by',
+  //           key: 'clientRepresentative',
+  //         },
+  //         {
+  //           label: 'EMS Supervisor',
+  //           signatureLabel: 'Noted by',
+  //           key: 'EMSSupervisor',
+  //         },
+  //       ].map(({ label, signatureLabel, key }) => (
+  //         <div key={key}>
+  //           <label className="block mb-2 font-medium">
+  //             {signatureLabel} ({label})
+  //           </label>
+  //           <div
+  //             className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
+  //             onClick={() => setActiveSig(key as typeof activeSig)}
+  //           >
+  //             {sigData[key] ? (
+  //               <img
+  //                 src={sigData[key]}
+  //                 alt={`${label} signature`}
+  //                 className="max-h-[100px]"
+  //               />
+  //             ) : (
+  //               <div className="text-center">
+  //                 <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+  //                 <span className="text-sm text-gray-500">
+  //                   Click to add signature
+  //                 </span>
+  //               </div>
+  //             )}
+  //           </div>
+  //         </div>
+  //       ))}
+  //     </div>
+  //   </div>
+  // );
 
   return (
     <div className="min-h-screen">
@@ -1537,6 +1711,15 @@ export default function ConsolidatedDispatchForm() {
           </div>
         </div>
 
+        {/* Form Content */}
+        <div className=" rounded-lg shadow-sm p-8">
+          {currentPage === 1 && renderPage1()}
+          {currentPage === 2 && renderPage2()}
+          {currentPage === 3 && renderPage3()}
+
+          {/* Signatures section appears on all pages */}
+          {/* <div className="mt-12 pt-8 border-t">{renderSignatures()}</div> */}
+        </div>
         {/* Action Buttons */}
         <div className=" rounded-lg shadow-sm p-6 mb-6">
           <div className="flex justify-between items-center">
@@ -1580,93 +1763,43 @@ export default function ConsolidatedDispatchForm() {
             </div>
           </div>
         </div>
-
-        {/* Form Content */}
-        <div className=" rounded-lg shadow-sm p-8">
-          {currentPage === 1 && renderPage1()}
-          {currentPage === 2 && renderPage2()}
-          {currentPage === 3 && renderPage3()}
-
-          {/* Signatures section appears on all pages */}
-          <div className="mt-12 pt-8 border-t">{renderSignatures()}</div>
-        </div>
-
-        {/* Signature Modal */}
         <Dialog.Root
           open={!!activeSig}
           onOpenChange={(open) => !open && setActiveSig(null)}
         >
           <Dialog.Portal>
             <Dialog.Title>
-              <VisuallyHidden>Signature Dialog</VisuallyHidden>
+              <VisuallyHidden>
+                {activeSig
+                  ? `${getSignatureTitle(activeSig)} Signature`
+                  : 'Signature Dialog'}
+              </VisuallyHidden>
             </Dialog.Title>
             <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
             <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className=" p-6 rounded-lg shadow-lg relative w-full max-w-[1000px] h-[800px] flex flex-col">
-                <Dialog.Close asChild>
-                  <button
-                    className="absolute right-6 top-6 text-gray-700 hover:text-black"
-                    onClick={() => setActiveSig(null)}
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </Dialog.Close>
-
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">Add Signature</h3>
-                  <p className="text-gray-600">
-                    Draw your signature or upload an image
-                  </p>
-                </div>
-
-                <div ref={modalCanvasRef} className="flex-1 mb-4">
-                  <SignatureCanvas
-                    ref={getRefByType(activeSig)}
-                    penColor="black"
-                    canvasProps={{
-                      width: sigCanvasSize.width,
-                      height: sigCanvasSize.height,
-                      className: 'bg-gray-100 rounded shadow ',
-                    }}
-                  />
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      id="sig-upload"
-                      onChange={handleFileUpload}
-                    />
-                    <label htmlFor="sig-upload">
-                      <Button size="sm" variant="secondary" type="button">
-                        Upload
-                      </Button>
-                    </label>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={clearSig}
-                      type="button"
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
+              <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="text-lg font-semibold">
+                    {activeSig
+                      ? `${getSignatureTitle(activeSig)} E-Signature`
+                      : 'E-Signature'}
+                  </h2>
+                  <Dialog.Close asChild>
+                    <button
+                      className="text-gray-500 hover:text-gray-700"
                       onClick={() => setActiveSig(null)}
-                      type="button"
                     >
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={uploadSig} type="button">
-                      Save
-                    </Button>
-                  </div>
+                      <X className="w-6 h-6" />
+                    </button>
+                  </Dialog.Close>
+                </div>
+
+                <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                  <SignatureForm
+                    onSubmit={handleSignatureSubmit}
+                    defaultSignature={sigPaths[activeSig || '']}
+                    loading={isSigLoading}
+                  />
                 </div>
               </div>
             </Dialog.Content>
