@@ -560,3 +560,7 @@ export const refusalForTreatmentOrTransportFormPdf = async (
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
+
+// export const censusRecordFormPdf = (data: CensusData, returnBuffer: boolean = false) => {
+
+// }
