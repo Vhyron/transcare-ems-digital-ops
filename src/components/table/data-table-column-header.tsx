@@ -1,8 +1,8 @@
-import { Column } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { Column } from '@tanstack/react-table';
+import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { cn } from '@/lib/utils';
+import { Button } from '../ui/button';
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,7 +20,7 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn('flex items-center gap-2', className)}>
       <Button
         variant="ghost"
         size="sm"
@@ -28,9 +28,9 @@ export function DataTableColumnHeader<TData, TValue>({
         onClick={() => column.toggleSorting()}
       >
         <span>{title}</span>
-        {column.getIsSorted() === "desc" ? (
+        {column.getIsSorted() === 'desc' ? (
           <ArrowDown />
-        ) : column.getIsSorted() === "asc" ? (
+        ) : column.getIsSorted() === 'asc' ? (
           <ArrowUp />
         ) : (
           <ChevronsUpDown />

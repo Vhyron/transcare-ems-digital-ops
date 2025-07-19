@@ -6,6 +6,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX } from 'lucide-react';
 import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
+import { reviewedFormStatus } from '../data';
 
 export const columns: ColumnDef<ReviewedFormType>[] = [
   {
@@ -25,7 +26,7 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
   },
   {
     id: 'Submitted By',
-    accessorFn: (row) => `${row.submitted_by.email}`,
+    accessorFn: (row) => row.submitted_by.email,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Submitted By" />
     ),
@@ -34,13 +35,22 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     },
   },
   {
-    id: 'Status',
-    accessorFn: (row) => `${row.form_submissions.status}`,
+    id: 'status',
+    accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
+    enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
+      const status = reviewedFormStatus.find(
+        (status) => status.value === row.getValue('status')
+      );
+
+      if (!status) {
+        return null;
+      }
+
       return (
         <span className="capitalize flex items-center gap-1.5">
           {row.original.form_submissions.status === 'approved' ? (
@@ -52,10 +62,13 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
         </span>
       );
     },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
   },
   {
     id: 'Date Submitted',
-    accessorFn: (row) => `${row.form_submissions.created_at}`,
+    accessorFn: (row) => row.form_submissions.created_at,
     enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Date Submitted" />
@@ -63,7 +76,20 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     cell: ({ row }) => {
       const date = row.original.form_submissions.created_at;
 
-      return formatDate(date, 'MMMM dd, yyyy');
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
+    },
+  },
+  {
+    id: 'Date Reviewed',
+    accessorFn: (row) => row.form_submissions.updated_at,
+    enableGlobalFilter: false,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date Reviewed" />
+    ),
+    cell: ({ row }) => {
+      const date = row.original.form_submissions.updated_at;
+
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
     },
   },
   {

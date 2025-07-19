@@ -1,33 +1,44 @@
 'use client';
-import { useState } from 'react';
 import {
   ColumnDef,
+  ColumnFiltersState,
   flexRender,
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import { useState } from 'react';
 
 import { DataTablePagination } from '@/components/table/data-table-pagination';
-import { DataTableViewOptions } from '@/components/table/data-table-view';
-import { Input } from '@/components/ui/input';
+import { DataTableToolbar } from '@/components/table/data-table-toolbar';
 import {
   Table,
+  TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  TableBody,
 } from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  actionComponent?: React.ReactNode;
   searchPlaceholder?: string;
+  actionComponent?: React.ReactNode;
+  filters?: Array<{
+    columnKey: string;
+    title: string;
+    options: {
+      label: string;
+      value: string;
+      icon?: any;
+    }[];
+  }>;
 }
 
 export function DataTable<TData, TValue>({
@@ -35,41 +46,41 @@ export function DataTable<TData, TValue>({
   data,
   actionComponent,
   searchPlaceholder = 'Filter names...',
+  filters,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState<any>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
-    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
       globalFilter,
+      columnFilters,
     },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <Input
-          placeholder={searchPlaceholder}
-          value={globalFilter || ''}
-          onChange={(e) => table.setGlobalFilter(e.target.value as string)}
-          className="max-w-sm"
-        />
-        <div className="flex items-center gap-2">
-          <DataTableViewOptions table={table} />
-          {actionComponent}
-        </div>
-      </div>
+      <DataTableToolbar
+        table={table}
+        searchPlaceholder={searchPlaceholder}
+        actionComponent={actionComponent}
+        filters={filters}
+      />
 
-      <div className="rounded-md border">
+      <div className="border rounded-md">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -97,7 +108,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="pl-4 py-4">
+                    <TableCell key={cell.id} className="py-4 pl-4">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

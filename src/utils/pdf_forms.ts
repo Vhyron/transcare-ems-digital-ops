@@ -10,12 +10,15 @@ import {
   setFieldsReadOnly,
 } from './pdf_util';
 
-export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
+export const hospitalTripTicketsPdf = async (
+  data: HospitalTripTicket,
+  returnBuffer: boolean = false
+) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
   }
 
-  const response = await fetch('/pdf/hospital_trip_tickets_fill.pdf');
+  const response = await fetch('/pdf/hospital_trip_ticket_fill.pdf');
   if (!response.ok) {
     throw new Error('Failed to fetch PDF file');
   }
@@ -30,6 +33,10 @@ export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
     'room',
     'vehicle',
     'plate',
+    'bls',
+    'bls_er',
+    'als',
+    'als1',
     'pt_name',
     'age_sex',
     'purpose',
@@ -88,7 +95,7 @@ export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
   if (data.trip_type) {
     checkFormCheckbox(form, data.trip_type, {
       BLS: 'bls',
-      'BLS-ER': 'bls-er',
+      'BLS-ER': 'bls_er',
       ALS: 'als',
       ALS1: 'als1',
     });
@@ -126,11 +133,19 @@ export const hospitalTripTicketsPdf = async (data: HospitalTripTicket) => {
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
 
-export const conductionRefusalFormPdf = async (data: ConductionRefusalForm) => {
+export const conductionRefusalFormPdf = async (
+  data: ConductionRefusalForm,
+  returnBuffer: boolean = false
+) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
   }
@@ -259,11 +274,19 @@ export const conductionRefusalFormPdf = async (data: ConductionRefusalForm) => {
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
 
-export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
+export const advanceDirectivesFormPdf = async (
+  data: AdvanceDirectiveForm,
+  returnBuffer: boolean = false
+) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
   }
@@ -389,12 +412,18 @@ export const advanceDirectivesFormPdf = async (data: AdvanceDirectiveForm) => {
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };
 
 export const refusalForTreatmentOrTransportFormPdf = async (
-  data: RefusalForm
+  data: RefusalForm,
+  returnBuffer: boolean = false
 ) => {
   if (!data || !data.id) {
     throw new Error('Invalid data provided for PDF generation');
@@ -523,6 +552,11 @@ export const refusalForTreatmentOrTransportFormPdf = async (
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
     type: 'application/pdf',
   });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
   const url = URL.createObjectURL(pdfBlob);
   window.open(url, '_blank');
 };

@@ -25,7 +25,7 @@ export const columns: ColumnDef<PendingFormType>[] = [
   },
   {
     id: 'Submitted By',
-    accessorFn: (row) => `${row.submitted_by.email}`,
+    accessorFn: (row) => row.submitted_by.email,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Submitted By" />
     ),
@@ -35,7 +35,7 @@ export const columns: ColumnDef<PendingFormType>[] = [
   },
   {
     id: 'Status',
-    accessorFn: (row) => `${row.form_submissions.status}`,
+    accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
@@ -51,7 +51,7 @@ export const columns: ColumnDef<PendingFormType>[] = [
   },
   {
     id: 'Date Submitted',
-    accessorFn: (row) => `${row.form_submissions.created_at}`,
+    accessorFn: (row) => row.form_submissions.created_at,
     enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Date Submitted" />
@@ -59,7 +59,7 @@ export const columns: ColumnDef<PendingFormType>[] = [
     cell: ({ row }) => {
       const date = row.original.form_submissions.created_at;
 
-      return formatDate(date, 'MMMM dd, yyyy');
+      return formatDate(date, 'MMMM dd, yyyy - hh:mm a');
     },
   },
   {
