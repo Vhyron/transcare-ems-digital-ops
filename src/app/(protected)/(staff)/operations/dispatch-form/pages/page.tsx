@@ -1425,6 +1425,55 @@ export default function ConsolidatedDispatchForm() {
           </div>
         </div>
       </div>
+
+      {/* Signatures section - also appears on Page 2 */}
+      <div className="space-y-6 mt-12 pt-8 border-t">
+        <h3 className="text-lg font-semibold border-b pb-2">Signatures</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              label: 'Team Leader',
+              signatureLabel: 'Prepared and Filled by',
+              key: 'teamLeader',
+            },
+            {
+              label: 'Client Representative',
+              signatureLabel: 'Conformed by',
+              key: 'clientRepresentative',
+            },
+            {
+              label: 'EMS Supervisor',
+              signatureLabel: 'Noted by',
+              key: 'EMSSupervisor',
+            },
+          ].map(({ label, signatureLabel, key }) => (
+            <div key={key}>
+              <label className="block mb-2 font-medium">
+                {signatureLabel} ({label})
+              </label>
+              <div
+                className="border bg-gray-50 border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] hover:bg-gray-100 cursor-pointer transition-colors"
+                onClick={() => setActiveSig(key as typeof activeSig)}
+              >
+                {sigData[key] ? (
+                  <img
+                    src={sigData[key]}
+                    alt={`${label} signature`}
+                    className="max-h-[100px]"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <span className="text-sm text-gray-500">
+                      Click to add signature
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 
