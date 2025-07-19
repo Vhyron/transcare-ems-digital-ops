@@ -5,6 +5,7 @@ import {
   advanceDirectivesFormPdf,
   conductionRefusalFormPdf,
   hospitalTripTicketsPdf,
+  operationCensusRecordsFormPdf,
   refusalForTreatmentOrTransportFormPdf,
 } from './pdf_forms';
 
@@ -25,6 +26,8 @@ export const generatePdf = async (
       return await refusalForTreatmentOrTransportFormPdf(data, returnBuffer);
     case 'conduction_refusal_forms':
       return await conductionRefusalFormPdf(data, returnBuffer);
+    case 'operation_census_records':
+      return await operationCensusRecordsFormPdf(data, returnBuffer);
     default:
       toast.error('Invalid form type', {
         description: 'The form type is not recognized.',
