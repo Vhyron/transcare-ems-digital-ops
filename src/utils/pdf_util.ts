@@ -4,6 +4,7 @@ import { FormType } from '../db/schema/form_submissions.schema';
 import {
   advanceDirectivesFormPdf,
   conductionRefusalFormPdf,
+  dispatchFormPdf,
   hospitalTripTicketsPdf,
   operationCensusRecordsFormPdf,
   refusalForTreatmentOrTransportFormPdf,
@@ -18,8 +19,7 @@ export const generatePdf = async (
     case 'hospital_trip_tickets':
       return await hospitalTripTicketsPdf(data, returnBuffer);
     case 'dispatch_forms':
-      console.log('Generate Dispatch Form');
-      break;
+      return await dispatchFormPdf(data, returnBuffer);
     case 'advance_directives':
       return await advanceDirectivesFormPdf(data, returnBuffer);
     case 'refusal_forms':

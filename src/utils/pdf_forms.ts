@@ -586,7 +586,7 @@ export const dispatchFormPdf = async (
   const fieldNames = [
     'paid',
     'charity',
-    'biling',
+    'billing',
     'discounted',
 
     'indoor',
@@ -702,17 +702,29 @@ export const dispatchFormPdf = async (
     even_title: data.event_title,
     event_owner: data.event_owner,
     owner_contact_details: data.event_owner_contact,
-    event_organizer: data.event_organizer_contact,
+    event_organizer: data.event_organizer,
+    organizer_contact_details: data.event_organizer_contact,
     date_and_time: data.event_date_time,
     event_duration: data.event_duration,
     events_call_time: data.event_call_time,
     estimated_crowd: data.estimated_crowd,
     events_venue: data.event_venue,
-    types_of_events_specify: data.type_of_events,
+    types_of_events_specify: [
+      'Religious Gathering',
+      'Party',
+      'Audition',
+      'Show Taping',
+      'Exhibition/Trade Event',
+      'Outbound',
+      'Festival',
+      'Premier Night',
+      'Sport/ Games Event',
+      'Concert'
+    ].includes(data.type_of_events || "") ? '' : data.type_of_events,
     brief_concept_description: data.brief_concept_description,
     'expected_vip/guest': data.expected_vip_guest,
     crowd_management_others: data.crowd_others,
-    economic_class_specify: data.economic_class,
+    economic_class_specify: ['A', 'B', 'C', 'D', 'E', 'Mixed'].includes(data.economic_class || "") ? '' : data.economic_class,
 
     // 2nd Page
   };
@@ -721,50 +733,65 @@ export const dispatchFormPdf = async (
   // 1st page
   if (data.event_type) {
     checkFormCheckbox(form, data.event_type, {
-      paid: 'paid',
-      charity: 'charity',
-      billing: 'billing',
-      discounted: 'discounted',
+      PAID: 'paid',
+      CHARITY: 'charity',
+      BILLING: 'billing',
+      DISCOUNTED: 'discounted',
     });
   }
   if (data.venue_type) {
     checkFormCheckbox(form, data.venue_type, {
-      indoor: 'indoor',
-      outdoor: 'outdoor',
+      Indoor: 'indoor',
+      Outdoor: 'outdoor',
+    });
+  }
+  if (data.type_of_events) {
+    checkFormCheckbox(form, data.type_of_events, {
+      'Religious Gathering': 'religious_gathering',
+      'Party': 'party',
+      'Audition': 'audition',
+      'Show Taping': 'show_taping',
+      'Exhibition/Trade Event': 'exhibition/trade_event',
+      'Outbound': 'outbound',
+      'Festival': 'festival',
+      'Premier Night': 'premier_night',
+      'Sport/ Games Event': 'sport/games_event',
+      'Others': 'types_of_events_others',
+      'Concert': 'concert',
     });
   }
   if (data.crowd_access) {
     checkFormCheckbox(form, data.crowd_access, {
-      free_ticket: 'free_ticket',
-      paid_ticket: 'paid_ticket',
-      open: 'open',
-      access_combination: 'combination',
-      invitation: 'invitation',
+      'Free Ticket': 'free_ticket',
+      'Paid Ticket': 'paid_ticket',
+      'Open': 'open',
+      "Combination": 'combination',
+      "Invitation": 'invitation',
     });
   }
   if (data.crowd_security) {
     checkFormCheckbox(form, data.crowd_security, {
-      internal: 'internal',
-      external: 'external',
-      security_combination: 'combination',
+      Internal: 'internal',
+      External: 'external',
+      Combination: 'combination',
     });
   }
   if (data.crowd_risk) {
     checkFormCheckbox(form, data.crowd_risk, {
-      low: 'low',
-      medium: 'medium',
-      high: 'high',
+      Low: 'low',
+      Medium: 'medium',
+      High: 'high',
     });
   }
   if (data.economic_class) {
     checkFormCheckbox(form, data.economic_class, {
-      a: 'a',
-      b: 'b',
-      c: 'c',
-      d: 'd',
-      e: 'e',
-      mixed: 'mixed',
-      others: 'others',
+      A: 'a',
+      B: 'b',
+      C: 'c',
+      D: 'd',
+      E: 'e',
+      Mixed: 'mixed',
+      Others: 'others',
     });
   }
   if (data.crowd_type) {
@@ -775,16 +802,16 @@ export const dispatchFormPdf = async (
       '18-45': '18-45',
       '45-60': '45-60',
       '60-above': '60-above',
-      all_ages: 'all ages',
+      "All Ages": 'all ages',
     });
   }
   if (data.venue_safety_equipment) {
     checkFormCheckbox(form, data.venue_safety_equipment, {
-      Extinguisher: 'extinguisher',
-      fire_hose: 'fire_hose',
-      first_aid_kit: 'first_aid_kit',
-      scba: 'scba',
-      aed: 'aed',
+      Extinguisher: 'Extinguisher',
+      'Fire Hose': 'fire_hose',
+      'First Aid Kit': 'first_aid_kit',
+      'SCBA': 'scba',
+      'AED': 'aed',
     });
   }
 
