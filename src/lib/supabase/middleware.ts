@@ -43,11 +43,7 @@ export async function updateSession(request: NextRequest) {
     }
     user = data?.user;
   } catch (err) {
-    // Network or fetch error
     console.error('Supabase getUser fetch failed:', err);
-    // Optionally, you can set a flag here to show a maintenance page
-    // return NextResponse.rewrite(new URL('/offline', request.url));
-    // Or just let the request through
     return supabaseResponse;
   }
 

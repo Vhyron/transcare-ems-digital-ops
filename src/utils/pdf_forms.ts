@@ -9,6 +9,7 @@ import {
   fillPdfTextFields,
   setFieldsReadOnly,
 } from './pdf_util';
+import { OperationCensusRecord } from '@/db/schema/census_record.schema';
 
 export const hospitalTripTicketsPdf = async (
   data: HospitalTripTicket,
@@ -100,7 +101,6 @@ export const hospitalTripTicketsPdf = async (
       ALS1: 'als1',
     });
   }
-
   if (data.tare) {
     checkFormCheckbox(form, data.tare, {
       REG: 'tare_reg',
@@ -109,7 +109,6 @@ export const hospitalTripTicketsPdf = async (
       CR: 'cr',
     });
   }
-
   if (data.billing_type) {
     checkFormCheckbox(form, data.billing_type, {
       REG: 'type_reg',
@@ -118,7 +117,6 @@ export const hospitalTripTicketsPdf = async (
       InHOUSE: 'in_house',
     });
   }
-
   if (data.billing_class) {
     checkFormCheckbox(form, data.billing_class, {
       DRP: 'drp',
@@ -546,6 +544,170 @@ export const refusalForTreatmentOrTransportFormPdf = async (
     {
       yes: '5_applicable',
     }
+  );
+
+  const pdfBytes = await pdfDoc.save();
+  const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
+    type: 'application/pdf',
+  });
+
+  if (returnBuffer) {
+    return pdfBlob;
+  }
+
+  const url = URL.createObjectURL(pdfBlob);
+  window.open(url, '_blank');
+};
+
+export const operationCensusRecordsFormPdf = async (
+  data: OperationCensusRecord,
+  returnBuffer: boolean = false
+) => {
+  if (!data || !data.id) {
+    throw new Error('Invalid data provided for PDF generation');
+  }
+
+  const response = await fetch(
+    '/pdf/census_record_fill.pdf'
+  );
+  if (!response.ok) {
+    throw new Error('Failed to fetch PDF file');
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+  const form = pdfDoc.getForm();
+
+  const fieldNames = [
+    'date',
+    'event_owner',
+    'time_in',
+    'time_out',
+    'activity',
+    'location',
+    'no1',
+    'no2',
+    'no3',
+    'no4',
+    'no5',
+    'no6',
+    'no7',
+    'no8',
+    'no9',
+    'no10',
+    'name1',
+    'name2',
+    'name3',
+    'name4',
+    'name5',
+    'name6',
+    'name7',
+    'name8',
+    'name9',
+    'name10',
+    'age_sex1',
+    'age_sex2',
+    'age_sex3',
+    'age_sex4',
+    'age_sex5',
+    'age_sex6',
+    'age_sex7',
+    'age_sex8',
+    'age_sex9',
+    'age_sex10',
+    'chief_complain1',
+    'chief_complain2',
+    'chief_complain3',
+    'chief_complain4',
+    'chief_complain5',
+    'chief_complain6',
+    'chief_complain7',
+    'chief_complain8',
+    'chief_complain9',
+    'chief_complain10',
+    'vital_signs1',
+    'vital_signs2',
+    'vital_signs3',
+    'vital_signs4',
+    'vital_signs5',
+    'vital_signs6',
+    'vital_signs7',
+    'vital_signs8',
+    'vital_signs9',
+    'vital_signs10',
+    'management1',
+    'management2',
+    'management3',
+    'management4',
+    'management5',
+    'management6',
+    'management7',
+    'management8',
+    'management9',
+    'management10',
+    'signature1',
+    'signature2',
+    'signature3',
+    'signature4',
+    'signature5',
+    'signature6',
+    'signature7',
+    'signature8',
+    'signature9',
+    'signature10',
+    'signature11',
+    'signature12',
+  ];
+  setFieldsReadOnly(form, fieldNames);
+
+  const fieldMap = {
+    date: data.date,
+    event_owner: data.event_owner,
+    time_in: data.time_in,
+    time_out: data.time_out,
+    activity: data.activity,
+    location: data.location,
+  }
+  fillPdfTextFields(form, fieldMap);
+
+  if (data.form_data && typeof data.form_data === 'object') {
+    const formData = Array.isArray(data.form_data)
+      ? data.form_data
+      : [];
+
+    formData.forEach(async (item, index) => {
+      const no = `no${index + 1}`
+      const name = `name${index + 1}`
+      const age_sex = `age_sex${index + 1}`
+      const chief_complain = `chief_complain${index + 1}`
+      const vital_signs = `vital_signs${index + 1}`
+      const management = `management${index + 1}`
+      const signature = `signature${index + 1}`
+
+      form.getTextField(no).setText(item ? String(`${index + 1}.`) : '');
+      form.getTextField(name).setText(item ? String(item.name) : '');
+      form.getTextField(age_sex).setText(item ? String(item.age_sex) : '');
+      form.getTextField(chief_complain).setText(item ? String(item.chief_complain) : '');
+      form.getTextField(vital_signs).setText(item ? String(item.vital_signs) : '');
+      form.getTextField(management).setText(item ? String(item.management) : '');
+
+      await embedSignatureImage(
+        pdfDoc,
+        signature,
+        item.signature || ''
+      );
+    });
+  }
+
+  await embedSignatureImage(
+    pdfDoc,
+    'signature11',
+    data.prepared_by_signature || ''
+  );
+  await embedSignatureImage(
+    pdfDoc,
+    'signature12',
+    data.conformed_by_signature || ''
   );
 
   const pdfBytes = await pdfDoc.save();
