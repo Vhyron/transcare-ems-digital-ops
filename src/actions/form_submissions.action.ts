@@ -119,7 +119,7 @@ export async function listReviewedForms(): Promise<ReviewedFormType[]> {
         eq(formSubmissionsTable.status, 'rejected')
       )
     )
-    .orderBy(desc(formSubmissionsTable.created_at))
+    .orderBy(desc(formSubmissionsTable.updated_at))
     .innerJoinLateral(submittedByQuery, sql`true`)
     .innerJoinLateral(reviewedByQuery, sql`true`);
 

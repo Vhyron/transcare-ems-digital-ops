@@ -4,6 +4,7 @@ import { FormType } from '../db/schema/form_submissions.schema';
 import {
   advanceDirectivesFormPdf,
   conductionRefusalFormPdf,
+  dispatchFormPdf,
   hospitalTripTicketsPdf,
   operationCensusRecordsFormPdf,
   refusalForTreatmentOrTransportFormPdf,
@@ -18,8 +19,7 @@ export const generatePdf = async (
     case 'hospital_trip_tickets':
       return await hospitalTripTicketsPdf(data, returnBuffer);
     case 'dispatch_forms':
-      console.log('Generate Dispatch Form');
-      break;
+      return await dispatchFormPdf(data, returnBuffer);
     case 'advance_directives':
       return await advanceDirectivesFormPdf(data, returnBuffer);
     case 'refusal_forms':
@@ -87,7 +87,8 @@ export const setFieldsReadOnly = (form: PDFForm, fieldNames: string[]) => {
 export const embedSignatureImage = async (
   pdfDoc: PDFDocument,
   fieldName: string,
-  imageBase64?: string
+  imageBase64?: string,
+  pageNumber: number = 1
 ) => {
   if (!imageBase64) return;
 
@@ -96,12 +97,8 @@ export const embedSignatureImage = async (
     const field = form.getField(fieldName) as any;
     const widget = field.acroField.getWidgets()[0];
     const { x, y, width, height } = widget.getRectangle();
-    const ref = widget.dict.get('P');
-    const pages = pdfDoc.getPages();
-    let page = pages.find((p) => p.ref === ref);
-    if (!page) {
-      page = pages[0];
-    }
+
+    const page = pdfDoc.getPage(pageNumber - 1);
 
     const imageData = imageBase64.split(',')[1];
     const img = await pdfDoc.embedPng(imageData);
