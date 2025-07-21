@@ -405,22 +405,26 @@ export const refusalForTreatmentOrTransportFormPdf = async (
   await embedSignatureImage(
     pdfDoc,
     'parent/guardian_signature',
-    data.patient_guardian_signature_image || ''
+    data.patient_guardian_signature_image || '',
+    2
   );
   await embedSignatureImage(
     pdfDoc,
     'organizer_signature',
-    data.events_organizer_signature_image || ''
+    data.events_organizer_signature_image || '',
+    2
   );
   await embedSignatureImage(
     pdfDoc,
     'witness_signature',
-    data.witness_signature_image || ''
+    data.witness_signature_image || '',
+    2
   );
   await embedSignatureImage(
     pdfDoc,
     'personnel_signature',
-    data.medic_personnel_signature_image || ''
+    data.medic_personnel_signature_image || '',
+    2
   );
 
   checkFormCheckbox(form, data.guardian ? 'yes' : 'no', {
@@ -576,7 +580,7 @@ export const dispatchFormPdf = async (
     throw new Error('Invalid data provided for PDF generation');
   }
 
-  const response = await fetch('/pdf/dispatch_form_fill2.pdf');
+  const response = await fetch('/pdf/dispatch_form_fill.pdf');
   if (!response.ok) {
     throw new Error('Failed to fetch PDF file');
   }
@@ -813,7 +817,8 @@ export const dispatchFormPdf = async (
       await embedSignatureImage(
         pdfDoc,
         `${index + 1}signature`,
-        item.signature || ''
+        item.signature || '',
+        3
       )
     });
   }
@@ -942,44 +947,50 @@ export const dispatchFormPdf = async (
     });
   }
 
-  await embedSignatureImage(
-    pdfDoc,
-    'signature_md',
-    data.team_leader_signature || ''
-  );
-
   // 2nd page signatures
+  // await embedSignatureImage(
+  //   pdfDoc,
+  //   'signature_md',
+  //   data.team_leader_signature || '',
+  //   2
+  // );
   await embedSignatureImage(
     pdfDoc,
     'signature1',
-    data.team_leader_signature || ''
+    data.team_leader_signature || '',
+    2
   );
   await embedSignatureImage(
     pdfDoc,
     'signature2',
-    data.client_representative_signature || ''
+    data.client_representative_signature || '',
+    2
   );
   await embedSignatureImage(
     pdfDoc,
     'signature3',
-    data.ems_supervisor_signature || ''
+    data.ems_supervisor_signature || '',
+    2
   );
 
   // 3rd page signatures
   await embedSignatureImage(
     pdfDoc,
     'signature4',
-    data.team_leader_signature || ''
+    data.page3_team_leader_signature || '',
+    3
   );
   await embedSignatureImage(
     pdfDoc,
     'signature5',
-    data.team_leader_signature || ''
+    data.page3_client_representative_signature || '',
+    3
   );
   await embedSignatureImage(
     pdfDoc,
     'signature6',
-    data.team_leader_signature || ''
+    data.page3_ems_supervisor_signature || '',
+    3
   );
 
   const pdfBytes = await pdfDoc.save();
