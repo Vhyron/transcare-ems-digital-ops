@@ -1,17 +1,17 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { createClient } from "@supabase/supabase-js";
-import { useAuth } from "@/components/provider/auth-provider";
-import SignatureForm, { SignatureData } from "@/components/forms/SignatureForm";
-import { uploadFile } from "@/lib/supabase/storage";
-import { toast } from "sonner";
+import { useEffect, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Plus, X } from 'lucide-react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { createClient } from '@supabase/supabase-js';
+import { useAuth } from '@/components/provider/auth-provider';
+import SignatureForm, { SignatureData } from '@/components/forms/SignatureForm';
+import { uploadFile } from '@/lib/supabase/storage';
+import { toast } from 'sonner';
 import * as React from 'react';
 
 const supabase = createClient(
@@ -28,7 +28,7 @@ export default function HospitalTripForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSigLoading, setIsSigLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
+
   const { user, loading } = useAuth();
 
   // Ensure component is mounted on client side
@@ -65,12 +65,12 @@ export default function HospitalTripForm() {
     if (!activeSig) return;
 
     setIsSigLoading(true);
-    
+
     try {
       // Generate unique filename for each signature
       const timestamp = new Date().getTime();
       const filename = `trip_tickets/${activeSig}_signature_${timestamp}.png`;
-      
+
       // Upload signature to storage
       const upload = await uploadFile({
         storage: 'signatures',
@@ -89,16 +89,15 @@ export default function HospitalTripForm() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result as string;
-        
+
         // Update state with both display data and storage path
-        setSigData(prev => ({ ...prev, [activeSig]: base64String }));
-        setSigPaths(prev => ({ ...prev, [activeSig]: upload.path }));
-        
+        setSigData((prev) => ({ ...prev, [activeSig]: base64String }));
+        setSigPaths((prev) => ({ ...prev, [activeSig]: upload.path }));
+
         toast.success(`${activeSig} signature saved successfully`);
         setActiveSig(null);
       };
       reader.readAsDataURL(data.signature);
-
     } catch (error) {
       console.error('Error saving signature:', error);
       toast.error('Failed to save signature', {
@@ -111,7 +110,7 @@ export default function HospitalTripForm() {
 
   const handleSubmit = async () => {
     if (!user) {
-      alert("Please log in to submit the form");
+      alert('Please log in to submit the form');
       return;
     }
 
@@ -130,18 +129,22 @@ export default function HospitalTripForm() {
       };
 
       // Use window.location.origin for both development and production
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+      const baseUrl =
+        typeof window !== 'undefined' ? window.location.origin : '';
 
       // Get the current session token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
-        console.error("Error getting session:", sessionError);
-        throw new Error("Authentication error");
+        console.error('Error getting session:', sessionError);
+        throw new Error('Authentication error');
       }
 
-      console.log("Submitting form with user:", user.id);
-      console.log("Session token available:", !!session?.access_token);
+      console.log('Submitting form with user:', user.id);
+      console.log('Session token available:', !!session?.access_token);
 
       const response = await fetch(`${baseUrl}/api/trip-ticket`, {
         method: 'POST',
@@ -163,12 +166,12 @@ export default function HospitalTripForm() {
       const result = await response.json();
       const formId = result.id || result.data?.id;
 
-      console.log("Form submitted successfully, ID:", formId);
+      console.log('Form submitted successfully, ID:', formId);
 
       if (formId) {
         try {
-          console.log("Creating form submission tracking...");
-          
+          console.log('Creating form submission tracking...');
+
           const headers: HeadersInit = {
             'Content-Type': 'application/json',
           };
@@ -176,30 +179,37 @@ export default function HospitalTripForm() {
           if (session?.access_token) {
             headers.Authorization = `Bearer ${session.access_token}`;
           }
-          
-          const submissionResponse = await fetch(`${baseUrl}/api/form-submissions`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              form_type: "hospital_trip_tickets",
-              reference_id: formId,
-              status: "pending",
-              submitted_by: user.id,
-              reviewed_by: null,
-            }),
-          });
+
+          const submissionResponse = await fetch(
+            `${baseUrl}/api/form-submissions`,
+            {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                form_type: 'hospital_trip_tickets',
+                reference_id: formId,
+                status: 'pending',
+                submitted_by: user.id,
+                reviewed_by: null,
+              }),
+            }
+          );
 
           if (!submissionResponse.ok) {
             const errorData = await submissionResponse.json().catch(() => ({}));
-            console.error("Form submission tracking failed:", errorData);
-            throw new Error(`Failed to create submission tracking: ${errorData.error}`);
+            console.error('Form submission tracking failed:', errorData);
+            throw new Error(
+              `Failed to create submission tracking: ${errorData.error}`
+            );
           }
 
           const submissionResult = await submissionResponse.json();
-          console.log("Form submission tracking created:", submissionResult);
-          
+          console.log('Form submission tracking created:', submissionResult);
         } catch (submissionError) {
-          console.error("Failed to create submission tracking:", submissionError);
+          console.error(
+            'Failed to create submission tracking:',
+            submissionError
+          );
         }
       }
 
@@ -233,7 +243,7 @@ export default function HospitalTripForm() {
       setSigData({});
       setSigPaths({});
     } catch (error) {
-      console.error("Error saving:", error);
+      console.error('Error saving:', error);
       toast.error('Failed to save trip ticket', {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -246,7 +256,7 @@ export default function HospitalTripForm() {
     const titles = {
       nurse: 'Nurse',
       billing: 'Admitting/Billing',
-      ambulance: 'Ambulance Staff'
+      ambulance: 'Ambulance Staff',
     };
     return titles[key as keyof typeof titles] || key;
   };
@@ -257,20 +267,25 @@ export default function HospitalTripForm() {
   }
 
   return (
-    <div className="p-10 w-full">
-      <h1 className="text-xl font-bold mb-6">
+    // Replace the main container div:
+    <div className="p-4 sm:p-6 lg:p-10 w-full">
+      <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6">
         Transcare Emergency Medical Services - Hospital Trip Ticket
       </h1>
+      <div className="mb-6 sm:mb-8 lg:mb-10 border rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm">
+        <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+          Trip Details
+        </h2>
 
-      <div className="mb-10 border rounded-lg p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Trip Details</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm mb-6">
+        {/* First row - responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 text-sm mb-4 sm:mb-6">
           <div>
-            <label className="block mb-1 font-medium">Date</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Date
+            </label>
             <Input
               type="date"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.date}
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
@@ -278,10 +293,12 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Time</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Time
+            </label>
             <Input
               type="time"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.time}
               onChange={(e) =>
                 setFormData({ ...formData, time: e.target.value })
@@ -289,10 +306,12 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Room</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Room
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.room}
               onChange={(e) =>
                 setFormData({ ...formData, room: e.target.value })
@@ -300,9 +319,11 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Type</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Type
+            </label>
             <select
-              className="w-full h-10 text-base border rounded px-2"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.trip_type}
               onChange={(e) =>
                 setFormData({ ...formData, trip_type: e.target.value })
@@ -317,12 +338,15 @@ export default function HospitalTripForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
+        {/* Second row - responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 text-sm mb-4 sm:mb-6">
           <div>
-            <label className="block mb-1 font-medium">Vehicle</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Vehicle
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.vehicle}
               onChange={(e) =>
                 setFormData({ ...formData, vehicle: e.target.value })
@@ -330,21 +354,25 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Plate</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Plate
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.plate}
               onChange={(e) =>
                 setFormData({ ...formData, plate: e.target.value })
               }
             />
           </div>
-          <div>
-            <label className="block mb-1 font-medium">Age/Sex</label>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Age/Sex
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.age_sex}
               onChange={(e) =>
                 setFormData({ ...formData, age_sex: e.target.value })
@@ -353,12 +381,15 @@ export default function HospitalTripForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6">
-          <div>
-            <label className="block mb-1 font-medium">Patient Name</label>
+        {/* Third row - responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 text-sm mb-4 sm:mb-6">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Patient Name
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.patient_name}
               onChange={(e) =>
                 setFormData({ ...formData, patient_name: e.target.value })
@@ -366,9 +397,11 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Purpose</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Purpose
+            </label>
             <select
-              className="w-full h-10 text-base border rounded px-2"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.purpose}
               onChange={(e) =>
                 setFormData({ ...formData, purpose: e.target.value })
@@ -389,10 +422,12 @@ export default function HospitalTripForm() {
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-medium">Pick up</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Pick up
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.pickup}
               onChange={(e) =>
                 setFormData({ ...formData, pickup: e.target.value })
@@ -401,12 +436,15 @@ export default function HospitalTripForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-          <div>
-            <label className="block mb-1 font-medium">Destination</label>
+        {/* Fourth row - single column */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 text-sm">
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Destination
+            </label>
             <Input
               type="text"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.destination}
               onChange={(e) =>
                 setFormData({ ...formData, destination: e.target.value })
@@ -415,14 +453,19 @@ export default function HospitalTripForm() {
           </div>
         </div>
       </div>
+      <div className="border rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm">
+        <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+          Billing and Signatures
+        </h2>
 
-      <div className="border rounded-lg p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-4">Billing and Signatures</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+        {/* Billing fields - responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 text-sm mb-4 sm:mb-6">
           <div>
-            <label className="block mb-1 font-medium">Type</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Type
+            </label>
             <select
-              className="w-full h-10 text-base border rounded px-2"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.billing_type}
               onChange={(e) =>
                 setFormData({ ...formData, billing_type: e.target.value })
@@ -437,9 +480,11 @@ export default function HospitalTripForm() {
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">TARE</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              TARE
+            </label>
             <select
-              className="w-full h-10 text-base border rounded px-2"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.tare}
               onChange={(e) =>
                 setFormData({ ...formData, tare: e.target.value })
@@ -453,10 +498,12 @@ export default function HospitalTripForm() {
             </select>
           </div>
 
-          <div>
-            <label className="block mb-1 font-medium">Billing</label>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Billing
+            </label>
             <select
-              className="w-full h-10 text-base border rounded px-2"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.billing_class}
               onChange={(e) =>
                 setFormData({ ...formData, billing_class: e.target.value })
@@ -469,13 +516,18 @@ export default function HospitalTripForm() {
               ))}
             </select>
           </div>
+        </div>
 
+        {/* Financial fields - responsive grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 text-sm mb-4 sm:mb-6">
           <div>
-            <label className="block mb-1 font-medium">Gross</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Gross
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.gross}
               onChange={(e) =>
                 setFormData({ ...formData, gross: e.target.value })
@@ -483,11 +535,13 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Discount</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Discount
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.discount}
               onChange={(e) =>
                 setFormData({ ...formData, discount: e.target.value })
@@ -495,11 +549,13 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Payables</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Payables
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.payables}
               onChange={(e) =>
                 setFormData({ ...formData, payables: e.target.value })
@@ -507,11 +563,13 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">VAT</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              VAT
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.vat}
               onChange={(e) =>
                 setFormData({ ...formData, vat: e.target.value })
@@ -519,11 +577,13 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Vatables</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Vatables
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.vatables}
               onChange={(e) =>
                 setFormData({ ...formData, vatables: e.target.value })
@@ -531,69 +591,78 @@ export default function HospitalTripForm() {
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">ZeroVAT</label>
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              ZeroVAT
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.zero_vat}
               onChange={(e) =>
                 setFormData({ ...formData, zero_vat: e.target.value })
               }
             />
           </div>
-          <div>
-            <label className="block mb-1 font-medium">Withholding</label>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <label className="block mb-1 font-medium text-xs sm:text-sm">
+              Withholding
+            </label>
             <Input
               type="number"
               step="0.01"
-              className="h-10 text-base"
+              className="h-10 sm:h-11 text-sm sm:text-base"
               value={formData.withholding}
               onChange={(e) =>
                 setFormData({ ...formData, withholding: e.target.value })
               }
             />
           </div>
-
-          <div className="col-span-1 md:col-span-3">
-            <label className="block mb-1 font-medium">Remarks</label>
-            <Textarea
-              className="w-full h-24 text-base"
-              value={formData.remarks}
-              onChange={(e) =>
-                setFormData({ ...formData, remarks: e.target.value })
-              }
-            />
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        {/* Remarks field */}
+        <div className="mb-4 sm:mb-6">
+          <label className="block mb-1 font-medium text-xs sm:text-sm">
+            Remarks
+          </label>
+          <Textarea
+            className="w-full h-20 sm:h-24 text-sm sm:text-base resize-none"
+            value={formData.remarks}
+            onChange={(e) =>
+              setFormData({ ...formData, remarks: e.target.value })
+            }
+          />
+        </div>
+
+        {/* Signature section - responsive grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
           {[
             { label: 'Nurse', key: 'nurse' },
             { label: 'Admitting/Billing', key: 'billing' },
             { label: 'Ambulance Staff', key: 'ambulance' },
           ].map(({ label, key }) => (
-            <div key={key}>
-              <label className="block mb-1 font-medium">
+            <div key={key} className="lg:col-span-1">
+              <label className="block mb-1 sm:mb-2 font-medium text-xs sm:text-sm">
                 Signature Over Printed Name ({label})
               </label>
               <div
-                className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                className="border border-dashed border-gray-400 p-3 sm:p-4 rounded-md flex items-center justify-center min-h-[100px] sm:min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors duration-200"
                 onClick={() => setActiveSig(key as typeof activeSig)}
               >
                 {sigData[key] ? (
                   <img
                     src={sigData[key]}
                     alt={`${label} signature`}
-                    className="max-h-[100px] max-w-full object-contain"
+                    className="max-h-[80px] sm:max-h-[100px] max-w-full object-contain"
                   />
                 ) : (
-                  <Plus className="h-8 w-8 text-gray-500" />
+                  <Plus className="h-6 w-6 sm:h-8 sm:w-8 text-gray-500" />
                 )}
               </div>
             </div>
           ))}
 
+          {/* Dialog remains the same but with responsive content */}
           <Dialog.Root
             open={!!activeSig}
             onOpenChange={(open) => !open && setActiveSig(null)}
@@ -601,27 +670,31 @@ export default function HospitalTripForm() {
             <Dialog.Portal>
               <Dialog.Title>
                 <VisuallyHidden>
-                  {activeSig ? `${getSignatureTitle(activeSig)} Signature` : 'Signature Dialog'}
+                  {activeSig
+                    ? `${getSignatureTitle(activeSig)} Signature`
+                    : 'Signature Dialog'}
                 </VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-              <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
-                  <div className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-lg font-semibold">
-                      {activeSig ? `${getSignatureTitle(activeSig)} E-Signature` : 'E-Signature'}
+              <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+                    <h2 className="text-base sm:text-lg font-semibold">
+                      {activeSig
+                        ? `${getSignatureTitle(activeSig)} E-Signature`
+                        : 'E-Signature'}
                     </h2>
                     <Dialog.Close asChild>
                       <button
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-gray-500 hover:text-gray-700 p-1"
                         onClick={() => setActiveSig(null)}
                       >
-                        <X className="w-6 h-6" />
+                        <X className="w-5 h-5 sm:w-6 sm:h-6" />
                       </button>
                     </Dialog.Close>
                   </div>
-                  
-                  <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+
+                  <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(95vh-80px)] sm:max-h-[calc(90vh-80px)]">
                     <SignatureForm
                       onSubmit={handleSignatureSubmit}
                       defaultSignature={sigPaths[activeSig || '']}
@@ -634,18 +707,21 @@ export default function HospitalTripForm() {
           </Dialog.Root>
         </div>
       </div>
-      
-      <Button 
-        className="mt-6" 
-        onClick={handleSubmit} 
-        disabled={isSubmitting || loading || !user}
-      >
-        {isSubmitting ? "Submitting..." : "Submit "}
-      </Button>
-      
-      {!user && !loading && (
-        <p className="text-red-500 mt-2">Please log in to submit the form</p>
-      )}
+      <div className="mt-4 sm:mt-6 space-y-2">
+        <Button
+          className=" h-10 sm:h-11 text-sm sm:text-base"
+          onClick={handleSubmit}
+          disabled={isSubmitting || loading || !user}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit '}
+        </Button>
+
+        {!user && !loading && (
+          <p className="text-red-500 text-xs sm:text-sm">
+            Please log in to submit the form
+          </p>
+        )}
+      </div>
     </div>
   );
 }

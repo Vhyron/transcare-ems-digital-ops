@@ -465,13 +465,14 @@ export default function RefusalTreatmentTransportationForm() {
   }
 
   return (
-    <div className="p-10 w-full">
-      <h1 className="text-xl font-bold mb-6">
+    // Main container
+    <div className="p-4 md:p-6 lg:p-10 w-full">
+      <h1 className="text-lg md:text-xl font-bold mb-4 md:mb-6">
         Transcare Emergency Medical Services - Refusal Form
       </h1>
 
       {/* Event Information */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             League /Event:
@@ -496,7 +497,7 @@ export default function RefusalTreatmentTransportationForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Location:</label>
           <Input
@@ -520,8 +521,8 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Patient Information */}
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">
             Patient Name:
           </label>
@@ -543,7 +544,7 @@ export default function RefusalTreatmentTransportationForm() {
             className="w-full h-10 text-base"
           />
         </div>
-        <div className="">
+        <div>
           <label className="block text-sm font-medium mb-1">Age:</label>
           <Input
             type="number"
@@ -556,7 +557,7 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Contact Details */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             Contact Details - Landline:
@@ -583,13 +584,13 @@ export default function RefusalTreatmentTransportationForm() {
 
       {/* Guardian Information */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
           <label className="text-sm font-medium">GUARDIAN:</label>
           <select
             name="guardian"
             value={formData.guardian}
             onChange={handleInputChange}
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
           >
             <option value="yes" className="text-gray-700">
               YES
@@ -600,7 +601,7 @@ export default function RefusalTreatmentTransportationForm() {
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Landline:</label>
             <Input
@@ -625,7 +626,7 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Guardian Details */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Name:</label>
           <Input
@@ -666,7 +667,7 @@ export default function RefusalTreatmentTransportationForm() {
           Situation of Injury/Illness:
         </label>
         <textarea
-          className="w-full border border-gray-300 rounded-md p-2 min-h-[80px]"
+          className="w-full border border-gray-300 rounded-md p-2 min-h-[80px] text-sm md:text-base"
           name="situation"
           value={formData.situation}
           onChange={handleInputChange}
@@ -674,8 +675,10 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Check Applicable Refusal */}
-      <div className="border rounded-lg p-6 shadow-sm mb-6">
-        <h3 className="text-lg font-semibold mb-4">Check Applicable Refusal</h3>
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm mb-6">
+        <h3 className="text-base md:text-lg font-semibold mb-4">
+          Check Applicable Refusal
+        </h3>
 
         <div className="space-y-3">
           <label className="flex items-start">
@@ -684,7 +687,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="treatmentNotNecessary"
               checked={formData.refusalReasons.treatmentNotNecessary}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient refuses treatment; transport is not necessary for the
@@ -698,7 +701,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="refusesTransportAgainstAdvice"
               checked={formData.refusalReasons.refusesTransportAgainstAdvice}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient refuses treatment and transport to a hospital against EMS
@@ -712,7 +715,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="treatmentReceivedNoTransport"
               checked={formData.refusalReasons.treatmentReceivedNoTransport}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient receives treatment does not desire transport to hospital
@@ -726,7 +729,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="alternativeTransportation"
               checked={formData.refusalReasons.alternativeTransportation}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient / Guardian believes alternative transportation plan is
@@ -740,7 +743,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="acceptsTransportRefusesTreatment"
               checked={formData.refusalReasons.acceptsTransportRefusesTreatment}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient accepts transportation to hospital by EMS but refuses any
@@ -753,7 +756,7 @@ export default function RefusalTreatmentTransportationForm() {
               Specify treatment refused:
             </label>
             <textarea
-              className="w-full border border-gray-300 rounded-md p-2 min-h-[60px]"
+              className="w-full border border-gray-300 rounded-md p-2 min-h-[60px] text-sm md:text-base"
               name="treatmentRefused"
               value={formData.treatmentRefused}
               onChange={handleInputChange}
@@ -763,8 +766,8 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Legal Text */}
-      <div className="border rounded-lg p-6 shadow-sm mb-6">
-        <div className="text-sm space-y-4">
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm mb-6">
+        <div className="text-xs md:text-sm space-y-4">
           <p>
             This form is being provided to me because I have refused assessment,
             treatment and/or transport by EMS personnel myself or on behalf of
@@ -785,9 +788,9 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Acknowledgment and Signature Section */}
-      <div className="border rounded-lg p-6 shadow-sm mb-6">
-        <div className="text-sm mb-6">
-          <p>
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm mb-6">
+        <div className="text-xs md:text-sm mb-6">
+          <p className="leading-relaxed">
             I acknowledge that this advice has been explained to me by the
             ambulance crew and upon affixing my signature for myself or on
             behalf of the patient signing this form, I am releasing Transcare
@@ -797,7 +800,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="company"
               value={formData.company}
               onChange={handleInputChange}
-              className="border-b border-gray-400 outline-none px-1 w-48 inline-block"
+              className="border-b border-gray-400 outline-none px-1 w-32 sm:w-48 inline-block text-xs md:text-sm"
               placeholder="Organizer"
             />{' '}
             and its employees of any liability or medical claims resulting from
@@ -806,7 +809,7 @@ export default function RefusalTreatmentTransportationForm() {
         </div>
 
         {/* Signature Grid */}
-        <div className="grid grid-cols-2 gap-8 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
           {/* Patient/Guardian Signature */}
           <div className="space-y-4">
             <div>
@@ -820,8 +823,8 @@ export default function RefusalTreatmentTransportationForm() {
                 {sigData['patientGuardian'] ? (
                   <img
                     src={sigData['patientGuardian']}
-                    alt="Witness signature"
-                    className="max-h-[100px]"
+                    alt="Patient/Guardian signature"
+                    className="max-h-[60px] md:max-h-[100px]"
                   />
                 ) : (
                   <Plus className="h-6 w-6 text-gray-500" />
@@ -888,7 +891,7 @@ export default function RefusalTreatmentTransportationForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
           {/* Witness Signature */}
           <div className="space-y-4">
             <div>
@@ -965,7 +968,7 @@ export default function RefusalTreatmentTransportationForm() {
         </div>
 
         {/* Bottom Information */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">PCR:</label>
             <Input
@@ -998,6 +1001,8 @@ export default function RefusalTreatmentTransportationForm() {
           </div>
         </div>
       </div>
+
+      {/* Dialog for signatures - responsive modal */}
       <Dialog.Root
         open={!!activeSig}
         onOpenChange={(open) => !open && setActiveSig(null)}
@@ -1011,10 +1016,10 @@ export default function RefusalTreatmentTransportationForm() {
             </VisuallyHidden>
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
+          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-sm md:max-w-4xl max-h-[95vh] md:max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-3 md:p-4 border-b">
+                <h2 className="text-base md:text-lg font-semibold">
                   {activeSig
                     ? `${getSignatureTitle(activeSig)} E-Signature`
                     : 'E-Signature'}
@@ -1024,12 +1029,12 @@ export default function RefusalTreatmentTransportationForm() {
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => setActiveSig(null)}
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 </Dialog.Close>
               </div>
 
-              <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="p-3 md:p-4 overflow-y-auto max-h-[calc(95vh-60px)] md:max-h-[calc(90vh-80px)]">
                 <SignatureForm
                   onSubmit={handleSignatureSubmit}
                   defaultSignature={sigPaths[activeSig || '']}
@@ -1042,9 +1047,9 @@ export default function RefusalTreatmentTransportationForm() {
       </Dialog.Root>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 mt-6">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6">
         <Button
-          className="mt-6"
+          className="mt-0 sm:mt-6 w-full sm:w-auto"
           onClick={handleSubmit}
           disabled={isSubmitting || loading || !user}
         >
@@ -1052,7 +1057,9 @@ export default function RefusalTreatmentTransportationForm() {
         </Button>
 
         {!user && !loading && (
-          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+          <p className="text-red-500 text-sm mt-2">
+            Please log in to submit the form
+          </p>
         )}
       </div>
     </div>
