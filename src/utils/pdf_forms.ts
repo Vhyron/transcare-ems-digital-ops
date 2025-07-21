@@ -506,28 +506,30 @@ export const operationCensusRecordsFormPdf = async (
     const formData = Array.isArray(data.form_data) ? data.form_data : [];
 
     formData.forEach(async (item, index) => {
-      const no = `no${index + 1}`;
-      const name = `name${index + 1}`;
-      const age_sex = `age_sex${index + 1}`;
-      const chief_complain = `chief_complain${index + 1}`;
-      const vital_signs = `vital_signs${index + 1}`;
-      const management = `management${index + 1}`;
-      const signature = `signature${index + 1}`;
-
-      form.getTextField(no).setText(item ? String(`${index + 1}.`) : '');
-      form.getTextField(name).setText(item ? String(item.name) : '');
-      form.getTextField(age_sex).setText(item ? String(item.age_sex) : '');
       form
-        .getTextField(chief_complain)
+        .getTextField(`no${index + 1}`)
+        .setText(item ? String(`${index + 1}.`) : '');
+      form
+        .getTextField(`name${index + 1}`)
+        .setText(item ? String(item.name) : '');
+      form
+        .getTextField(`age_sex${index + 1}`)
+        .setText(item ? String(item.age_sex) : '');
+      form
+        .getTextField(`chief_complain${index + 1}`)
         .setText(item ? String(item.chief_complain) : '');
       form
-        .getTextField(vital_signs)
+        .getTextField(`vital_signs${index + 1}`)
         .setText(item ? String(item.vital_signs) : '');
       form
-        .getTextField(management)
+        .getTextField(`management${index + 1}`)
         .setText(item ? String(item.management) : '');
 
-      await embedSignatureImage(pdfDoc, signature, item.signature || '');
+      await embedSignatureImage(
+        pdfDoc,
+        `signature${index + 1}`,
+        item.signature || ''
+      );
     });
   }
 
@@ -574,7 +576,7 @@ export const dispatchFormPdf = async (
     throw new Error('Invalid data provided for PDF generation');
   }
 
-  const response = await fetch('/pdf/dispatch_form_fill.pdf');
+  const response = await fetch('/pdf/dispatch_form_fill2.pdf');
   if (!response.ok) {
     throw new Error('Failed to fetch PDF file');
   }
@@ -719,18 +721,104 @@ export const dispatchFormPdf = async (
       'Festival',
       'Premier Night',
       'Sport/ Games Event',
-      'Concert'
-    ].includes(data.type_of_events || "") ? '' : data.type_of_events,
+      'Concert',
+    ].includes(data.type_of_events || '')
+      ? ''
+      : data.type_of_events,
     brief_concept_description: data.brief_concept_description,
     'expected_vip/guest': data.expected_vip_guest,
     crowd_management_others: data.crowd_others,
-    economic_class_specify: ['A', 'B', 'C', 'D', 'E', 'Mixed'].includes(data.economic_class || "") ? '' : data.economic_class,
+    economic_class_specify: ['A', 'B', 'C', 'D', 'E'].includes(
+      data.economic_class || ''
+    )
+      ? ''
+      : data.economic_class,
 
     // 2nd Page
+    type_of_service_specify: data.type_of_service_other,
+    number_of_crew: data.number_of_crew,
+    full_name_md: data.md_names![0],
+    point_of_destination1: data.point_of_destinations![0],
+    point_of_destination2: data.point_of_destinations![1],
+    point_of_destination3: data.point_of_destinations![2],
+    point_of_destination4: data.point_of_destinations![3],
+    special_consideration: data.special_consideration,
+    treated_trauma: data.treated_trauma,
+    treated_medical: data.treated_medical,
+    rate1: data.treated_rate_1,
+    rate2: data.treated_rate_2,
+    transported_trauma: data.transported_trauma,
+    transported_medical: data.transported_medical,
+    rate3: data.transported_rate_1,
+    rate4: data.transported_rate_2,
+    refused_trauma: data.refused_trauma,
+    refused_medical: data.refused_medical,
+    rate5: data.refused_rate_1,
+    rate6: data.refused_rate_2,
+    dispatch_hrs: data.dispatch_hrs,
+    dispatch_min: data.dispatch_min,
+    dispatch_reading: data.dispatch_reading,
+    on_scene_hrs: data.on_scene_hrs,
+    on_scene_min: data.on_scene_min,
+    on_scene_reading: data.on_scene_reading,
+    departure_hrs: data.departure_hrs,
+    departure_min: data.departure_min,
+    departure_reading: data.departure_reading,
+    arrival_hrs: data.arrival_hrs,
+    arrival_min: data.arrival_min,
+    arrival_reading: data.arrival_reading,
+    working_time_hrs: data.working_time_hrs,
+    working_time_min: data.working_time_min,
+    travel_time_hrs: data.travel_time_hrs,
+    travel_time_min: data.travel_time_min,
+    overall_hrs: data.overall_hrs,
+    overall_min: data.overall_min,
+
+    event_title2: data.page3_event_title,
+    total_crew: data.page3_total_crew,
   };
   fillPdfTextFields(form, fieldMap);
 
-  // 1st page
+  if (data.ambulance_models && typeof data.ambulance_models === 'object') {
+    const formData = Array.isArray(data.ambulance_models)
+      ? data.ambulance_models
+      : [];
+
+    formData.forEach(async (item, index) => {
+      form
+        .getTextField(`ambulance_model${index + 1}`)
+        .setText(item ? String(item.model) : '');
+      form
+        .getTextField(`plate_number${index + 1}`)
+        .setText(item ? String(item.plate_number) : '');
+      form
+        .getTextField(`type${index + 1}`)
+        .setText(item ? String(item.type) : '');
+    });
+  }
+
+  if (data.crew_data && typeof data.crew_data === 'object') {
+    const formData = Array.isArray(data.crew_data) ? data.crew_data : [];
+
+    formData.forEach(async (item, index) => {
+      form
+        .getTextField(`name${index + 1}`)
+        .setText(item ? String(item.name) : '');
+
+      form.getTextField(`title${index + 1}`).setText(item ? String(item.title) : '');
+      form.getTextField(`position${index + 1}`).setText(item ? String(item.position) : '');
+      form.getTextField(`in${index + 1}`).setText(item ? String(item.time_in) : '');
+      form.getTextField(`out${index + 1}`).setText(item ? String(item.time_out) : '');
+
+      await embedSignatureImage(
+        pdfDoc,
+        `${index + 1}signature`,
+        item.signature || ''
+      )
+    });
+  }
+
+  // 1st page checkboxes
   if (data.event_type) {
     checkFormCheckbox(form, data.event_type, {
       PAID: 'paid',
@@ -748,25 +836,25 @@ export const dispatchFormPdf = async (
   if (data.type_of_events) {
     checkFormCheckbox(form, data.type_of_events, {
       'Religious Gathering': 'religious_gathering',
-      'Party': 'party',
-      'Audition': 'audition',
+      Party: 'party',
+      Audition: 'audition',
       'Show Taping': 'show_taping',
       'Exhibition/Trade Event': 'exhibition/trade_event',
-      'Outbound': 'outbound',
-      'Festival': 'festival',
+      Outbound: 'outbound',
+      Festival: 'festival',
       'Premier Night': 'premier_night',
       'Sport/ Games Event': 'sport/games_event',
-      'Others': 'types_of_events_others',
-      'Concert': 'concert',
+      Others: 'types_of_events_others',
+      Concert: 'concert',
     });
   }
   if (data.crowd_access) {
     checkFormCheckbox(form, data.crowd_access, {
       'Free Ticket': 'free_ticket',
       'Paid Ticket': 'paid_ticket',
-      'Open': 'open',
-      "Combination": 'combination',
-      "Invitation": 'invitation',
+      Open: 'open',
+      Combination: 'combination',
+      Invitation: 'invitation',
     });
   }
   if (data.crowd_security) {
@@ -802,7 +890,7 @@ export const dispatchFormPdf = async (
       '18-45': '18-45',
       '45-60': '45-60',
       '60-above': '60-above',
-      "All Ages": 'all ages',
+      'All Ages': 'all ages',
     });
   }
   if (data.venue_safety_equipment) {
@@ -810,10 +898,89 @@ export const dispatchFormPdf = async (
       Extinguisher: 'Extinguisher',
       'Fire Hose': 'fire_hose',
       'First Aid Kit': 'first_aid_kit',
-      'SCBA': 'scba',
-      'AED': 'aed',
+      SCBA: 'scba',
+      AED: 'aed',
     });
   }
+
+  // 2nd page checkboxes
+  if (data.type_of_service) {
+    checkFormCheckbox(form, data.type_of_service, {
+      Manpower: 'manpower',
+      Ambulance: 'ambulance',
+      Combination: 'type_of_service_combination',
+      'Support Unit': 'support_unit',
+    });
+  }
+  if (data.crew_credential) {
+    checkFormCheckbox(form, data.crew_credential, {
+      EMT: 'emt',
+      RN: 'rn',
+      EMR: 'emr',
+      Combination: 'crew_credentials_combination',
+    });
+  }
+  if (data.treated_waiver) {
+    checkFormCheckbox(form, data.treated_waiver, {
+      Y: 'y1',
+      N: 'n1',
+      'N/A': 'n/a1',
+    });
+  }
+  if (data.transported_insurance) {
+    checkFormCheckbox(form, data.transported_insurance, {
+      Y: 'y2',
+      N: 'n2',
+      'N/A': 'n/a2',
+    });
+  }
+  if (data.refused_pre_med_check) {
+    checkFormCheckbox(form, data.refused_pre_med_check, {
+      Y: 'y3',
+      N: 'n3',
+      'N/A': 'n/a3',
+    });
+  }
+
+  await embedSignatureImage(
+    pdfDoc,
+    'signature_md',
+    data.team_leader_signature || ''
+  );
+
+  // 2nd page signatures
+  await embedSignatureImage(
+    pdfDoc,
+    'signature1',
+    data.team_leader_signature || ''
+  );
+  await embedSignatureImage(
+    pdfDoc,
+    'signature2',
+    data.client_representative_signature || ''
+  );
+  await embedSignatureImage(
+    pdfDoc,
+    'signature3',
+    data.ems_supervisor_signature || ''
+  );
+
+  // 3rd page signatures
+  await embedSignatureImage(
+    pdfDoc,
+    'signature4',
+    data.team_leader_signature || ''
+  );
+  await embedSignatureImage(
+    pdfDoc,
+    'signature5',
+    data.team_leader_signature || ''
+  );
+  await embedSignatureImage(
+    pdfDoc,
+    'signature6',
+    data.team_leader_signature || ''
+  );
 
   const pdfBytes = await pdfDoc.save();
   const pdfBlob = new Blob([new Uint8Array(pdfBytes)], {
