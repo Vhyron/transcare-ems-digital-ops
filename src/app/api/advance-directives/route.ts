@@ -51,9 +51,11 @@ export async function POST(request: NextRequest) {
       limited_intervention: formData.carePreferences?.limitedIntervention || false,
       iv_fluid: formData.carePreferences?.limitedInterventionOptions?.ivFluid || false,
       ng_tube: formData.carePreferences?.limitedInterventionOptions?.ngTube || false,
-      o2_therapy: formData.carePreferences?.limitedInterventionOptions?.o2Therapy || false,
+      gt_tube: formData.carePreferences?.limitedInterventionOptions?.gtTube || false,
+      // o2_therapy: formData.carePreferences?.limitedInterventionOptions?.o2Therapy || false,
       cpap_bipap: formData.carePreferences?.limitedInterventionOptions?.cpapBipap || false,
       antibiotics: formData.carePreferences?.limitedInterventionOptions?.antibiotics || false,
+      laboratory: formData.carePreferences?.limitedInterventionOptions?.laboratory || false,
       diagnostics: formData.carePreferences?.limitedInterventionOptions?.diagnostics || false,
       full_treatment: formData.carePreferences?.fullTreatment || false,
       

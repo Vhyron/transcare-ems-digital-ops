@@ -407,18 +407,20 @@ export default function AdvanceDirectivesForm() {
   return (
     <div className="p-10 w-full">
       <h1 className="text-xl font-bold mb-6">
-        Transcare Emergency Medical Services - Advance Directives on Level of
-        Care
+        ADVANCE DIRECTIVES ON LEVEL OF CARE
       </h1>
 
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
-     
+        <h1 className="text-xl font-bold mb-6">
+          Transcare Emergency Medical Services - Advance Directives on Level of
+          Care
+        </h1>
         <h3 className="font-bold text-lg mb-3 p-1">
           PATIENT GENERAL INFORMATION
         </h3>
 
-        <div className="grid grid-cols-12 gap-2 mb-2">
-          <div className="col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
+          <div className="md:col-span-4">
             <label className="font-medium">First</label>
             <Input
               type="text"
@@ -428,7 +430,7 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Middle</label>
             <Input
               type="text"
@@ -438,7 +440,7 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Last</label>
             <Input
               type="text"
@@ -450,8 +452,8 @@ export default function AdvanceDirectivesForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-2 mb-2">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2 mb-2">
+          <div className="md:col-span-2">
             <label className="font-medium">Age</label>
             <Input
               type="text"
@@ -461,7 +463,7 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-2">
+          <div className="md:col-span-2">
             <label className="font-medium">Sex</label>
             <Input
               type="text"
@@ -471,7 +473,7 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Birthdate(mm/dd/yyyy):</label>
             <Input
               type="date"
@@ -481,7 +483,7 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Citizenship</label>
             <Input
               type="text"
@@ -493,8 +495,8 @@ export default function AdvanceDirectivesForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-8 gap-2 mb-2">
-          <div className="col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mb-2">
+          <div className="md:col-span-4">
             <label className="font-medium">Address</label>
             <Input
               type="text"
@@ -504,7 +506,7 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Contact No.</label>
             <Input
               type="text"
@@ -522,7 +524,7 @@ export default function AdvanceDirectivesForm() {
           NEXT OF KIN/LEGAL GUARDIAN INFORMATION
         </h3>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div className="space-y-4">
             <div>
               <label className="font-medium">Name</label>
@@ -534,7 +536,7 @@ export default function AdvanceDirectivesForm() {
                 onChange={handleInputChange}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="font-medium">Relation</label>
                 <Input
@@ -601,8 +603,8 @@ export default function AdvanceDirectivesForm() {
         {/* CPR Section */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">CARDIOPULMONARY RESUSCITATION</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.attemptCPR"
                 value={formData.carePreferences.attemptCPR ? 'yes' : 'no'}
@@ -617,7 +619,7 @@ export default function AdvanceDirectivesForm() {
                 </option>
               </select>
             </div>
-            <div className="col-span-5">
+            <div className="lg:col-span-5">
               <p className="text-sm ">
                 May be done if a person has no pulse and is not breathing to
                 prolong the life of the patient. This procedure entails pushing
@@ -631,8 +633,8 @@ export default function AdvanceDirectivesForm() {
         {/* Comfort Measures */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">COMFORT MEASURES ONLY</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.comfortOnly"
                 value={formData.carePreferences.comfortOnly ? 'yes' : 'no'}
@@ -660,8 +662,8 @@ export default function AdvanceDirectivesForm() {
         {/* Limited Additional Interventions */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">LIMITED ADDITIONAL INTERVENTIONS</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.limitedIntervention"
                 value={
@@ -684,7 +686,7 @@ export default function AdvanceDirectivesForm() {
                 medical treatment as indicated. DO NOT intubate. May transfer to
                 hospital ONLY if care is not met in current location.
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {limitedOptions.map(({ key, label }) => (
                   <label key={key} className="flex items-center text-sm">
                     <input
@@ -707,8 +709,8 @@ export default function AdvanceDirectivesForm() {
         {/* Full Treatment */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">FULL TREATMENT</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.fullTreatment"
                 value={formData.carePreferences.fullTreatment ? 'yes' : 'no'}
@@ -778,8 +780,8 @@ export default function AdvanceDirectivesForm() {
           DECISION-MAKER VERIFICATION
         </h2>
 
-        <div className="flex gap-6">
-          <div className="w-1/2 space-y-2">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-1/2 space-y-2">
             <label className="block text-sm font-medium mb-2">
               Decision Maker Signature
             </label>
@@ -805,7 +807,7 @@ export default function AdvanceDirectivesForm() {
             </label>
           </div>
 
-          <div className="w-1/2 grid grid-cols-1 gap-4">
+          <div className="w-full lg:w-1/2 grid grid-cols-1 gap-4">
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
@@ -844,8 +846,8 @@ export default function AdvanceDirectivesForm() {
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
         <h2 className="text-lg font-semibold mb-2">PHYSICIAN VERIFICATION</h2>
 
-        <div className="flex gap-6">
-          <div className="w-1/2 space-y-2">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-1/2 space-y-2">
             <label className="block text-sm font-medium mb-2">
               Physician Signature
             </label>
@@ -871,7 +873,7 @@ export default function AdvanceDirectivesForm() {
             </label>
           </div>
 
-          <div className="w-1/2 grid grid-cols-1 gap-4">
+          <div className="w-full lg:w-1/2 grid grid-cols-1 gap-4">
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
@@ -922,9 +924,9 @@ export default function AdvanceDirectivesForm() {
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-base md:text-lg font-semibold">
                   {activeSig
                     ? `${getSignatureTitle(activeSig)} E-Signature`
                     : 'E-Signature'}
@@ -951,9 +953,9 @@ export default function AdvanceDirectivesForm() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <div className="flex gap-4 mt-6">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6">
         <Button
-          className="mt-6"
+          className="mt-6 w-full sm:w-auto"
           onClick={handleSubmit}
           disabled={isSubmitting || loading || !user}
         >
@@ -961,7 +963,9 @@ export default function AdvanceDirectivesForm() {
         </Button>
 
         {!user && !loading && (
-          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+          <p className="text-red-500 mt-2 text-sm">
+            Please log in to submit the form
+          </p>
         )}
       </div>
     </div>
