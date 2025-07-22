@@ -357,6 +357,17 @@ export default function OperationCensusForm() {
         </div>
       </div>
 
+      <div className="mb-4">
+        <Button
+          onClick={addPatientRecord}
+          className="flex items-center gap-2"
+          type="button"
+        >
+          <Plus className="w-4 h-4" />
+          Add Patient Record
+        </Button>
+      </div>
+
       <div className="mb-4 flex items-center gap-2">
         <Button
           onClick={addPatientRecord}
@@ -569,6 +580,13 @@ export default function OperationCensusForm() {
         onOpenChange={(open) => !open && setActiveSig(null)}
       >
         <Dialog.Portal>
+          <Dialog.Title>
+            <VisuallyHidden>
+              {activeSig
+                ? `${getSignatureTitle(activeSig)} Signature`
+                : 'Signature Dialog'}
+            </VisuallyHidden>
+          </Dialog.Title>
           <Dialog.Title>
             <VisuallyHidden>
               {activeSig

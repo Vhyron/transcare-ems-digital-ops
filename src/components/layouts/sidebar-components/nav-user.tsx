@@ -2,9 +2,7 @@
 
 import {
   BadgeCheck,
-  Bell,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
 } from 'lucide-react';
 
@@ -100,25 +98,16 @@ export function NavUser({ user, loading = false }: Props) {
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link
-                  href={`${
-                    user.user_role === 'admin'
-                      ? '/admin-profile'
-                      : user.user_role === 'staff'
+                  href={`${user.user_role === 'admin'
+                    ? '/admin-profile'
+                    : user.user_role === 'staff'
                       ? '/staff-profile'
                       : '#'
-                  }`}
+                    }`}
                 >
                   <BadgeCheck />
                   My Profile
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

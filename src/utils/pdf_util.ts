@@ -4,7 +4,9 @@ import { FormType } from '../db/schema/form_submissions.schema';
 import {
   advanceDirectivesFormPdf,
   conductionRefusalFormPdf,
+  dispatchFormPdf,
   hospitalTripTicketsPdf,
+  operationCensusRecordsFormPdf,
   refusalForTreatmentOrTransportFormPdf,
 } from './pdf_forms';
 
@@ -17,14 +19,15 @@ export const generatePdf = async (
     case 'hospital_trip_tickets':
       return await hospitalTripTicketsPdf(data, returnBuffer);
     case 'dispatch_forms':
-      console.log('Generate Dispatch Form');
-      break;
+      return await dispatchFormPdf(data, returnBuffer);
     case 'advance_directives':
       return await advanceDirectivesFormPdf(data, returnBuffer);
     case 'refusal_forms':
       return await refusalForTreatmentOrTransportFormPdf(data, returnBuffer);
     case 'conduction_refusal_forms':
       return await conductionRefusalFormPdf(data, returnBuffer);
+    case 'operation_census_records':
+      return await operationCensusRecordsFormPdf(data, returnBuffer);
     default:
       toast.error('Invalid form type', {
         description: 'The form type is not recognized.',
@@ -38,8 +41,15 @@ export const fillPdfTextFields = (
   fieldMap: Record<string, any>
 ) => {
   Object.entries(fieldMap).forEach(([field, value]) => {
+    const textField = form.getFieldMaybe(field);
+
+    if (!textField) {
+      console.error(`Error field not found: ${field}`);
+      return;
+    }
+
     form.getTextField(field).setText(value ? String(value) : '');
-    form.getField(field).enableReadOnly();
+    textField.enableReadOnly();
   });
 };
 
@@ -65,15 +75,20 @@ export const checkFormCheckbox = (
 
 export const setFieldsReadOnly = (form: PDFForm, fieldNames: string[]) => {
   fieldNames.forEach((name) => {
-    const field = form.getField(name);
-    if (field) field.enableReadOnly();
+    const field = form.getFieldMaybe(name);
+    if (!field) {
+      console.error(`Error field not found: ${name}`);
+      return;
+    }
+    field.enableReadOnly();
   });
 };
 
 export const embedSignatureImage = async (
   pdfDoc: PDFDocument,
   fieldName: string,
-  imageBase64?: string
+  imageBase64?: string,
+  pageNumber: number = 1
 ) => {
   if (!imageBase64) return;
 
@@ -82,12 +97,8 @@ export const embedSignatureImage = async (
     const field = form.getField(fieldName) as any;
     const widget = field.acroField.getWidgets()[0];
     const { x, y, width, height } = widget.getRectangle();
-    const ref = widget.dict.get('P');
-    const pages = pdfDoc.getPages();
-    let page = pages.find((p) => p.ref === ref);
-    if (!page) {
-      page = pages[0];
-    }
+
+    const page = pdfDoc.getPage(pageNumber - 1);
 
     const imageData = imageBase64.split(',')[1];
     const img = await pdfDoc.embedPng(imageData);

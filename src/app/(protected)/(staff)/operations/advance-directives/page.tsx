@@ -405,13 +405,16 @@ export default function AdvanceDirectivesForm() {
   }
 
   return (
-    <div className="p-4 md:p-6 lg:p-10 w-full">
-      <h1 className="text-lg md:text-xl lg:text-2xl font-bold mb-4 md:mb-6">
-        Transcare Emergency Medical Services - Advance Directives on Level of
-        Care
+    <div className="p-10 w-full">
+      <h1 className="text-xl font-bold mb-6">
+        ADVANCE DIRECTIVES ON LEVEL OF CARE
       </h1>
 
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
+        <h1 className="text-xl font-bold mb-6">
+          Transcare Emergency Medical Services - Advance Directives on Level of
+          Care
+        </h1>
         <h3 className="font-bold text-lg mb-3 p-1">
           PATIENT GENERAL INFORMATION
         </h3>
