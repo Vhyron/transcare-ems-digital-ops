@@ -94,7 +94,11 @@ export default function ConsolidatedDispatchForm() {
   const [mounted, setMounted] = useState(false);
 
   const [activeSig, setActiveSig] = useState<
-    'teamLeader' | 'clientRepresentative' | 'EMSSupervisor' | null
+    | 'teamLeader'
+    | 'clientRepresentative'
+    | 'EMSSupervisor'
+    | 'md_signature'
+    | null
   >(null);
 
   const addDestinationRow = () => {
@@ -249,6 +253,7 @@ export default function ConsolidatedDispatchForm() {
     number_of_crew: '',
     ambulance_models: [{ model: '', plate_number: '', type: '' }],
     md_names: '', // Single field instead of multi-line
+    md_signature: '',
     point_of_destinations: '', // Will be managed by dynamic inputs
     special_consideration: '',
 
@@ -405,6 +410,7 @@ export default function ConsolidatedDispatchForm() {
       ambulance_models: [{ model: '', plate_number: '', type: '' }],
 
       md_names: '',
+      md_signature: '',
       point_of_destinations: '',
       special_consideration: '',
 
@@ -472,12 +478,12 @@ export default function ConsolidatedDispatchForm() {
       current_page: '',
     });
     setSigData({});
-    setTypeOfEventsOther(''); 
+    setTypeOfEventsOther('');
     setTypeOfServiceOther('');
     setCrewCredentialOther('');
     setCurrentPage(1);
-    setDestinationRows(1); 
-    setAmbulanceRows(1); 
+    setDestinationRows(1);
+    setAmbulanceRows(1);
   };
 
   interface AmbulanceModel {
@@ -513,6 +519,7 @@ export default function ConsolidatedDispatchForm() {
         ...formData,
         form_status: 'draft',
         current_page: currentPage.toString(),
+        md_signature: sigData.md_signature || '', // Remove .image
         team_leader_signature: sigData.teamLeader || '', // Remove .image
         client_representative_signature: sigData.clientRepresentative || '', // Remove .image
         ems_supervisor_signature: sigData.EMSSupervisor || '', // Remove .image
@@ -1064,17 +1071,42 @@ export default function ConsolidatedDispatchForm() {
             value={formData.number_of_crew}
           />
         </div>
-        <div>
-          <label className="block mb-2 font-medium">
-            Full Name and Signature of MD
-          </label>
-          <Input
-            placeholder="MD Name"
-            className="h-10 text-base"
-            name="md_names"
-            value={formData.md_names}
-            onChange={handleInputChange}
-          />
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              MD Signature
+            </label>
+            <div
+              className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[80px] hover:bg-gray-100 cursor-pointer"
+              onClick={() => setActiveSig('md_signature')}
+            >
+              {sigData['md_signature'] ? (
+                <img
+                  src={sigData['md_signature']}
+                  alt="MD Signature"
+                  className="max-h-[60px] md:max-h-[100px]"
+                />
+              ) : (
+                <Plus className="h-6 w-6 text-gray-500" />
+              )}
+            </div>
+            <label className="text-xs text-gray-600">
+              Signature over printed Name
+            </label>
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">
+              Full Name and Signature of MD
+            </label>
+            <Input
+              placeholder="MD Name"
+              className="h-10 text-base"
+              name="md_names"
+              value={formData.md_names}
+              onChange={handleInputChange}
+            />
+          </div>
         </div>
       </div>
       <div>

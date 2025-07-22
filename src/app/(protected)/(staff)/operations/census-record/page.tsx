@@ -28,6 +28,8 @@ interface PatientRecord {
   signature: string; // base64 signature data
 }
 
+const MAX_PATIENT_RECORDS = 10;
+
 export default function OperationCensusForm() {
   const [activeSig, setActiveSig] = useState<string | null>(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
@@ -55,8 +57,13 @@ export default function OperationCensusForm() {
     location: '',
   });
 
-  // Add new patient record
+  // Add new patient record with limit check
   const addPatientRecord = () => {
+    if (patientRecords.length >= MAX_PATIENT_RECORDS) {
+      toast.error(`Maximum ${MAX_PATIENT_RECORDS} patient records allowed`);
+      return;
+    }
+
     const newRecord: PatientRecord = {
       id: `patient_${Date.now()}`,
       name: '',
@@ -350,15 +357,19 @@ export default function OperationCensusForm() {
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <Button
           onClick={addPatientRecord}
           className="flex items-center gap-2"
           type="button"
+          disabled={patientRecords.length >= MAX_PATIENT_RECORDS}
         >
           <Plus className="w-4 h-4" />
           Add Patient Record
         </Button>
+        <span className="text-sm text-gray-500">
+          ({patientRecords.length}/{MAX_PATIENT_RECORDS} records)
+        </span>
       </div>
 
       <div className="overflow-x-auto -mx-4 sm:mx-0">
