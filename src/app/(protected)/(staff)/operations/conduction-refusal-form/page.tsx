@@ -327,7 +327,6 @@ export default function ConductionRefusalForm() {
         );
       }
 
-
       const baseUrl =
         process.env.NODE_ENV === 'development'
           ? 'http://localhost:3000'
@@ -683,16 +682,12 @@ export default function ConductionRefusalForm() {
               <div className="sm:col-span-3 w-full">
                 <select
                   name={item.field}
-                  className="w-full border rounded-md px-2 py-1 text-sm md:text-base"
+                  className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
                   value={formData[item.field as keyof FormData] ? 'yes' : 'no'}
                   onChange={handleInputChange}
                 >
-                  <option value="yes" className="text-gray-700">
-                    Yes
-                  </option>
-                  <option value="no" className="text-gray-700">
-                    No
-                  </option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             </div>

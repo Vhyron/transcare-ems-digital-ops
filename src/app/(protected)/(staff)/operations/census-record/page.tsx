@@ -357,16 +357,6 @@ export default function OperationCensusForm() {
         </div>
       </div>
 
-      <div className="mb-4">
-        <Button
-          onClick={addPatientRecord}
-          className="flex items-center gap-2"
-          type="button"
-        >
-          <Plus className="w-4 h-4" />
-          Add Patient Record
-        </Button>
-      </div>
 
       <div className="mb-4 flex items-center gap-2">
         <Button

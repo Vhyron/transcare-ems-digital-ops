@@ -285,7 +285,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="date"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.date}
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
@@ -298,7 +298,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="time"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.time}
               onChange={(e) =>
                 setFormData({ ...formData, time: e.target.value })
@@ -311,7 +311,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.room}
               onChange={(e) =>
                 setFormData({ ...formData, room: e.target.value })
@@ -323,14 +323,14 @@ export default function HospitalTripForm() {
               Type
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.trip_type}
               onChange={(e) =>
                 setFormData({ ...formData, trip_type: e.target.value })
               }
             >
               {['BLS', 'ALS', 'BLS-ER', 'ALS1'].map((type) => (
-                <option key={type} value={type} className="text-gray-700">
+                <option key={type} value={type}>
                   {type}
                 </option>
               ))}
@@ -346,7 +346,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.vehicle}
               onChange={(e) =>
                 setFormData({ ...formData, vehicle: e.target.value })
@@ -359,7 +359,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.plate}
               onChange={(e) =>
                 setFormData({ ...formData, plate: e.target.value })
@@ -372,7 +372,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.age_sex}
               onChange={(e) =>
                 setFormData({ ...formData, age_sex: e.target.value })
@@ -389,7 +389,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.patient_name}
               onChange={(e) =>
                 setFormData({ ...formData, patient_name: e.target.value })
@@ -401,7 +401,7 @@ export default function HospitalTripForm() {
               Purpose
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.purpose}
               onChange={(e) =>
                 setFormData({ ...formData, purpose: e.target.value })
@@ -427,7 +427,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.pickup}
               onChange={(e) =>
                 setFormData({ ...formData, pickup: e.target.value })
@@ -444,7 +444,7 @@ export default function HospitalTripForm() {
             </label>
             <Input
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.destination}
               onChange={(e) =>
                 setFormData({ ...formData, destination: e.target.value })
@@ -465,7 +465,7 @@ export default function HospitalTripForm() {
               Type
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.billing_type}
               onChange={(e) =>
                 setFormData({ ...formData, billing_type: e.target.value })
@@ -484,7 +484,7 @@ export default function HospitalTripForm() {
               TARE
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.tare}
               onChange={(e) =>
                 setFormData({ ...formData, tare: e.target.value })
@@ -503,7 +503,7 @@ export default function HospitalTripForm() {
               Billing
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.billing_class}
               onChange={(e) =>
                 setFormData({ ...formData, billing_class: e.target.value })
@@ -527,7 +527,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.gross}
               onChange={(e) =>
                 setFormData({ ...formData, gross: e.target.value })
@@ -541,7 +541,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.discount}
               onChange={(e) =>
                 setFormData({ ...formData, discount: e.target.value })
@@ -555,7 +555,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.payables}
               onChange={(e) =>
                 setFormData({ ...formData, payables: e.target.value })
@@ -569,7 +569,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.vat}
               onChange={(e) =>
                 setFormData({ ...formData, vat: e.target.value })
@@ -583,7 +583,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.vatables}
               onChange={(e) =>
                 setFormData({ ...formData, vatables: e.target.value })
@@ -597,7 +597,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.zero_vat}
               onChange={(e) =>
                 setFormData({ ...formData, zero_vat: e.target.value })
@@ -611,7 +611,7 @@ export default function HospitalTripForm() {
             <Input
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.withholding}
               onChange={(e) =>
                 setFormData({ ...formData, withholding: e.target.value })

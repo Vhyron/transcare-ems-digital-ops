@@ -33,7 +33,7 @@ function SelectWithOthers({
   return (
     <div className="space-y-2 w-full">
       <select
-        className="border border-gray-300 rounded-md px-3 py-2 w-full"
+        className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{ backgroundColor: '#0a0a0a', color: 'white' }}
@@ -652,7 +652,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Event Title</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_title"
             value={formData.event_title}
@@ -663,7 +663,7 @@ export default function ConsolidatedDispatchForm() {
           <select
             value={formData.event_type}
             name="event_type"
-            className="w-full h-10 border rounded px-3 text-base"
+            className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
             onChange={handleInputChange}
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
@@ -681,7 +681,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Event Owner</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_owner"
             value={formData.event_owner}
@@ -689,7 +689,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mt-4 mb-2">Contact Details</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_owner_contact"
             value={formData.event_owner_contact}
@@ -699,7 +699,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Event Organizer</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_organizer"
             value={formData.event_organizer}
@@ -707,7 +707,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mt-4 mb-2">Contact Details</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_organizer_contact"
             value={formData.event_organizer_contact}
@@ -720,7 +720,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Date and Time</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_date_time"
             value={formData.event_date_time}
@@ -730,7 +730,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Event Duration</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_duration"
             value={formData.event_duration}
@@ -743,7 +743,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Events Call Time</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_call_time"
             value={formData.event_call_time}
@@ -753,7 +753,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Estimated Crowd</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="estimated_crowd"
             value={formData.estimated_crowd}
@@ -766,7 +766,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="block font-medium mb-2">Event Venue</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full"
             onChange={handleInputChange}
             name="event_venue"
             value={formData.event_venue}
@@ -778,7 +778,7 @@ export default function ConsolidatedDispatchForm() {
             value={formData.type_of_events}
             name="type_of_events"
             onChange={handleInputChange}
-            className="w-full h-10 border rounded px-3 text-base"
+            className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
             {[
@@ -808,7 +808,7 @@ export default function ConsolidatedDispatchForm() {
                 placeholder="Please specify the type of event"
                 value={typeOfEventsOther}
                 onChange={(e) => setTypeOfEventsOther(e.target.value)}
-                className="w-full h-10 border rounded px-3 text-base"
+                className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
                 style={{ backgroundColor: '#0a0a0a', color: 'white' }}
               />
             </div>
@@ -820,7 +820,7 @@ export default function ConsolidatedDispatchForm() {
             value={formData.venue_type}
             name="venue_type"
             onChange={handleInputChange}
-            className="w-full h-10 border rounded px-3 text-base"
+            className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
             style={{ backgroundColor: '#0a0a0a', color: 'white' }}
           >
             {['Indoor', 'Outdoor'].map((type) => (
@@ -873,7 +873,7 @@ export default function ConsolidatedDispatchForm() {
                   ] as string
                 }
                 onChange={handleInputChange}
-                className="w-full h-10 border rounded px-3 text-base"
+                className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
                 style={{ backgroundColor: '#0a0a0a', color: 'white' }}
               >
                 {getCrowdOptions(category).map((option) => (
@@ -897,7 +897,7 @@ export default function ConsolidatedDispatchForm() {
             <select
               value={formData.economic_class}
               name="economic_class"
-              className="w-full h-10 border rounded px-3 text-base"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               onChange={handleInputChange}
               style={{ backgroundColor: '#0a0a0a', color: 'white' }}
             >
@@ -913,7 +913,7 @@ export default function ConsolidatedDispatchForm() {
             <select
               value={formData.crowd_type}
               name="crowd_type"
-              className="w-full h-10 border rounded px-3 text-base"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               onChange={handleInputChange}
               style={{ backgroundColor: '#0a0a0a', color: 'white' }}
             >
@@ -940,7 +940,7 @@ export default function ConsolidatedDispatchForm() {
         <select
           value={formData.venue_safety_equipment}
           name="venue_safety_equipment"
-          className="w-full h-10 border rounded px-3 text-base"
+          className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
           onChange={handleInputChange}
           style={{ backgroundColor: '#0a0a0a', color: 'white' }}
         >
@@ -1002,7 +1002,7 @@ export default function ConsolidatedDispatchForm() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                   <Input
                     placeholder="Ambulance Model"
-                    className="h-10 text-base"
+                    className="w-full"
                     value={model.model}
                     onChange={(e) =>
                       handleAmbulanceModelChange(index, 'model', e.target.value)
@@ -1010,7 +1010,7 @@ export default function ConsolidatedDispatchForm() {
                   />
                   <Input
                     placeholder="Plate Number"
-                    className="h-10 text-base"
+                    className="w-full"
                     value={model.plate_number}
                     onChange={(e) =>
                       handleAmbulanceModelChange(
@@ -1022,7 +1022,7 @@ export default function ConsolidatedDispatchForm() {
                   />
                   <Input
                     placeholder="Type"
-                    className="h-10 text-base"
+                    className="w-full"
                     value={model.type}
                     onChange={(e) =>
                       handleAmbulanceModelChange(index, 'type', e.target.value)
@@ -1035,7 +1035,7 @@ export default function ConsolidatedDispatchForm() {
                     onClick={() => removeAmbulanceRow(index)}
                     size="sm"
                     variant="outline"
-                    className="h-10 px-2 text-red-500 hover:text-red-700"
+                    className=" px-2 text-red-500 hover:text-red-700"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -1065,7 +1065,7 @@ export default function ConsolidatedDispatchForm() {
             type="number"
             min="0"
             max="50"
-            className="h-10 text-base"
+            className="w-full"
             onChange={(e) => handleNumberOfCrewChange(e.target.value)}
             name="number_of_crew"
             value={formData.number_of_crew}
@@ -1101,7 +1101,7 @@ export default function ConsolidatedDispatchForm() {
             </label>
             <Input
               placeholder="MD Name"
-              className="h-10 text-base"
+              className="w-full"
               name="md_names"
               value={formData.md_names}
               onChange={handleInputChange}
@@ -1133,7 +1133,7 @@ export default function ConsolidatedDispatchForm() {
             <div key={i} className="flex items-center gap-2">
               <Input
                 placeholder={`${i + 1})`}
-                className="h-10 text-base flex-1"
+                className="w-full flex-1"
                 name={`destination_${i}`}
                 value={formData.point_of_destinations.split('\n')[i] || ''}
                 onChange={(e) => {
@@ -1220,10 +1220,9 @@ export default function ConsolidatedDispatchForm() {
               name="treated_waiver"
               value={formData.treated_waiver}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               style={{ backgroundColor: '#0a0a0a', color: 'white' }}
             >
-              <option value="">Select</option>
               <option value="Y">Y</option>
               <option value="N">N</option>
               <option value="NA">N/A</option>
@@ -1277,10 +1276,9 @@ export default function ConsolidatedDispatchForm() {
               name="transported_insurance"
               value={formData.transported_insurance}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               style={{ backgroundColor: '#0a0a0a', color: 'white' }}
             >
-              <option value="">Select</option>
               <option value="Y">Y</option>
               <option value="N">N</option>
               <option value="NA">N/A</option>
@@ -1334,10 +1332,9 @@ export default function ConsolidatedDispatchForm() {
               name="refused_pre_med_check"
               value={formData.refused_pre_med_check}
               onChange={handleInputChange}
-              className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               style={{ backgroundColor: '#0a0a0a', color: 'white' }}
             >
-              <option value="">Select</option>
               <option value="Y">Y</option>
               <option value="N">N</option>
               <option value="NA">N/A</option>
@@ -1520,7 +1517,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="font-medium block mb-2">Event Title</label>
           <Input
             type="text"
-            className="h-10 text-base"
+            className="w-full text-base"
             onChange={handleInputChange}
             name="page3_event_title"
             value={formData.page3_event_title}
@@ -1530,7 +1527,7 @@ export default function ConsolidatedDispatchForm() {
           <label className="font-medium block mb-2">Total Crew</label>
           <Input
             type="number"
-            className="h-10 text-base"
+            className="w-full text-base"
             onChange={handleInputChange}
             name="page3_total_crew"
             value={formData.page3_total_crew}

@@ -585,19 +585,17 @@ export default function RefusalTreatmentTransportationForm() {
       {/* Guardian Information */}
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-          <label className="text-sm font-medium">GUARDIAN:</label>
+          <label className="text-sm font-medium text-foreground">
+            GUARDIAN:
+          </label>
           <select
             name="guardian"
             value={formData.guardian}
             onChange={handleInputChange}
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+            className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto"
           >
-            <option value="yes" className="text-gray-700">
-              YES
-            </option>
-            <option value="no" className="text-gray-700">
-              NO
-            </option>
+            <option value="yes">YES</option>
+            <option value="no">NO</option>
           </select>
         </div>
 
