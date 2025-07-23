@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { listAllStaff, removeUser } from "../actions/users.action";
+import { listAllStaff, removeUser } from "../../actions/users.action";
 import { createUser } from "@/actions/auth.action";
 import { NewStaffFormData } from "@/components/forms/NewStaffForm";
 

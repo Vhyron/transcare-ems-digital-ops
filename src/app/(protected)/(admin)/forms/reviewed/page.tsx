@@ -1,10 +1,18 @@
-import { listReviewedForms } from '@/actions/form_submissions.action';
-import { DataTable } from '@/components/table/data-table';
-import { columns } from './columns';
-import { reviewedFormStatus } from '../data';
+'use client';
 
-const ReviewedFormsPage = async () => {
-  const data = await listReviewedForms();
+import Loading from '@/components/Loading';
+import { DataTable } from '@/components/table/data-table';
+import { useReviewedForms } from '@/hooks/react-queries/use-form';
+import { reviewedFormStatus } from '../data';
+import { columns } from './columns';
+
+const ReviewedFormsPage = () => {
+  const { data = [], error, isLoading } = useReviewedForms();
+
+  if (isLoading) return <Loading />;
+  if (error) {
+    return <div>Error loading reviewed forms data</div>;
+  }
 
   return (
     <>

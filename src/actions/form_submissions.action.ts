@@ -176,3 +176,68 @@ export async function listAllForms(): Promise<AllFormType[]> {
 
   return forms;
 }
+
+export async function listAllFormsPaginate(
+  page: number,
+  limit: number,
+  search?: string,
+  statusFilter?: "pending" | "approved" | "rejected"
+): Promise<{ forms: AllFormType[]; total: number }> {
+  const offset = (page - 1) * limit;
+
+  const submittedByQuery = db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
+    .as('submitted_by');
+  const reviewedByQuery = db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, formSubmissionsTable.reviewed_by))
+    .as('reviewed_by');
+
+  let query = db
+    .select()
+    .from(formSubmissionsTable)
+    .orderBy(desc(formSubmissionsTable.created_at))
+    .innerJoinLateral(submittedByQuery, sql`true`)
+    .leftJoinLateral(reviewedByQuery, sql`true`)
+    .limit(limit)
+    .offset(offset);
+
+  if (search) {
+    query = query.where(
+      or(
+        sql`"${formSubmissionsTable.form_type}" ILIKE ${`%${search}%`}`,
+        sql`"${formSubmissionsTable.submitted_by}" ILIKE ${`%${search}%`}`
+      )
+    );
+  }
+
+  if (statusFilter) {
+    query = query.where(eq(formSubmissionsTable.status, statusFilter));
+  }
+
+  const forms = await query;
+
+  const totalQuery = db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(formSubmissionsTable);
+
+  if (search) {
+    totalQuery.where(
+      or(
+        sql`"${formSubmissionsTable.form_type}" ILIKE ${`%${search}%`}`,
+        sql`"${formSubmissionsTable.submitted_by}" ILIKE ${`%${search}%`}`
+      )
+    );
+  }
+
+  if (statusFilter) {
+    totalQuery.where(eq(formSubmissionsTable.status, statusFilter));
+  }
+
+  const [{ count }] = await totalQuery;
+
+  return { forms, total: Number(count) };
+}

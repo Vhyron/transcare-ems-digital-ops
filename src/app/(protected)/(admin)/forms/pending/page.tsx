@@ -1,9 +1,17 @@
-import { listPendingForms } from '@/actions/form_submissions.action';
+'use client';
+
+import Loading from '@/components/Loading';
 import { DataTable } from '@/components/table/data-table';
+import { usePendingForms } from '@/hooks/react-queries/use-form';
 import { columns } from './columns';
 
-const PendingFormsPage = async () => {
-  const data = await listPendingForms();
+const PendingFormsPage = () => {
+  const { data = [], error, isLoading } = usePendingForms();
+
+  if (isLoading) return <Loading />;
+  if (error) {
+    return <div>Error loading pending forms data</div>;
+  }
 
   return (
     <>

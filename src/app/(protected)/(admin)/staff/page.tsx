@@ -2,7 +2,7 @@
 
 import Loading from '@/components/Loading';
 import { DataTable } from '@/components/table/data-table';
-import { useStaffs } from '@/hooks/use-user';
+import { useStaffs } from '@/hooks/react-queries/use-user';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';

@@ -18,7 +18,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
-import { useAddStaff } from "@/hooks/use-user";
+import { useAddStaff } from "@/hooks/react-queries/use-user";
 
 const formSchema = z
   .object({
