@@ -68,7 +68,6 @@ export const columns: ColumnDef<PendingFormType>[] = [
     cell: ({ row }) => (
       <PendingFormAction
         formSubmission={row.original.form_submissions}
-        formData={row.original.referenceForm}
       />
     ),
   },

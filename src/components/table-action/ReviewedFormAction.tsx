@@ -17,21 +17,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { sendEmailWithPdf } from '../../actions/email.action';
 import { deleteFormSubmission } from '../../actions/form_submissions.action';
 import { FormSubmission } from '../../db/schema/form_submissions.schema';
 import { generatePdf } from '../../utils/pdf_util';
-import { Separator } from '../ui/separator';
-import { sendEmailWithPdf } from '../../actions/email.action';
 import EmailForm from '../forms/EmailForm';
-import { useState } from 'react';
+import { Separator } from '../ui/separator';
 
 interface Props {
   formSubmission: FormSubmission;
-  formData: any;
 }
 
-const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
+const ReviewedFormAction = ({ formSubmission }: Props) => {
   const [openEmailModal, setOpenEmailModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -55,11 +54,7 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
   }) => {
     setLoading(true);
     try {
-      const pdfBuffer = await generatePdf(
-        formSubmission.form_type,
-        formData,
-        true
-      );
+      const pdfBuffer = await generatePdf(formSubmission, true);
 
       await sendEmailWithPdf(pdfBuffer!, {
         to: emailOptions.to,
@@ -88,9 +83,7 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => generatePdf(formSubmission.form_type, formData)}
-          >
+          <DropdownMenuItem onClick={() => generatePdf(formSubmission)}>
             View Form Details
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpenEmailModal(true)}>
@@ -135,8 +128,7 @@ const ReviewedFormAction = ({ formSubmission, formData }: Props) => {
         loading={loading}
         onSubmit={handleSendEmail}
         onOpenChange={setOpenEmailModal}
-        formType={formSubmission.form_type}
-        formData={formData}
+        formSubmission={formSubmission}
       />
     </>
   );

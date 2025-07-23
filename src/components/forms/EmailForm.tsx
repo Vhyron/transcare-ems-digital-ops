@@ -21,7 +21,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { FileText, Loader } from 'lucide-react';
-import { FormType } from '../../db/schema/form_submissions.schema';
+import { FormSubmission } from '../../db/schema/form_submissions.schema';
 import { capitalizeString } from '../../utils';
 import { generatePdf } from '../../utils/pdf_util';
 
@@ -34,8 +34,7 @@ interface EmailFormProps {
     text: string;
   }) => void;
   onOpenChange: (open: boolean) => void;
-  formType: FormType;
-  formData?: any;
+  formSubmission: FormSubmission
 }
 
 const formSchema = z.object({
@@ -50,8 +49,7 @@ const EmailForm = ({
   loading,
   onSubmit,
   onOpenChange,
-  formType,
-  formData,
+  formSubmission
 }: EmailFormProps) => {
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -77,7 +75,7 @@ const EmailForm = ({
       <DialogContent aria-disabled={loading}>
         <DialogHeader>
           <DialogTitle>
-            Send Email with PDF Attachment - {capitalizeString(formType, '_')}
+            Send Email with PDF Attachment - {capitalizeString(formSubmission.form_type, '_')}
           </DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
@@ -141,13 +139,13 @@ const EmailForm = ({
                 type="button"
                 variant="outline"
                 className="flex items-center justify-start gap-2 border rounded-md p-2 w-full"
-                onClick={() => generatePdf(formType, formData)}
+                onClick={() => generatePdf(formSubmission)}
                 disabled={loading}
               >
                 <div className="flex items-center text-gray-500">
                   <FileText className="h-5 w-5 mr-2" />
                   <span className="text-sm">
-                    PDF Attached - {capitalizeString(formType, '_')}
+                    PDF Attached - {capitalizeString(formSubmission.form_type, '_')}
                   </span>
                 </div>
               </Button>

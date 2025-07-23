@@ -98,7 +98,6 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     cell: ({ row }) => (
       <ReviewedFormAction
         formSubmission={row.original.form_submissions}
-        formData={row.original.referenceForm}
       />
     ),
   },
