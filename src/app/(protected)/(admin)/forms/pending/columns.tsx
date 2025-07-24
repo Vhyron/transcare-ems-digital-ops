@@ -1,13 +1,13 @@
 'use client';
 
-import { PendingFormType } from '@/actions/form_submissions.action';
+import { ListFormType } from '@/actions/form_submissions.action';
 import PendingFormAction from '@/components/table-action/PendingFormAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { ClockFading } from 'lucide-react';
 
-export const columns: ColumnDef<PendingFormType>[] = [
+export const columns: ColumnDef<ListFormType>[] = [
   {
     id: 'Form Type',
     accessorFn: (row) =>

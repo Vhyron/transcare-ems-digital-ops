@@ -1,15 +1,15 @@
 'use client';
 
+import { ListFormType } from '@/actions/form_submissions.action';
 import PendingFormAction from '@/components/table-action/PendingFormAction';
 import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX, ClockFading } from 'lucide-react';
-import { AllFormType } from '../../../../actions/form_submissions.action';
 import { allFormStatus } from './data';
 
-export const columns: ColumnDef<AllFormType>[] = [
+export const columns: ColumnDef<ListFormType>[] = [
   {
     id: 'form_type',
     enableColumnFilter: true,

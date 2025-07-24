@@ -1,7 +1,7 @@
 import { listReviewedForms } from '@/actions/form_submissions.action';
 import { DataTable } from '@/components/table/data-table';
-import { columns } from './columns';
 import { reviewedFormStatus } from '../data';
+import { columns } from './columns';
 
 const ReviewedFormsPage = async () => {
   const data = await listReviewedForms();

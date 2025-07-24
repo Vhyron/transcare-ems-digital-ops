@@ -77,11 +77,27 @@ export async function fetchReferenceForm(
   }
 }
 
-export type PendingFormType = {
+export interface ListFormType {
   form_submissions: FormSubmission;
   submitted_by: User;
-};
-export async function listPendingForms(): Promise<PendingFormType[]> {
+}
+export async function listAllForms(): Promise<ListFormType[]> {
+  const submittedByQuery = db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
+    .as('submitted_by');
+
+  const forms = await db
+    .select()
+    .from(formSubmissionsTable)
+    .orderBy(desc(formSubmissionsTable.created_at))
+    .innerJoinLateral(submittedByQuery, sql`true`)
+
+  return forms;
+}
+
+export async function listPendingForms(): Promise<ListFormType[]> {
   const submittedByQuery = db
     .select()
     .from(usersTable)
@@ -98,20 +114,12 @@ export async function listPendingForms(): Promise<PendingFormType[]> {
   return pendingSubmissions;
 }
 
-export interface ReviewedFormType extends PendingFormType {
-  reviewed_by: User;
-}
-export async function listReviewedForms(): Promise<ReviewedFormType[]> {
+export async function listReviewedForms(): Promise<ListFormType[]> {
   const submittedByQuery = db
     .select()
     .from(usersTable)
     .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
     .as('submitted_by');
-  const reviewedByQuery = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, formSubmissionsTable.reviewed_by))
-    .as('reviewed_by');
 
   const reviewedSubmissions = await db
     .select()
@@ -124,27 +132,6 @@ export async function listReviewedForms(): Promise<ReviewedFormType[]> {
     )
     .orderBy(desc(formSubmissionsTable.updated_at))
     .innerJoinLateral(submittedByQuery, sql`true`)
-    .innerJoinLateral(reviewedByQuery, sql`true`);
 
   return reviewedSubmissions;
-}
-
-export interface AllFormType {
-  form_submissions: FormSubmission;
-  submitted_by: User;
-}
-export async function listAllForms(): Promise<AllFormType[]> {
-  const submittedByQuery = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
-    .as('submitted_by');
-
-  const forms = await db
-    .select()
-    .from(formSubmissionsTable)
-    .orderBy(desc(formSubmissionsTable.created_at))
-    .innerJoinLateral(submittedByQuery, sql`true`)
-
-  return forms;
 }

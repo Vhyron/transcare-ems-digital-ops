@@ -1,14 +1,14 @@
 'use client';
 
-import { ReviewedFormType } from '@/actions/form_submissions.action';
+import { ListFormType } from '@/actions/form_submissions.action';
+import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX } from 'lucide-react';
-import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
 import { reviewedFormStatus } from '../data';
 
-export const columns: ColumnDef<ReviewedFormType>[] = [
+export const columns: ColumnDef<ListFormType>[] = [
   {
     id: 'Form Type',
     accessorFn: (row) =>
