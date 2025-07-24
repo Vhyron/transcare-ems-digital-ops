@@ -12,9 +12,8 @@ import { allFormStatus } from './data';
 export const columns: ColumnDef<ListFormType>[] = [
   {
     id: 'form_type',
-    enableColumnFilter: true,
-    accessorFn: (row) =>
-      `${row.form_submissions.form_type.split('_').join(' ')}`,
+    enableGlobalFilter: false,
+    accessorFn: (row) => row.form_submissions.form_type,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Form Type" />
     ),
@@ -43,7 +42,6 @@ export const columns: ColumnDef<ListFormType>[] = [
     id: 'status',
     accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
-    enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),

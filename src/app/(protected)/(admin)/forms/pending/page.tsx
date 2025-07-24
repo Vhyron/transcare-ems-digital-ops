@@ -1,5 +1,6 @@
 import { listPendingForms } from '@/actions/form_submissions.action';
 import { DataTable } from '@/components/table/data-table';
+import { formTypes } from '../data';
 import { columns } from './columns';
 
 const PendingFormsPage = async () => {
@@ -18,7 +19,8 @@ const PendingFormsPage = async () => {
       <DataTable
         columns={columns}
         data={data}
-        searchPlaceholder="Filter form types and submitted by..."
+        searchPlaceholder="Filter submitted by..."
+        filters={[{ columnKey: 'form_type', title: 'Form Type', options: formTypes }]}
       />
     </>
   );
