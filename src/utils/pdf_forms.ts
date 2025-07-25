@@ -292,7 +292,7 @@ export const advanceDirectivesFormPdf = async (
   checkFormCheckbox(form, data.ng_tube ? 'yes' : 'no', {
     yes: '2_intervention',
   });
-  checkFormCheckbox(form, data.ng_tube ? 'yes' : 'no', {
+  checkFormCheckbox(form, data.gt_tube ? 'yes' : 'no', {
     yes: '3_intervention',
   });
   checkFormCheckbox(form, data.cpap_bipap ? 'yes' : 'no', {
@@ -301,7 +301,7 @@ export const advanceDirectivesFormPdf = async (
   checkFormCheckbox(form, data.antibiotics ? 'yes' : 'no', {
     yes: '5_intervention',
   });
-  checkFormCheckbox(form, data.diagnostics ? 'yes' : 'no', {
+  checkFormCheckbox(form, data.laboratory ? 'yes' : 'no', {
     yes: '6_intervention',
   });
   checkFormCheckbox(form, data.diagnostics ? 'yes' : 'no', {
@@ -741,7 +741,7 @@ export const dispatchFormPdf = async (
     // 2nd Page
     type_of_service_specify: data.type_of_service_other,
     number_of_crew: data.number_of_crew,
-    full_name_md: data.md_names![0],
+    full_name_md: data.md_names,
     point_of_destination1: data.point_of_destinations![0],
     point_of_destination2: data.point_of_destinations![1],
     point_of_destination3: data.point_of_destinations![2],
@@ -809,17 +809,25 @@ export const dispatchFormPdf = async (
         .getTextField(`name${index + 1}`)
         .setText(item ? String(item.name) : '');
 
-      form.getTextField(`title${index + 1}`).setText(item ? String(item.title) : '');
-      form.getTextField(`position${index + 1}`).setText(item ? String(item.position) : '');
-      form.getTextField(`in${index + 1}`).setText(item ? String(item.time_in) : '');
-      form.getTextField(`out${index + 1}`).setText(item ? String(item.time_out) : '');
+      form
+        .getTextField(`title${index + 1}`)
+        .setText(item ? String(item.title) : '');
+      form
+        .getTextField(`position${index + 1}`)
+        .setText(item ? String(item.position) : '');
+      form
+        .getTextField(`in${index + 1}`)
+        .setText(item ? String(item.time_in) : '');
+      form
+        .getTextField(`out${index + 1}`)
+        .setText(item ? String(item.time_out) : '');
 
       await embedSignatureImage(
         pdfDoc,
         `${index + 1}signature`,
         item.signature || '',
         3
-      )
+      );
     });
   }
 
@@ -948,12 +956,7 @@ export const dispatchFormPdf = async (
   }
 
   // 2nd page signatures
-  // await embedSignatureImage(
-  //   pdfDoc,
-  //   'signature_md',
-  //   data.team_leader_signature || '',
-  //   2
-  // );
+  await embedSignatureImage(pdfDoc, 'signature_md', data.md_signature || '', 2);
   await embedSignatureImage(
     pdfDoc,
     'signature1',

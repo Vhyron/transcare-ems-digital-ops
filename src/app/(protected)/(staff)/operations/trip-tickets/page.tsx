@@ -107,10 +107,82 @@ export default function HospitalTripForm() {
       setIsSigLoading(false);
     }
   };
+  // Add this validation function before your handleSubmit function
 
+  const validateForm = () => {
+    const requiredFields = [
+      { field: 'date', label: 'Date' },
+      { field: 'time', label: 'Time' },
+      { field: 'room', label: 'Room' },
+      { field: 'trip_type', label: 'Trip Type' },
+      { field: 'vehicle', label: 'Vehicle' },
+      { field: 'plate', label: 'Plate' },
+      { field: 'age_sex', label: 'Age/Sex' },
+      { field: 'patient_name', label: 'Patient Name' },
+      { field: 'purpose', label: 'Purpose' },
+      { field: 'pickup', label: 'Pick up' },
+      { field: 'destination', label: 'Destination' },
+      { field: 'billing_class', label: 'Billing Class' },
+      { field: 'tare', label: 'TARE' },
+      { field: 'billing_type', label: 'Billing Type' },
+      { field: 'gross', label: 'Gross' },
+      { field: 'discount', label: 'Discount' },
+      { field: 'payables', label: 'Payables' },
+      { field: 'vat', label: 'VAT' },
+      { field: 'vatables', label: 'Vatables' },
+      { field: 'zero_vat', label: 'Zero VAT' },
+      { field: 'withholding', label: 'Withholding' },
+      { field: 'remarks', label: 'Remarks' },
+    ];
+
+    const missingFields = [];
+
+    for (const { field, label } of requiredFields) {
+      const value = formData[field as keyof typeof formData];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(label);
+      }
+    }
+
+    // Check for signatures
+    const requiredSignatures = ['nurse', 'billing', 'ambulance'];
+    const missingSignatures = requiredSignatures.filter((sig) => !sigData[sig]);
+
+    if (missingSignatures.length > 0) {
+      missingSignatures.forEach((sig) => {
+        missingFields.push(`${getSignatureTitle(sig)} Signature`);
+      });
+    }
+
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+    };
+  };
+
+  // Replace your existing handleSubmit function with this enhanced version:
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Authentication required', {
+        description: 'Please log in to submit the form',
+      });
+      return;
+    }
+
+    // Validate form before submission
+    const validation = validateForm();
+
+    if (!validation.isValid) {
+      const missingFieldsList = validation.missingFields.join(', ');
+      toast.error('Form validation failed', {
+        description: `Please fill in the following required fields: ${missingFieldsList}`,
+        duration: 5000, // Show for 5 seconds
+      });
+
+      // Optional: Focus on the first missing field
+      const firstMissingField = validation.missingFields[0];
+      console.log('First missing field:', firstMissingField);
+
       return;
     }
 
@@ -213,7 +285,9 @@ export default function HospitalTripForm() {
         }
       }
 
-      toast.success('Trip ticket saved successfully!');
+      toast.success('Trip ticket saved successfully!', {
+        description: 'Your hospital trip ticket has been submitted for review.',
+      });
 
       // Reset form
       setFormData({
@@ -245,7 +319,8 @@ export default function HospitalTripForm() {
     } catch (error) {
       console.error('Error saving:', error);
       toast.error('Failed to save trip ticket', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       });
     } finally {
       setIsSubmitting(false);

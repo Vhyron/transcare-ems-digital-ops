@@ -292,24 +292,65 @@ export default function ConductionRefusalForm() {
     setSigPaths({});
   };
 
+  const validateRequiredFields = () => {
+    const requiredFields = [
+      { field: 'patient_first_name', label: 'Patient First Name' },
+      { field: 'patient_middle_name', label: 'Patient Middle Name' },
+      { field: 'patient_last_name', label: 'Patient Last Name' },
+      { field: 'patient_age', label: 'Patient Age' },
+      { field: 'patient_sex', label: 'Patient Sex' },
+      { field: 'patient_birthdate', label: 'Patient Birthdate' },
+      { field: 'patient_citizenship', label: 'Patient Citizenship' },
+      { field: 'patient_address', label: 'Patient Address' },
+      { field: 'patient_contact_no', label: 'Patient Contact No.' },
+      { field: 'kin_name', label: 'Next of Kin Name' },
+      { field: 'kin_relation', label: 'Relation' },
+      { field: 'kin_contact_no', label: 'Next of Kin Contact No.' },
+      { field: 'kin_address', label: 'Next of Kin Address' },
+      { field: 'medical_record', label: 'Medical Record' },
+      { field: 'date_accomplished', label: 'Date Accomplished' },
+      { field: 'witness_name', label: 'Witness Name' },
+      { field: 'witness_date', label: 'Witness Date' },
+    ];
+
+    const missingFields: string[] = [];
+
+    requiredFields.forEach(({ field, label }) => {
+      const value = formData[field as keyof FormData];
+
+      // Check if field is empty, null, undefined, or 0 (for age)
+      if (
+        !value ||
+        (field === 'patient_age' && (value === 0 || value === '0'))
+      ) {
+        missingFields.push(label);
+      }
+    });
+
+    return missingFields;
+  };
+
+
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Authentication required', {
+        description: 'Please log in to submit the form',
+      });
+      return;
+    }
+
+    const missingFields = validateRequiredFields();
+    if (missingFields.length > 0) {
+      toast.error('Failed to save conduction refusal form', {
+        description: 'Please fill in all required fields',
+      });
       return;
     }
 
     setIsSubmitting(true);
 
-    // Add debugging to see what's being sent
-    console.log(
-      'Form data before submission:',
-      JSON.stringify(formData, null, 2)
-    );
-    console.log('Signature data:', sigData);
-    console.log('Signature paths:', sigPaths);
-
+  
     try {
-      // Step 1: Submit the conduction refusal form
       const response = await fetch('/api/conduction-refusal-form', {
         method: 'POST',
         headers: {
@@ -320,6 +361,15 @@ export default function ConductionRefusalForm() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
+        // Handle specific error cases with user-friendly messages
+        if (response.status === 400) {
+          toast.error('Failed to save conduction refusal form', {
+            description: 'Please fill in all required fields',
+          });
+          return;
+        }
+
         throw new Error(
           `HTTP ${response.status}: ${
             errorData.error || 'Failed to submit form'
@@ -398,14 +448,13 @@ export default function ConductionRefusalForm() {
       resetForm();
     } catch (error) {
       console.error('Error saving:', error);
-      toast.error('Failed to save conduction refusal', {
+      toast.error('Failed to save conduction refusal form', {
         description: error instanceof Error ? error.message : 'Unknown error',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  // Don't render until mounted
   if (!mounted) {
     return <div>Loading...</div>;
   }
@@ -588,9 +637,8 @@ export default function ConductionRefusalForm() {
               </div>
             </div>
             <div>
-              <label className="font-medium text-sm md:text-base">
-                Address
-              </label>
+              <label className="font-medium">Address</label>
+              label{' '}
               <Input
                 required
                 type="text"

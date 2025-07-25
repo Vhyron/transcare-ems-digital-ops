@@ -1,6 +1,6 @@
 'use client';
 
-import { AllFormType } from '@/actions/form_submissions.action';
+import { ListFormType } from '@/actions/form_submissions.action';
 import PendingFormAction from '@/components/table-action/PendingFormAction';
 import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
@@ -9,12 +9,11 @@ import { formatDate } from 'date-fns';
 import { Check, CircleX, ClockFading } from 'lucide-react';
 import { allFormStatus } from './data';
 
-export const columns: ColumnDef<AllFormType>[] = [
+export const columns: ColumnDef<ListFormType>[] = [
   {
     id: 'form_type',
-    enableColumnFilter: true,
-    accessorFn: (row) =>
-      `${row.form_submissions.form_type.split('_').join(' ')}`,
+    enableGlobalFilter: false,
+    accessorFn: (row) => row.form_submissions.form_type,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Form Type" />
     ),
@@ -43,7 +42,6 @@ export const columns: ColumnDef<AllFormType>[] = [
     id: 'status',
     accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
-    enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -108,12 +106,10 @@ export const columns: ColumnDef<AllFormType>[] = [
       row.original.form_submissions.status === 'pending' ? (
         <PendingFormAction
           formSubmission={row.original.form_submissions}
-          formData={row.original.referenceForm}
         />
       ) : (
         <ReviewedFormAction
           formSubmission={row.original.form_submissions}
-          formData={row.original.referenceForm}
         />
       ),
   },

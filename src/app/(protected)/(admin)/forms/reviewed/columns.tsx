@@ -1,18 +1,18 @@
 'use client';
 
-import { ReviewedFormType } from '@/actions/form_submissions.action';
+import { ListFormType } from '@/actions/form_submissions.action';
+import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { Check, CircleX } from 'lucide-react';
-import ReviewedFormAction from '@/components/table-action/ReviewedFormAction';
 import { reviewedFormStatus } from '../data';
 
-export const columns: ColumnDef<ReviewedFormType>[] = [
+export const columns: ColumnDef<ListFormType>[] = [
   {
-    id: 'Form Type',
-    accessorFn: (row) =>
-      `${row.form_submissions.form_type.split('_').join(' ')}`,
+    id: 'form_type',
+    accessorFn: (row) => row.form_submissions.form_type,
+    enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Form Type" />
     ),
@@ -22,6 +22,9 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
           {row.original.form_submissions.form_type.split('_').join(' ')}
         </span>
       );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
     },
   },
   {
@@ -38,7 +41,6 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     id: 'status',
     accessorFn: (row) => row.form_submissions.status,
     enableGlobalFilter: false,
-    enableColumnFilter: true,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -96,10 +98,7 @@ export const columns: ColumnDef<ReviewedFormType>[] = [
     id: 'Action',
     enableGlobalFilter: false,
     cell: ({ row }) => (
-      <ReviewedFormAction
-        formSubmission={row.original.form_submissions}
-        formData={row.original.referenceForm}
-      />
+      <ReviewedFormAction formSubmission={row.original.form_submissions} />
     ),
   },
 ];

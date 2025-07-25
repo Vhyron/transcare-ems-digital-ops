@@ -288,9 +288,103 @@ export default function RefusalTreatmentTransportationForm() {
     setSigData({});
   };
 
+  // Replace the validateRequiredFields function (around line 295)
+  const validateRequiredFields = (formData: any) => {
+    const missingFields: string[] = [];
+
+    // Define required fields based on the 'required' attributes in your JSX
+    const requiredFields = [
+      { key: 'leagueEvent', label: 'League/Event' },
+      { key: 'type', label: 'Type' },
+      { key: 'location', label: 'Location' },
+      { key: 'incident', label: 'Incident' },
+      { key: 'patientName', label: 'Patient Name' },
+      { key: 'dob', label: 'Date of Birth' },
+      { key: 'age', label: 'Age' },
+      { key: 'landline', label: 'Landline' },
+      { key: 'cell', label: 'Cell' },
+      { key: 'pcr', label: 'PCR' },
+      { key: 'date', label: 'Date' },
+      { key: 'time', label: 'Time' },
+    ];
+
+    // Check regular required fields
+    requiredFields.forEach((field) => {
+      const value = formData[field.key];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(field.label);
+      }
+    });
+
+    // Check required signature fields (both name and signature required)
+    const signatureFields = [
+      {
+        section: 'patientGuardian',
+        nameKey: 'patient_guardian_signature_name',
+        imageKey: 'patient_guardian_signature_image',
+        label: 'Patient/Guardian',
+      },
+      {
+        section: 'eventsOrganizer',
+        nameKey: 'events_organizer_signature_name',
+        imageKey: 'events_organizer_signature_image',
+        label: 'Events Organizer',
+      },
+      {
+        section: 'witness',
+        nameKey: 'witness_signature_name',
+        imageKey: 'witness_signature_image',
+        label: 'Witness',
+      },
+      {
+        section: 'medicPersonnel',
+        nameKey: 'medic_personnel_signature_name',
+        imageKey: 'medic_personnel_signature_image',
+        label: 'Medic Personnel',
+      },
+    ];
+
+    signatureFields.forEach((field) => {
+      const sectionData = formData[field.section];
+
+      // Check if name is provided
+      const nameValue = sectionData?.[field.nameKey];
+      if (
+        !nameValue ||
+        (typeof nameValue === 'string' && nameValue.trim() === '')
+      ) {
+        missingFields.push(`${field.label} Name`);
+      }
+
+      // Check if signature is provided
+      const signatureValue = sectionData?.[field.imageKey];
+      if (
+        !signatureValue ||
+        (typeof signatureValue === 'string' && signatureValue.trim() === '')
+      ) {
+        missingFields.push(`${field.label} Signature`);
+      }
+    });
+
+    return missingFields;
+  };
+
+  // Replace the handleSubmit function (around line 370)
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Authentication required', {
+        description: 'Please log in to submit the form',
+      });
+      return;
+    }
+
+    // Validate required fields before submission
+    const missingFields = validateRequiredFields(formData);
+
+    if (missingFields.length > 0) {
+      toast.error('Please fill in required fields', {
+        description: `Missing: ${missingFields.join(', ')}`,
+      });
       return;
     }
 
@@ -298,25 +392,6 @@ export default function RefusalTreatmentTransportationForm() {
 
     try {
       const submitData = { ...formData };
-
-      const missingSignatures = [];
-      if (!submitData.patientGuardian?.patient_guardian_signature_image) {
-        missingSignatures.push('patientGuardian');
-      }
-      if (!submitData.eventsOrganizer?.events_organizer_signature_image) {
-        missingSignatures.push('eventsOrganizer');
-      }
-      if (!submitData.witness?.witness_signature_image) {
-        missingSignatures.push('witness');
-      }
-      if (!submitData.medicPersonnel?.medic_personnel_signature_image) {
-        missingSignatures.push('medicPersonnel');
-      }
-
-      if (missingSignatures.length > 0) {
-        console.warn('Missing signature images for:', missingSignatures);
-        // You can choose to show a warning or continue with submission
-      }
 
       const baseUrl =
         process.env.NODE_ENV === 'development'
@@ -370,9 +445,17 @@ export default function RefusalTreatmentTransportationForm() {
       }
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP ${response.status}: ${result.error || 'Failed to submit form'}`
-        );
+        // Handle specific error cases with user-friendly messages
+        if (
+          response.status === 500 &&
+          result.error?.includes('invalid input syntax for type date')
+        ) {
+          throw new Error(
+            'Please check your date fields and ensure they are properly filled'
+          );
+        }
+
+        throw new Error('Failed to save the form');
       }
 
       console.log('Server response:', result);
@@ -420,13 +503,22 @@ export default function RefusalTreatmentTransportationForm() {
       resetForm();
     } catch (error) {
       console.error('Error saving form:', error);
-      toast.error('Failed to save refusal', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+
+      // Display user-friendly error message
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+
+      toast.error('Failed to save the form', {
+        description:
+          errorMessage === 'Failed to save the form'
+            ? 'Please check all fields and try again'
+            : errorMessage,
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
   // Don't render until mounted
   if (!mounted) {
     return <div>Loading...</div>;
@@ -436,7 +528,8 @@ export default function RefusalTreatmentTransportationForm() {
     // Main container
     <div className="p-4 md:p-6 lg:p-10 w-full">
       <h1 className="text-lg md:text-xl font-bold mb-4 md:mb-6">
-        Transcare Emergency Medical Services - Refusal Form
+        Transcare Emergency Medical Services - Refusal for Treatment or
+        Transportation
       </h1>
 
       {/* Event Information */}
