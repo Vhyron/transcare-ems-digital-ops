@@ -386,15 +386,12 @@ export default function AdvanceDirectivesForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Advance Directives saved successfully!');
+
       resetForm();
     } catch (error) {
       console.error('Error saving:', error);
-      alert(
-        `Failed to save: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      toast.error('Advance Directives not saved!');
     } finally {
       setIsSubmitting(false);
     }
