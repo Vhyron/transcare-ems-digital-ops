@@ -624,14 +624,16 @@ export default function ConsolidatedDispatchForm() {
           );
         }
       }
-      alert('Saved successfully!');
+      toast.success('Dispatch Form saved successfully!');
 
       resetForm();
       setSigData({});
       showNotificationMessage('Form submitted successfully!', 'success');
     } catch (error) {
       console.error('Error saving:', error);
-      showNotificationMessage('Failed to submit form', 'error');
+      toast.error('Failed to save dispatch form', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -651,6 +653,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Event Title</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -680,6 +683,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Event Owner</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -688,6 +692,7 @@ export default function ConsolidatedDispatchForm() {
           />
           <label className="block font-medium mt-4 mb-2">Contact Details</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -698,6 +703,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Event Organizer</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -706,6 +712,7 @@ export default function ConsolidatedDispatchForm() {
           />
           <label className="block font-medium mt-4 mb-2">Contact Details</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -719,6 +726,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Date and Time</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -729,6 +737,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Event Duration</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -742,6 +751,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Events Call Time</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -752,6 +762,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Estimated Crowd</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -765,6 +776,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block font-medium mb-2">Event Venue</label>
           <Input
+            required
             type="text"
             className="w-full"
             onChange={handleInputChange}
@@ -1001,6 +1013,7 @@ export default function ConsolidatedDispatchForm() {
               <div key={index} className="flex items-center gap-2">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                   <Input
+                    required
                     placeholder="Ambulance Model"
                     className="w-full"
                     value={model.model}
@@ -1009,6 +1022,7 @@ export default function ConsolidatedDispatchForm() {
                     }
                   />
                   <Input
+                    required
                     placeholder="Plate Number"
                     className="w-full"
                     value={model.plate_number}
@@ -1021,6 +1035,7 @@ export default function ConsolidatedDispatchForm() {
                     }
                   />
                   <Input
+                    required
                     placeholder="Type"
                     className="w-full"
                     value={model.type}
@@ -1062,6 +1077,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="block mb-2 font-medium">Number of Crew</label>
           <Input
+            required
             type="number"
             min="0"
             max="50"
@@ -1100,6 +1116,7 @@ export default function ConsolidatedDispatchForm() {
               Full Name and Signature of MD
             </label>
             <Input
+              required
               placeholder="MD Name"
               className="w-full"
               name="md_names"
@@ -1132,6 +1149,7 @@ export default function ConsolidatedDispatchForm() {
           {Array.from({ length: destinationRows }, (_, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input
+                required
                 placeholder={`${i + 1})`}
                 className="w-full flex-1"
                 name={`destination_${i}`}
@@ -1516,6 +1534,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="font-medium block mb-2">Event Title</label>
           <Input
+            required
             type="text"
             className="w-full text-base"
             onChange={handleInputChange}
@@ -1526,6 +1545,7 @@ export default function ConsolidatedDispatchForm() {
         <div>
           <label className="font-medium block mb-2">Total Crew</label>
           <Input
+            required
             type="number"
             className="w-full text-base"
             onChange={handleInputChange}

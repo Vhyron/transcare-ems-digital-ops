@@ -394,15 +394,13 @@ export default function ConductionRefusalForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Conduction Refusal saved successfully!');
       resetForm();
     } catch (error) {
       console.error('Error saving:', error);
-      alert(
-        `Failed to save: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      toast.error('Failed to save conduction refusal', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -431,6 +429,7 @@ export default function ConductionRefusalForm() {
           <div className="md:col-span-4">
             <label className="font-medium text-sm md:text-base">First</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_first_name"
@@ -441,6 +440,7 @@ export default function ConductionRefusalForm() {
           <div className="col-span-4">
             <label className="font-medium text-sm md:text-base">Middle</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_middle_name"
@@ -451,6 +451,7 @@ export default function ConductionRefusalForm() {
           <div className="col-span-4">
             <label className="font-medium text-sm md:text-base">Last</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_last_name"
@@ -464,6 +465,7 @@ export default function ConductionRefusalForm() {
           <div className="md:col-span-2">
             <label className="font-medium text-sm md:text-base">Age</label>
             <Input
+              required
               type="number"
               className="w-full"
               name="patient_age"
@@ -474,6 +476,7 @@ export default function ConductionRefusalForm() {
           <div className="md:col-span-2">
             <label className="font-medium text-sm md:text-base">Sex</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_sex"
@@ -483,9 +486,10 @@ export default function ConductionRefusalForm() {
           </div>
           <div className="col-span-2 md:col-span-4">
             <label className="font-medium text-sm md:text-base">
-              Birthdate(mm/dd/yyyy):
+              Birthdate
             </label>
             <Input
+              required
               type="date"
               className="w-full"
               name="patient_birthdate"
@@ -498,6 +502,7 @@ export default function ConductionRefusalForm() {
               Citizenship
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_citizenship"
@@ -511,6 +516,7 @@ export default function ConductionRefusalForm() {
           <div className="col-span-4">
             <label className="font-medium text-sm md:text-base">Address</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_address"
@@ -523,6 +529,7 @@ export default function ConductionRefusalForm() {
               Contact No.
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_contact_no"
@@ -544,6 +551,7 @@ export default function ConductionRefusalForm() {
             <div>
               <label className="font-medium text-sm md:text-base">Name</label>
               <Input
+                required
                 type="text"
                 className="w-full"
                 name="kin_name"
@@ -557,6 +565,7 @@ export default function ConductionRefusalForm() {
                   Relation
                 </label>
                 <Input
+                  required
                   type="text"
                   className="w-full"
                   name="kin_relation"
@@ -569,6 +578,7 @@ export default function ConductionRefusalForm() {
                   Contact No.
                 </label>
                 <Input
+                  required
                   type="text"
                   className="w-full"
                   name="kin_contact_no"
@@ -582,6 +592,7 @@ export default function ConductionRefusalForm() {
                 Address
               </label>
               <Input
+                required
                 type="text"
                 className="w-full"
                 name="kin_address"
@@ -597,6 +608,7 @@ export default function ConductionRefusalForm() {
                 Medical Record
               </label>
               <Input
+                required
                 type="text"
                 className="w-full"
                 name="medical_record"
@@ -609,6 +621,7 @@ export default function ConductionRefusalForm() {
                 Date Accomplished
               </label>
               <Input
+                required
                 type="date"
                 className="w-full"
                 name="date_accomplished"
@@ -811,6 +824,7 @@ export default function ConductionRefusalForm() {
                   Witness Name
                 </label>
                 <Input
+                  required
                   type="text"
                   className="w-full"
                   name="witness_name"
@@ -821,6 +835,7 @@ export default function ConductionRefusalForm() {
               <div>
                 <label className="block text-sm font-medium mb-1">Date</label>
                 <Input
+                  required
                   type="date"
                   className="w-full"
                   name="witness_date"

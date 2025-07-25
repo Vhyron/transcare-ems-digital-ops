@@ -284,6 +284,7 @@ export default function HospitalTripForm() {
               Date
             </label>
             <Input
+              required
               type="date"
               className="w-full"
               value={formData.date}
@@ -297,6 +298,7 @@ export default function HospitalTripForm() {
               Time
             </label>
             <Input
+              required
               type="time"
               className="w-full"
               value={formData.time}
@@ -310,6 +312,7 @@ export default function HospitalTripForm() {
               Room
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.room}
@@ -323,6 +326,7 @@ export default function HospitalTripForm() {
               Type
             </label>
             <select
+              required
               className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.trip_type}
               onChange={(e) =>
@@ -345,6 +349,7 @@ export default function HospitalTripForm() {
               Vehicle
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.vehicle}
@@ -358,6 +363,7 @@ export default function HospitalTripForm() {
               Plate
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.plate}
@@ -371,6 +377,7 @@ export default function HospitalTripForm() {
               Age/Sex
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.age_sex}
@@ -388,6 +395,7 @@ export default function HospitalTripForm() {
               Patient Name
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.patient_name}
@@ -401,6 +409,7 @@ export default function HospitalTripForm() {
               Purpose
             </label>
             <select
+              required
               className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.purpose}
               onChange={(e) =>
@@ -426,6 +435,7 @@ export default function HospitalTripForm() {
               Pick up
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.pickup}
@@ -443,6 +453,7 @@ export default function HospitalTripForm() {
               Destination
             </label>
             <Input
+              required
               type="text"
               className="w-full"
               value={formData.destination}
@@ -465,6 +476,7 @@ export default function HospitalTripForm() {
               Type
             </label>
             <select
+              required
               className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.billing_type}
               onChange={(e) =>
@@ -484,6 +496,7 @@ export default function HospitalTripForm() {
               TARE
             </label>
             <select
+              required
               className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.tare}
               onChange={(e) =>
@@ -503,6 +516,7 @@ export default function HospitalTripForm() {
               Billing
             </label>
             <select
+              required
               className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.billing_class}
               onChange={(e) =>
@@ -525,6 +539,7 @@ export default function HospitalTripForm() {
               Gross
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -539,6 +554,7 @@ export default function HospitalTripForm() {
               Discount
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -553,6 +569,7 @@ export default function HospitalTripForm() {
               Payables
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -567,6 +584,7 @@ export default function HospitalTripForm() {
               VAT
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -581,6 +599,7 @@ export default function HospitalTripForm() {
               Vatables
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -595,6 +614,7 @@ export default function HospitalTripForm() {
               ZeroVAT
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -609,6 +629,7 @@ export default function HospitalTripForm() {
               Withholding
             </label>
             <Input
+              required
               type="number"
               step="0.01"
               className="w-full"
@@ -626,6 +647,7 @@ export default function HospitalTripForm() {
             Remarks
           </label>
           <Textarea
+            required
             className="w-full h-20 sm:h-24 text-sm sm:text-base resize-none"
             value={formData.remarks}
             onChange={(e) =>

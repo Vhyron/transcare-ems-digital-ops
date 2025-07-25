@@ -299,36 +299,6 @@ export default function RefusalTreatmentTransportationForm() {
     try {
       const submitData = { ...formData };
 
-      // ENHANCED DEBUG LOGGING
-      console.log('=== FORM SUBMISSION DEBUG ===');
-      console.log('Full formData:', submitData);
-      console.log('Signature paths state:', sigPaths);
-      console.log('Signature data state:', sigData);
-
-      // Debug each signature section
-      console.log('Individual signature sections:');
-      console.log('patientGuardian:', {
-        image: submitData.patientGuardian?.patient_guardian_signature_image,
-        name: submitData.patientGuardian?.patient_guardian_signature_name,
-        sigPath: sigPaths.patientGuardian,
-      });
-      console.log('eventsOrganizer:', {
-        image: submitData.eventsOrganizer?.events_organizer_signature_image,
-        name: submitData.eventsOrganizer?.events_organizer_signature_name,
-        sigPath: sigPaths.eventsOrganizer,
-      });
-      console.log('witness:', {
-        image: submitData.witness?.witness_signature_image,
-        name: submitData.witness?.witness_signature_name,
-        sigPath: sigPaths.witness,
-      });
-      console.log('medicPersonnel:', {
-        image: submitData.medicPersonnel?.medic_personnel_signature_image,
-        name: submitData.medicPersonnel?.medic_personnel_signature_name,
-        sigPath: sigPaths.medicPersonnel,
-      });
-
-      // Check for missing signature paths
       const missingSignatures = [];
       if (!submitData.patientGuardian?.patient_guardian_signature_image) {
         missingSignatures.push('patientGuardian');
@@ -446,15 +416,13 @@ export default function RefusalTreatmentTransportationForm() {
         }
       }
 
-      alert('Form saved successfully!');
+      toast.success('Refusal form saved successfully!');
       resetForm();
     } catch (error) {
       console.error('Error saving form:', error);
-      alert(
-        `Failed to save form: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      toast.error('Failed to save refusal', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -478,6 +446,7 @@ export default function RefusalTreatmentTransportationForm() {
             League /Event:
           </label>
           <Input
+            required
             type="text"
             name="leagueEvent"
             value={formData.leagueEvent}
@@ -488,6 +457,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">TYPE:</label>
           <Input
+            required
             type="text"
             name="type"
             value={formData.type}
@@ -501,6 +471,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">Location:</label>
           <Input
+            required
             type="text"
             name="location"
             value={formData.location}
@@ -511,6 +482,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">Incident:</label>
           <Input
+            required
             type="text"
             name="incident"
             value={formData.incident}
@@ -527,6 +499,7 @@ export default function RefusalTreatmentTransportationForm() {
             Patient Name:
           </label>
           <Input
+            required
             type="text"
             name="patientName"
             value={formData.patientName}
@@ -537,6 +510,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">DOB:</label>
           <Input
+            required
             type="date"
             name="dob"
             value={formData.dob}
@@ -547,6 +521,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">Age:</label>
           <Input
+            required
             type="number"
             name="age"
             value={formData.age}
@@ -563,6 +538,7 @@ export default function RefusalTreatmentTransportationForm() {
             Contact Details - Landline:
           </label>
           <Input
+            required
             type="tel"
             name="landline"
             value={formData.landline}
@@ -573,6 +549,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">Cell:</label>
           <Input
+            required
             type="tel"
             name="cell"
             value={formData.cell}
@@ -836,6 +813,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="patientGuardian.patient_guardian_signature_name"
                 type="text"
                 className="w-full"
@@ -876,6 +854,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="eventsOrganizer.events_organizer_signature_name"
                 type="text"
                 className="w-full"
@@ -916,6 +895,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="witness.witness_signature_name"
                 type="text"
                 className="w-full"
@@ -953,6 +933,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="medicPersonnel.medic_personnel_signature_name"
                 type="text"
                 className="w-full"
@@ -970,6 +951,7 @@ export default function RefusalTreatmentTransportationForm() {
           <div>
             <label className="block text-sm font-medium mb-1">PCR:</label>
             <Input
+              required
               type="text"
               name="pcr"
               value={formData.pcr}
@@ -980,6 +962,7 @@ export default function RefusalTreatmentTransportationForm() {
           <div>
             <label className="block text-sm font-medium mb-1">DATE:</label>
             <Input
+              required
               type="date"
               name="date"
               value={formData.date}
@@ -990,6 +973,7 @@ export default function RefusalTreatmentTransportationForm() {
           <div>
             <label className="block text-sm font-medium mb-1">TIME:</label>
             <Input
+              required
               type="time"
               name="time"
               value={formData.time}

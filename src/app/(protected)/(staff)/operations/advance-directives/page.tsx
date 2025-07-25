@@ -420,6 +420,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">First</label>
             <Input
+              required
               type="text"
               name="patient.firstName"
               className="w-full"
@@ -430,6 +431,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Middle</label>
             <Input
+              required
               type="text"
               name="patient.middleName"
               className="w-full"
@@ -440,6 +442,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Last</label>
             <Input
+              required
               type="text"
               name="patient.lastName"
               className="w-full"
@@ -453,7 +456,8 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-2">
             <label className="font-medium">Age</label>
             <Input
-              type="text"
+              required
+              type="number"
               name="patient.age"
               className="w-full"
               value={formData.patient.age}
@@ -463,6 +467,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-2">
             <label className="font-medium">Sex</label>
             <Input
+              required
               type="text"
               name="patient.sex"
               className="w-full"
@@ -471,8 +476,9 @@ export default function AdvanceDirectivesForm() {
             />
           </div>
           <div className="md:col-span-4">
-            <label className="font-medium">Birthdate(mm/dd/yyyy):</label>
+            <label className="font-medium">Birthdate</label>
             <Input
+              required
               type="date"
               name="patient.birthdate"
               className="w-full"
@@ -483,6 +489,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Citizenship</label>
             <Input
+              required
               type="text"
               name="patient.citizenship"
               className="w-full"
@@ -496,6 +503,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Address</label>
             <Input
+              required
               type="text"
               name="patient.address"
               className="w-full"
@@ -506,6 +514,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Contact No.</label>
             <Input
+              required
               type="text"
               name="patient.contactNo"
               className="w-full"
@@ -526,6 +535,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Name</label>
               <Input
+                required
                 type="text"
                 name="nextOfKin.name"
                 className="w-full"
@@ -537,6 +547,7 @@ export default function AdvanceDirectivesForm() {
               <div>
                 <label className="font-medium">Relation</label>
                 <Input
+                  required
                   type="text"
                   name="nextOfKin.relation"
                   className="w-full"
@@ -547,6 +558,7 @@ export default function AdvanceDirectivesForm() {
               <div>
                 <label className="font-medium">Contact No.</label>
                 <Input
+                  required
                   type="text"
                   name="nextOfKin.contactNo"
                   className="w-full"
@@ -558,6 +570,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Address</label>
               <Input
+                required
                 type="text"
                 name="nextOfKin.address"
                 className="w-full"
@@ -571,6 +584,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Medical Record</label>
               <Input
+                required
                 type="text"
                 name="medicalRecord.recordNumber"
                 className="w-full"
@@ -581,6 +595,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Date Accomplished</label>
               <Input
+                required
                 type="date"
                 name="medicalRecord.dateAccomplished"
                 className="w-full"
@@ -733,6 +748,7 @@ export default function AdvanceDirectivesForm() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">ADDITIONAL ORDERS</h2>
         <textarea
+          required
           name="additionalOrders"
           className="w-full border border-gray-300 rounded-md p-2 min-h-[100px]"
           value={formData.additionalOrders}
@@ -804,6 +820,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
+                required
                 type="text"
                 name="decisionMaker.name"
                 placeholder="write 'self' if patient"
@@ -815,6 +832,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Relation</label>
               <Input
+                required
                 type="text"
                 name="decisionMaker.relation"
                 className="w-full"
@@ -825,6 +843,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
+                required
                 type="date"
                 name="decisionMaker.dateSigned"
                 className="w-full"
@@ -870,6 +889,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
+                required
                 type="text"
                 name="physician.name"
                 className="w-full"
@@ -882,6 +902,7 @@ export default function AdvanceDirectivesForm() {
                 PRC License Number
               </label>
               <Input
+                required
                 type="text"
                 name="physician.prcLicenseNumber"
                 className="w-full"
@@ -892,6 +913,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
+                required
                 type="date"
                 name="physician.dateSigned"
                 className="w-full"
