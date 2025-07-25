@@ -1,17 +1,17 @@
 'use client';
 
-import { PendingFormType } from '@/actions/form_submissions.action';
+import { ListFormType } from '@/actions/form_submissions.action';
 import PendingFormAction from '@/components/table-action/PendingFormAction';
 import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDate } from 'date-fns';
 import { ClockFading } from 'lucide-react';
 
-export const columns: ColumnDef<PendingFormType>[] = [
+export const columns: ColumnDef<ListFormType>[] = [
   {
-    id: 'Form Type',
-    accessorFn: (row) =>
-      `${row.form_submissions.form_type.split('_').join(' ')}`,
+    id: 'form_type',
+    accessorFn: (row) => row.form_submissions.form_type,
+    enableGlobalFilter: false,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Form Type" />
     ),
@@ -21,6 +21,9 @@ export const columns: ColumnDef<PendingFormType>[] = [
           {row.original.form_submissions.form_type.split('_').join(' ')}
         </span>
       );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
     },
   },
   {
@@ -66,10 +69,7 @@ export const columns: ColumnDef<PendingFormType>[] = [
     id: 'Action',
     enableGlobalFilter: false,
     cell: ({ row }) => (
-      <PendingFormAction
-        formSubmission={row.original.form_submissions}
-        formData={row.original.referenceForm}
-      />
+      <PendingFormAction formSubmission={row.original.form_submissions} />
     ),
   },
 ];

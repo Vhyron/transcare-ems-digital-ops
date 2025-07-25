@@ -28,6 +28,8 @@ interface PatientRecord {
   signature: string; // base64 signature data
 }
 
+const MAX_PATIENT_RECORDS = 10;
+
 export default function OperationCensusForm() {
   const [activeSig, setActiveSig] = useState<string | null>(null);
   const [sigData, setSigData] = useState<{ [key: string]: string }>({});
@@ -55,8 +57,13 @@ export default function OperationCensusForm() {
     location: '',
   });
 
-  // Add new patient record
+  // Add new patient record with limit check
   const addPatientRecord = () => {
+    if (patientRecords.length >= MAX_PATIENT_RECORDS) {
+      toast.error(`Maximum ${MAX_PATIENT_RECORDS} patient records allowed`);
+      return;
+    }
+
     const newRecord: PatientRecord = {
       id: `patient_${Date.now()}`,
       name: '',
@@ -295,241 +302,294 @@ export default function OperationCensusForm() {
   }
 
   return (
-    <div className="p-10 w-full">
-      <h1 className="text-xl font-bold mb-6">
+    <div className="p-4 sm:p-6 lg:p-10 w-full">
+      <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6">
         Transcare Emergency Medical Service - Operation Census Record Form
       </h1>
 
       <div className="space-y-4 mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Input
-            placeholder="Date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          />
-          <Input
-            placeholder="Event Owner"
-            value={formData.event_owner}
-            onChange={(e) =>
-              setFormData({ ...formData, event_owner: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Time In"
-            type="time"
-            value={formData.time_in}
-            onChange={(e) =>
-              setFormData({ ...formData, time_in: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Time Out"
-            type="time"
-            value={formData.time_out}
-            onChange={(e) =>
-              setFormData({ ...formData, time_out: e.target.value })
-            }
-          />
+        <div className="grid grid-cols-12 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">Date</label>
+
+            <Input
+              required
+              placeholder="Date"
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">
+              Event Owner
+            </label>
+            <Input
+              required
+              value={formData.event_owner}
+              onChange={(e) =>
+                setFormData({ ...formData, event_owner: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">Time in</label>
+            <Input
+              required
+              placeholder="Time In"
+              type="time"
+              value={formData.time_in}
+              onChange={(e) =>
+                setFormData({ ...formData, time_in: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">Time out</label>
+            <Input
+              required
+              placeholder="Time Out"
+              type="time"
+              value={formData.time_out}
+              onChange={(e) =>
+                setFormData({ ...formData, time_out: e.target.value })
+              }
+            />
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
-            placeholder="Activity"
-            value={formData.activity}
-            onChange={(e) =>
-              setFormData({ ...formData, activity: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Location"
-            value={formData.location}
-            onChange={(e) =>
-              setFormData({ ...formData, location: e.target.value })
-            }
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4">
+          <div className="md:col-span">
+            <label className="font-medium text-sm md:text-base">Activity</label>
+            <Input
+              required
+              value={formData.activity}
+              onChange={(e) =>
+                setFormData({ ...formData, activity: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span">
+            <label className="font-medium text-sm md:text-base">Location</label>
+            <Input
+              required
+              value={formData.location}
+              onChange={(e) =>
+                setFormData({ ...formData, location: e.target.value })
+              }
+            />
+          </div>
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <Button
           onClick={addPatientRecord}
           className="flex items-center gap-2"
           type="button"
+          disabled={patientRecords.length >= MAX_PATIENT_RECORDS}
         >
           <Plus className="w-4 h-4" />
           Add Patient Record
         </Button>
+        <span className="text-sm text-gray-500">
+          ({patientRecords.length}/{MAX_PATIENT_RECORDS} records)
+        </span>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border">
-          <thead>
-            <tr className="text-sm">
-              <th className="border p-2">No.</th>
-              <th className="border p-2">Name of Injured/Ill Person</th>
-              <th className="border p-2">Age/Sex</th>
-              <th className="border p-2">Chief Complaint</th>
-              <th className="border p-2">Vital Signs</th>
-              <th className="border p-2">Management</th>
-              <th className="border p-2">Signature of PT</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {patientRecords.map((record, idx) => (
-              <tr key={record.id}>
-                <td className="border p-2 text-center">{idx + 1}</td>
-                <td className="border p-2">
-                  <Input
-                    value={record.name}
-                    onChange={(e) =>
-                      updatePatientRecord(record.id, 'name', e.target.value)
-                    }
-                    placeholder="Enter name"
-                    className="border-none p-0 h-8"
-                  />
-                </td>
-                <td className="border p-2">
-                  <Input
-                    value={record.age_sex}
-                    onChange={(e) =>
-                      updatePatientRecord(record.id, 'age_sex', e.target.value)
-                    }
-                    placeholder="e.g., 25/M"
-                    className="border-none p-0 h-8"
-                  />
-                </td>
-                <td className="border p-2">
-                  <Input
-                    value={record.chief_complaint}
-                    onChange={(e) =>
-                      updatePatientRecord(
-                        record.id,
-                        'chief_complaint',
-                        e.target.value
-                      )
-                    }
-                    placeholder="Chief complaint"
-                    className="border-none p-0 h-8"
-                  />
-                </td>
-                <td className="border p-2">
-                  <Input
-                    value={record.vital_signs}
-                    onChange={(e) =>
-                      updatePatientRecord(
-                        record.id,
-                        'vital_signs',
-                        e.target.value
-                      )
-                    }
-                    placeholder="Vital signs"
-                    className="border-none p-0 h-8"
-                  />
-                </td>
-                <td className="border p-2">
-                  <Input
-                    value={record.management}
-                    onChange={(e) =>
-                      updatePatientRecord(
-                        record.id,
-                        'management',
-                        e.target.value
-                      )
-                    }
-                    placeholder="Management"
-                    className="border-none p-0 h-8"
-                  />
-                </td>
-                <td className="border p-2">
-                  <div className="flex items-center justify-center">
-                    {record.signature ? (
-                      <img
-                        src={record.signature}
-                        alt="Patient Signature"
-                        className="max-h-8 max-w-16 cursor-pointer"
-                        onClick={() => setActiveSig(record.id)}
-                      />
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setActiveSig(record.id)}
-                        className="p-1 h-8 w-8"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </td>
-                <td className="border p-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removePatientRecord(record.id)}
-                    className="p-1 h-8 w-8 text-red-500 hover:text-red-700"
+      <div className="overflow-x-auto -mx-4 sm:mx-0">
+        <div className="min-w-[800px] sm:min-w-0">
+          <table className="w-full border">
+            <thead>
+              <tr className="text-xs sm:text-sm">
+                <th className="border p-2 sm:p-2">No.</th>
+                <th className="border p-2 sm:p-2">
+                  Name of Injured/Ill Person
+                </th>
+                <th className="border p-2 sm:p-2">Age/Sex</th>
+                <th className="border p-2 sm:p-2">Chief Complaint</th>
+                <th className="border p-2 sm:p-2">Vital Signs</th>
+                <th className="border p-2 sm:p-2">Management</th>
+                <th className="border p-2 sm:p-2">Signature of PT</th>
+                <th className="border p-2 sm:p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {patientRecords.map((record, idx) => (
+                <tr key={record.id}>
+                  <td className="border p-1 sm:p-2 text-center text-xs sm:text-sm">
+                    {idx + 1}
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <Input
+                      required
+                      value={record.name}
+                      onChange={(e) =>
+                        updatePatientRecord(record.id, 'name', e.target.value)
+                      }
+                      placeholder="Enter name"
+                      className="border-none p-0 h-6 sm:h-8 text-xs sm:text-sm"
+                    />
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <Input
+                      required
+                      value={record.age_sex}
+                      onChange={(e) =>
+                        updatePatientRecord(
+                          record.id,
+                          'age_sex',
+                          e.target.value
+                        )
+                      }
+                      placeholder="e.g., 25/M"
+                      className="border-none p-0 h-6 sm:h-8 text-xs sm:text-sm"
+                    />
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <Input
+                      required
+                      value={record.chief_complaint}
+                      onChange={(e) =>
+                        updatePatientRecord(
+                          record.id,
+                          'chief_complaint',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Chief complaint"
+                      className="border-none p-0 h-6 sm:h-8 text-xs sm:text-sm"
+                    />
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <Input
+                      required
+                      value={record.vital_signs}
+                      onChange={(e) =>
+                        updatePatientRecord(
+                          record.id,
+                          'vital_signs',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Vital signs"
+                      className="border-none p-0 h-6 sm:h-8 text-xs sm:text-sm"
+                    />
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <Input
+                      required
+                      value={record.management}
+                      onChange={(e) =>
+                        updatePatientRecord(
+                          record.id,
+                          'management',
+                          e.target.value
+                        )
+                      }
+                      placeholder="Management"
+                      className="border-none p-0 h-6 sm:h-8 text-xs sm:text-sm"
+                    />
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <div className="flex items-center justify-center">
+                      {record.signature ? (
+                        <img
+                          src={record.signature}
+                          alt="Patient Signature"
+                          className="max-h-8 max-w-16 cursor-pointer"
+                          onClick={() => setActiveSig(record.id)}
+                        />
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setActiveSig(record.id)}
+                          className="p-1 h-8 w-8"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                  <td className="border p-1 sm:p-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removePatientRecord(record.id)}
+                      className="p-1 h-8 w-8 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+              {patientRecords.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border p-4 text-center text-gray-500"
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </td>
-              </tr>
-            ))}
-            {patientRecords.length === 0 && (
-              <tr>
-                <td
-                  colSpan={8}
-                  className="border p-4 text-center text-gray-500"
-                >
-                  No patient records added. Click Add Patient Record to start.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                    No patient records added. Click Add Patient Record to start.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-10 mt-6 sm:mt-8">
         <div>
-          <label className="block font-medium mb-2">Prepared by:</label>
+          <label className="block font-medium mb-2 text-sm sm:text-base">
+            Prepared by:
+          </label>
           <div
-            className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
+            className="border border-dashed border-gray-400 p-3 sm:p-4 rounded-md flex items-center justify-center min-h-[80px] sm:min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
             onClick={() => setActiveSig('preparedBy')}
           >
             {sigData.preparedBy ? (
               <img
                 src={sigData.preparedBy}
                 alt="Prepared Signature"
-                className="max-h-24"
+                className="max-h-16 sm:max-h-24"
               />
             ) : (
-              <span className="text-gray-400">Click to sign</span>
+              <span className="text-gray-400 text-sm sm:text-base">
+                Click to sign
+              </span>
             )}
           </div>
         </div>
         <div>
-          <label className="block font-medium mb-2">Conformed by:</label>
+          <label className="block font-medium mb-2 text-sm sm:text-base">
+            Conformed by:
+          </label>
           <div
-            className="border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
+            className="border border-dashed border-gray-400 p-3 sm:p-4 rounded-md flex items-center justify-center min-h-[80px] sm:min-h-[120px] bg-gray-50 hover:bg-gray-100 cursor-pointer"
             onClick={() => setActiveSig('conformedBy')}
           >
             {sigData.conformedBy ? (
               <img
                 src={sigData.conformedBy}
                 alt="Conformed Signature"
-                className="max-h-24"
+                className="max-h-16 sm:max-h-24"
               />
             ) : (
-              <span className="text-gray-400">Click to sign</span>
+              <span className="text-gray-400 text-sm sm:text-base">
+                Click to sign
+              </span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="mt-8 flex">
+      <div className="mt-6 sm:mt-8 flex">
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting || loading || !user}
-          className="px-8 py-2"
+          className="px-4 sm:px-6 lg:px-8 py-2 text-sm sm:text-base w-full sm:w-auto"
         >
           {isSubmitting ? 'Submitting...' : 'Submit '}
         </Button>
@@ -547,11 +607,18 @@ export default function OperationCensusForm() {
                 : 'Signature Dialog'}
             </VisuallyHidden>
           </Dialog.Title>
+          <Dialog.Title>
+            <VisuallyHidden>
+              {activeSig
+                ? `${getSignatureTitle(activeSig)} Signature`
+                : 'Signature Dialog'}
+            </VisuallyHidden>
+          </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
+          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-sm sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+                <h2 className="text-base sm:text-lg font-semibold">
                   {activeSig
                     ? `${getSignatureTitle(activeSig)} E-Signature`
                     : 'E-Signature'}
@@ -561,12 +628,12 @@ export default function OperationCensusForm() {
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => setActiveSig(null)}
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
                   </button>
                 </Dialog.Close>
               </div>
 
-              <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(95vh-60px)] sm:max-h-[calc(90vh-80px)]">
                 <SignatureForm
                   onSubmit={handleSignatureSubmit}
                   defaultSignature={sigPaths[activeSig || '']}

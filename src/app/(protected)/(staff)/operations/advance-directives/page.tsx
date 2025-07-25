@@ -276,11 +276,93 @@ export default function AdvanceDirectivesForm() {
     setSigPaths({});
   };
 
+  // Add this validation function before the handleSubmit function
+
+  const validateRequiredFields = () => {
+    const requiredFields = [
+      // Patient fields
+      { field: formData.patient.firstName, name: 'Patient First Name' },
+      { field: formData.patient.middleName, name: 'Patient Middle Name' },
+      { field: formData.patient.lastName, name: 'Patient Last Name' },
+      { field: formData.patient.age, name: 'Patient Age' },
+      { field: formData.patient.sex, name: 'Patient Sex' },
+      { field: formData.patient.birthdate, name: 'Patient Birthdate' },
+      { field: formData.patient.citizenship, name: 'Patient Citizenship' },
+      { field: formData.patient.address, name: 'Patient Address' },
+      { field: formData.patient.contactNo, name: 'Patient Contact Number' },
+
+      // Next of Kin fields
+      { field: formData.nextOfKin.name, name: 'Next of Kin Name' },
+      { field: formData.nextOfKin.relation, name: 'Next of Kin Relation' },
+      {
+        field: formData.nextOfKin.contactNo,
+        name: 'Next of Kin Contact Number',
+      },
+      { field: formData.nextOfKin.address, name: 'Next of Kin Address' },
+
+      // Medical Record fields
+      {
+        field: formData.medicalRecord.recordNumber,
+        name: 'Medical Record Number',
+      },
+      {
+        field: formData.medicalRecord.dateAccomplished,
+        name: 'Date Accomplished',
+      },
+
+      // Additional Orders
+      { field: formData.additionalOrders, name: 'Additional Orders' },
+
+      // Decision Maker fields
+      { field: formData.decisionMaker.name, name: 'Decision Maker Name' },
+      {
+        field: formData.decisionMaker.relation,
+        name: 'Decision Maker Relation',
+      },
+      {
+        field: formData.decisionMaker.dateSigned,
+        name: 'Decision Maker Date Signed',
+      },
+
+      // Physician fields
+      { field: formData.physician.name, name: 'Physician Name' },
+      {
+        field: formData.physician.prcLicenseNumber,
+        name: 'PRC License Number',
+      },
+      { field: formData.physician.dateSigned, name: 'Physician Date Signed' },
+    ];
+
+    const emptyFields = requiredFields.filter(({ field }) => {
+      if (typeof field === 'string') {
+        return !field.trim();
+      }
+      return !field;
+    });
+
+    return {
+      isValid: emptyFields.length === 0,
+      emptyFields: emptyFields.map(({ name }) => name),
+    };
+  };
+
+
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Please log in to submit the form');
       return;
     }
+
+    // Validate required fields before submission
+    const validation = validateRequiredFields();
+    if (!validation.isValid) {
+      toast.error('Failed to save advance directives', {
+        description: 'Please fill in all required fields',
+      });
+      console.log('Missing required fields:', validation.emptyFields);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const baseUrl =
@@ -337,11 +419,21 @@ export default function AdvanceDirectivesForm() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          `HTTP ${response.status}: ${
-            errorData.error || 'Failed to submit form'
-          }`
-        );
+
+        // Check for validation error
+        if (
+          response.status === 400 &&
+          errorData.error?.includes('Validation failed')
+        ) {
+          toast.error('Failed to save advance directives', {
+            description: 'Please fill in all required fields',
+          });
+        } else {
+          toast.error('Failed to save advance directives', {
+            description: errorData.error || 'An unexpected error occurred',
+          });
+        }
+        return;
       }
 
       const result = await response.json();
@@ -386,15 +478,13 @@ export default function AdvanceDirectivesForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Advance Directives saved successfully!');
       resetForm();
     } catch (error) {
       console.error('Error saving:', error);
-      alert(
-        `Failed to save: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      toast.error('Failed to save advance directives', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -407,20 +497,23 @@ export default function AdvanceDirectivesForm() {
   return (
     <div className="p-10 w-full">
       <h1 className="text-xl font-bold mb-6">
-        Transcare Emergency Medical Services - Advance Directives on Level of
-        Care
+        ADVANCE DIRECTIVES ON LEVEL OF CARE
       </h1>
 
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
-     
+        <h1 className="text-xl font-bold mb-6">
+          Transcare Emergency Medical Services - Advance Directives on Level of
+          Care
+        </h1>
         <h3 className="font-bold text-lg mb-3 p-1">
           PATIENT GENERAL INFORMATION
         </h3>
 
-        <div className="grid grid-cols-12 gap-2 mb-2">
-          <div className="col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 mb-2">
+          <div className="md:col-span-4">
             <label className="font-medium">First</label>
             <Input
+              required
               type="text"
               name="patient.firstName"
               className="w-full"
@@ -428,9 +521,10 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Middle</label>
             <Input
+              required
               type="text"
               name="patient.middleName"
               className="w-full"
@@ -438,9 +532,10 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Last</label>
             <Input
+              required
               type="text"
               name="patient.lastName"
               className="w-full"
@@ -450,20 +545,22 @@ export default function AdvanceDirectivesForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-2 mb-2">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-2 mb-2">
+          <div className="md:col-span-2">
             <label className="font-medium">Age</label>
             <Input
-              type="text"
+              required
+              type="number"
               name="patient.age"
               className="w-full"
               value={formData.patient.age}
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-2">
+          <div className="md:col-span-2">
             <label className="font-medium">Sex</label>
             <Input
+              required
               type="text"
               name="patient.sex"
               className="w-full"
@@ -471,9 +568,10 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
-            <label className="font-medium">Birthdate(mm/dd/yyyy):</label>
+          <div className="md:col-span-4">
+            <label className="font-medium">Birthdate</label>
             <Input
+              required
               type="date"
               name="patient.birthdate"
               className="w-full"
@@ -481,9 +579,10 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Citizenship</label>
             <Input
+              required
               type="text"
               name="patient.citizenship"
               className="w-full"
@@ -493,10 +592,11 @@ export default function AdvanceDirectivesForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-8 gap-2 mb-2">
-          <div className="col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-2 mb-2">
+          <div className="md:col-span-4">
             <label className="font-medium">Address</label>
             <Input
+              required
               type="text"
               name="patient.address"
               className="w-full"
@@ -504,9 +604,10 @@ export default function AdvanceDirectivesForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
+          <div className="md:col-span-4">
             <label className="font-medium">Contact No.</label>
             <Input
+              required
               type="text"
               name="patient.contactNo"
               className="w-full"
@@ -522,11 +623,12 @@ export default function AdvanceDirectivesForm() {
           NEXT OF KIN/LEGAL GUARDIAN INFORMATION
         </h3>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div className="space-y-4">
             <div>
               <label className="font-medium">Name</label>
               <Input
+                required
                 type="text"
                 name="nextOfKin.name"
                 className="w-full"
@@ -534,10 +636,11 @@ export default function AdvanceDirectivesForm() {
                 onChange={handleInputChange}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="font-medium">Relation</label>
                 <Input
+                  required
                   type="text"
                   name="nextOfKin.relation"
                   className="w-full"
@@ -548,6 +651,7 @@ export default function AdvanceDirectivesForm() {
               <div>
                 <label className="font-medium">Contact No.</label>
                 <Input
+                  required
                   type="text"
                   name="nextOfKin.contactNo"
                   className="w-full"
@@ -559,6 +663,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Address</label>
               <Input
+                required
                 type="text"
                 name="nextOfKin.address"
                 className="w-full"
@@ -572,6 +677,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Medical Record</label>
               <Input
+                required
                 type="text"
                 name="medicalRecord.recordNumber"
                 className="w-full"
@@ -582,6 +688,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Date Accomplished</label>
               <Input
+                required
                 type="date"
                 name="medicalRecord.dateAccomplished"
                 className="w-full"
@@ -601,23 +708,19 @@ export default function AdvanceDirectivesForm() {
         {/* CPR Section */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">CARDIOPULMONARY RESUSCITATION</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.attemptCPR"
                 value={formData.carePreferences.attemptCPR ? 'yes' : 'no'}
                 onChange={handleInputChange}
-                className="border rounded px-2 py-1 w-full"
+                className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               >
-                <option value="yes" className="text-gray-700">
-                  yes
-                </option>
-                <option value="no" className="text-gray-700">
-                  no
-                </option>
+                <option value="yes">yes</option>
+                <option value="no">no</option>
               </select>
             </div>
-            <div className="col-span-5">
+            <div className="lg:col-span-5">
               <p className="text-sm ">
                 May be done if a person has no pulse and is not breathing to
                 prolong the life of the patient. This procedure entails pushing
@@ -631,8 +734,8 @@ export default function AdvanceDirectivesForm() {
         {/* Comfort Measures */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">COMFORT MEASURES ONLY</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.comfortOnly"
                 value={formData.carePreferences.comfortOnly ? 'yes' : 'no'}
@@ -660,8 +763,8 @@ export default function AdvanceDirectivesForm() {
         {/* Limited Additional Interventions */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">LIMITED ADDITIONAL INTERVENTIONS</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.limitedIntervention"
                 value={
@@ -684,7 +787,7 @@ export default function AdvanceDirectivesForm() {
                 medical treatment as indicated. DO NOT intubate. May transfer to
                 hospital ONLY if care is not met in current location.
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {limitedOptions.map(({ key, label }) => (
                   <label key={key} className="flex items-center text-sm">
                     <input
@@ -707,8 +810,8 @@ export default function AdvanceDirectivesForm() {
         {/* Full Treatment */}
         <div className="border p-4 rounded-lg space-y-2">
           <h3 className="font-bold">FULL TREATMENT</h3>
-          <div className="grid grid-cols-6 gap-4 items-start">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-start">
+            <div className="lg:col-span-1">
               <select
                 name="carePreferences.fullTreatment"
                 value={formData.carePreferences.fullTreatment ? 'yes' : 'no'}
@@ -738,6 +841,7 @@ export default function AdvanceDirectivesForm() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">ADDITIONAL ORDERS</h2>
         <textarea
+          required
           name="additionalOrders"
           className="w-full border border-gray-300 rounded-md p-2 min-h-[100px]"
           value={formData.additionalOrders}
@@ -778,8 +882,8 @@ export default function AdvanceDirectivesForm() {
           DECISION-MAKER VERIFICATION
         </h2>
 
-        <div className="flex gap-6">
-          <div className="w-1/2 space-y-2">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-1/2 space-y-2">
             <label className="block text-sm font-medium mb-2">
               Decision Maker Signature
             </label>
@@ -805,10 +909,11 @@ export default function AdvanceDirectivesForm() {
             </label>
           </div>
 
-          <div className="w-1/2 grid grid-cols-1 gap-4">
+          <div className="w-full lg:w-1/2 grid grid-cols-1 gap-4">
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
+                required
                 type="text"
                 name="decisionMaker.name"
                 placeholder="write 'self' if patient"
@@ -820,6 +925,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Relation</label>
               <Input
+                required
                 type="text"
                 name="decisionMaker.relation"
                 className="w-full"
@@ -830,6 +936,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
+                required
                 type="date"
                 name="decisionMaker.dateSigned"
                 className="w-full"
@@ -844,8 +951,8 @@ export default function AdvanceDirectivesForm() {
       <div className="border rounded-lg p-6 shadow-sm space-y-8">
         <h2 className="text-lg font-semibold mb-2">PHYSICIAN VERIFICATION</h2>
 
-        <div className="flex gap-6">
-          <div className="w-1/2 space-y-2">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-1/2 space-y-2">
             <label className="block text-sm font-medium mb-2">
               Physician Signature
             </label>
@@ -871,10 +978,11 @@ export default function AdvanceDirectivesForm() {
             </label>
           </div>
 
-          <div className="w-1/2 grid grid-cols-1 gap-4">
+          <div className="w-full lg:w-1/2 grid grid-cols-1 gap-4">
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
+                required
                 type="text"
                 name="physician.name"
                 className="w-full"
@@ -887,6 +995,7 @@ export default function AdvanceDirectivesForm() {
                 PRC License Number
               </label>
               <Input
+                required
                 type="text"
                 name="physician.prcLicenseNumber"
                 className="w-full"
@@ -897,6 +1006,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
+                required
                 type="date"
                 name="physician.dateSigned"
                 className="w-full"
@@ -922,9 +1032,9 @@ export default function AdvanceDirectivesForm() {
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-base md:text-lg font-semibold">
                   {activeSig
                     ? `${getSignatureTitle(activeSig)} E-Signature`
                     : 'E-Signature'}
@@ -951,9 +1061,9 @@ export default function AdvanceDirectivesForm() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <div className="flex gap-4 mt-6">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6">
         <Button
-          className="mt-6"
+          className="mt-6 w-full sm:w-auto"
           onClick={handleSubmit}
           disabled={isSubmitting || loading || !user}
         >
@@ -961,7 +1071,9 @@ export default function AdvanceDirectivesForm() {
         </Button>
 
         {!user && !loading && (
-          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+          <p className="text-red-500 mt-2 text-sm">
+            Please log in to submit the form
+          </p>
         )}
       </div>
     </div>

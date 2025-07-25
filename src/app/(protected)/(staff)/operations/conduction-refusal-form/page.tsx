@@ -292,24 +292,65 @@ export default function ConductionRefusalForm() {
     setSigPaths({});
   };
 
+  const validateRequiredFields = () => {
+    const requiredFields = [
+      { field: 'patient_first_name', label: 'Patient First Name' },
+      { field: 'patient_middle_name', label: 'Patient Middle Name' },
+      { field: 'patient_last_name', label: 'Patient Last Name' },
+      { field: 'patient_age', label: 'Patient Age' },
+      { field: 'patient_sex', label: 'Patient Sex' },
+      { field: 'patient_birthdate', label: 'Patient Birthdate' },
+      { field: 'patient_citizenship', label: 'Patient Citizenship' },
+      { field: 'patient_address', label: 'Patient Address' },
+      { field: 'patient_contact_no', label: 'Patient Contact No.' },
+      { field: 'kin_name', label: 'Next of Kin Name' },
+      { field: 'kin_relation', label: 'Relation' },
+      { field: 'kin_contact_no', label: 'Next of Kin Contact No.' },
+      { field: 'kin_address', label: 'Next of Kin Address' },
+      { field: 'medical_record', label: 'Medical Record' },
+      { field: 'date_accomplished', label: 'Date Accomplished' },
+      { field: 'witness_name', label: 'Witness Name' },
+      { field: 'witness_date', label: 'Witness Date' },
+    ];
+
+    const missingFields: string[] = [];
+
+    requiredFields.forEach(({ field, label }) => {
+      const value = formData[field as keyof FormData];
+
+      // Check if field is empty, null, undefined, or 0 (for age)
+      if (
+        !value ||
+        (field === 'patient_age' && (value === 0 || value === '0'))
+      ) {
+        missingFields.push(label);
+      }
+    });
+
+    return missingFields;
+  };
+
+
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Authentication required', {
+        description: 'Please log in to submit the form',
+      });
+      return;
+    }
+
+    const missingFields = validateRequiredFields();
+    if (missingFields.length > 0) {
+      toast.error('Failed to save conduction refusal form', {
+        description: 'Please fill in all required fields',
+      });
       return;
     }
 
     setIsSubmitting(true);
 
-    // Add debugging to see what's being sent
-    console.log(
-      'Form data before submission:',
-      JSON.stringify(formData, null, 2)
-    );
-    console.log('Signature data:', sigData);
-    console.log('Signature paths:', sigPaths);
-
+  
     try {
-      // Step 1: Submit the conduction refusal form
       const response = await fetch('/api/conduction-refusal-form', {
         method: 'POST',
         headers: {
@@ -320,6 +361,15 @@ export default function ConductionRefusalForm() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+
+        // Handle specific error cases with user-friendly messages
+        if (response.status === 400) {
+          toast.error('Failed to save conduction refusal form', {
+            description: 'Please fill in all required fields',
+          });
+          return;
+        }
+
         throw new Error(
           `HTTP ${response.status}: ${
             errorData.error || 'Failed to submit form'
@@ -394,41 +444,41 @@ export default function ConductionRefusalForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Conduction Refusal saved successfully!');
       resetForm();
     } catch (error) {
       console.error('Error saving:', error);
-      alert(
-        `Failed to save: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      toast.error('Failed to save conduction refusal form', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-  // Don't render until mounted
   if (!mounted) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="p-10 w-full">
+    <div className="p-4 md:p-6 lg:p-10 w-full">
       {/* Form Header */}
-      <div className="flex justify-between items-center ">
-        <h1 className="text-xl font-bold mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6">
+        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 leading-tight">
           Transcare Emergency Medical Services - Conduction Refusal Form
-        </h1>{' '}
+        </h1>
       </div>
 
       {/* Patient's General Information */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8">
-        <h3 className="font-bold text-lg mb-3">PATIENT GENERAL INFORMATION</h3>
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm space-y-4 md:space-y-6 lg:space-y-8">
+        <h3 className="font-bold text-base md:text-lg mb-3">
+          PATIENT GENERAL INFORMATION
+        </h3>
 
-        <div className="grid grid-cols-12 gap-2 mb-2">
-          <div className="col-span-4">
-            <label className="font-medium">First</label>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-2 mb-2">
+          <div className="md:col-span-4">
+            <label className="font-medium text-sm md:text-base">First</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_first_name"
@@ -437,8 +487,9 @@ export default function ConductionRefusalForm() {
             />
           </div>
           <div className="col-span-4">
-            <label className="font-medium">Middle</label>
+            <label className="font-medium text-sm md:text-base">Middle</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_middle_name"
@@ -447,8 +498,9 @@ export default function ConductionRefusalForm() {
             />
           </div>
           <div className="col-span-4">
-            <label className="font-medium">Last</label>
+            <label className="font-medium text-sm md:text-base">Last</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_last_name"
@@ -458,10 +510,11 @@ export default function ConductionRefusalForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-2 mb-2">
-          <div className="col-span-2">
-            <label className="font-medium">Age</label>
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-2 mb-2">
+          <div className="md:col-span-2">
+            <label className="font-medium text-sm md:text-base">Age</label>
             <Input
+              required
               type="number"
               className="w-full"
               name="patient_age"
@@ -469,9 +522,10 @@ export default function ConductionRefusalForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-2">
-            <label className="font-medium">Sex</label>
+          <div className="md:col-span-2">
+            <label className="font-medium text-sm md:text-base">Sex</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_sex"
@@ -479,9 +533,12 @@ export default function ConductionRefusalForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
-            <label className="font-medium">Birthdate(mm/dd/yyyy):</label>
+          <div className="col-span-2 md:col-span-4">
+            <label className="font-medium text-sm md:text-base">
+              Birthdate
+            </label>
             <Input
+              required
               type="date"
               className="w-full"
               name="patient_birthdate"
@@ -489,9 +546,12 @@ export default function ConductionRefusalForm() {
               onChange={handleInputChange}
             />
           </div>
-          <div className="col-span-4">
-            <label className="font-medium">Citizenship</label>
+          <div className="col-span-2 md:col-span-4">
+            <label className="font-medium text-sm md:text-base">
+              Citizenship
+            </label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_citizenship"
@@ -501,10 +561,11 @@ export default function ConductionRefusalForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-8 gap-2 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 mb-2">
           <div className="col-span-4">
-            <label className="font-medium">Address</label>
+            <label className="font-medium text-sm md:text-base">Address</label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_address"
@@ -513,8 +574,11 @@ export default function ConductionRefusalForm() {
             />
           </div>
           <div className="col-span-4">
-            <label className="font-medium">Contact No.</label>
+            <label className="font-medium text-sm md:text-base">
+              Contact No.
+            </label>
             <Input
+              required
               type="text"
               className="w-full"
               name="patient_contact_no"
@@ -526,16 +590,17 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Next of Kin/Legal Guardian Information */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-4 mt-6">
-        <h3 className="font-bold text-sm mb-3">
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm space-y-4 mt-4 md:mt-6">
+        <h3 className="font-bold text-sm md:text-base mb-3">
           NEXT OF KIN/LEGAL GUARDIAN INFORMATION
         </h3>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
           <div className="space-y-4">
             <div>
-              <label className="font-medium">Name</label>
+              <label className="font-medium text-sm md:text-base">Name</label>
               <Input
+                required
                 type="text"
                 className="w-full"
                 name="kin_name"
@@ -543,10 +608,13 @@ export default function ConductionRefusalForm() {
                 onChange={handleInputChange}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="font-medium">Relation</label>
+                <label className="font-medium text-sm md:text-base">
+                  Relation
+                </label>
                 <Input
+                  required
                   type="text"
                   className="w-full"
                   name="kin_relation"
@@ -555,8 +623,11 @@ export default function ConductionRefusalForm() {
                 />
               </div>
               <div>
-                <label className="font-medium">Contact No.</label>
+                <label className="font-medium text-sm md:text-base">
+                  Contact No.
+                </label>
                 <Input
+                  required
                   type="text"
                   className="w-full"
                   name="kin_contact_no"
@@ -567,7 +638,9 @@ export default function ConductionRefusalForm() {
             </div>
             <div>
               <label className="font-medium">Address</label>
+              label{' '}
               <Input
+                required
                 type="text"
                 className="w-full"
                 name="kin_address"
@@ -579,8 +652,11 @@ export default function ConductionRefusalForm() {
 
           <div className="space-y-4">
             <div>
-              <label className="font-medium">Medical Record</label>
+              <label className="font-medium text-sm md:text-base">
+                Medical Record
+              </label>
               <Input
+                required
                 type="text"
                 className="w-full"
                 name="medical_record"
@@ -589,8 +665,11 @@ export default function ConductionRefusalForm() {
               />
             </div>
             <div>
-              <label className="font-medium">Date Accomplished</label>
+              <label className="font-medium text-sm md:text-base">
+                Date Accomplished
+              </label>
               <Input
+                required
                 type="date"
                 className="w-full"
                 name="date_accomplished"
@@ -603,8 +682,8 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Vital Signs */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-6 mt-6">
-        <div className="grid grid-cols-6 gap-4">
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm space-y-4 md:space-y-6 mt-4 md:mt-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-4">
           {[
             { label: 'BP', field: 'vital_bp' },
             { label: 'PULSE', field: 'vital_pulse' },
@@ -614,7 +693,7 @@ export default function ConductionRefusalForm() {
             { label: 'LOC', field: 'vital_loc' },
           ].map((field, index) => (
             <div key={index} className="flex flex-col">
-              <label className="font-semibold text-sm mb-1 text-left">
+              <label className="font-semibold text-xs sm:text-sm mb-1 text-left">
                 {field.label}
               </label>
               <Input
@@ -651,22 +730,25 @@ export default function ConductionRefusalForm() {
               field: 'understands_refusal_consequences',
             },
           ].map((item, index) => (
-            <div className="grid grid-cols-12 gap-4 items-center" key={index}>
-              <div className="col-span-1 font-medium">{index + 1}.</div>
-              <div className="col-span-8">{item.question}</div>
-              <div className="col-span-3">
+            <div
+              className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-4 items-start sm:items-center"
+              key={index}
+            >
+              <div className="sm:col-span-1 font-medium text-sm md:text-base">
+                {index + 1}.
+              </div>
+              <div className="sm:col-span-8 text-sm md:text-base">
+                {item.question}
+              </div>
+              <div className="sm:col-span-3 w-full">
                 <select
                   name={item.field}
-                  className="w-full border rounded-md px-2 py-1"
+                  className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
                   value={formData[item.field as keyof FormData] ? 'yes' : 'no'}
                   onChange={handleInputChange}
                 >
-                  <option value="yes" className="text-gray-700">
-                    Yes
-                  </option>
-                  <option value="no" className="text-gray-700">
-                    No
-                  </option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             </div>
@@ -674,13 +756,13 @@ export default function ConductionRefusalForm() {
         </div>
 
         <div className="mt-4">
-          <div className="font-bold mb-2">
+          <div className="font-bold mb-2 text-sm md:text-base">
             Narrative: Describe reasonable alternatives to treatment that were
             offered, the circumstances of the call, specific consequences of
             refusal:
           </div>
           <textarea
-            className="w-full border rounded-md p-2 h-20 resize-none"
+            className="w-full border rounded-md p-2 h-20 md:h-24 resize-none text-sm md:text-base"
             name="narrative_description"
             value={formData.narrative_description || ''}
             onChange={handleInputChange}
@@ -690,9 +772,9 @@ export default function ConductionRefusalForm() {
       </div>
 
       {/* Main Content */}
-      <div className="border rounded-lg p-6 shadow-sm space-y-8 mt-6">
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm space-y-4 md:space-y-6 lg:space-y-8 mt-4 md:mt-6">
         <div className="mb-4">
-          <p className="mb-2">
+          <p className="mb-2 text-sm md:text-base leading-relaxed">
             It is sometimes impossible to recognize actual or potential medical
             problems outside the hospital, that we strongly encourage you to be
             evaluated, treated as necessary, and transported to the nearest
@@ -700,7 +782,7 @@ export default function ConductionRefusalForm() {
             physician.
           </p>
 
-          <p className="mb-2">
+          <p className="mb-2 text-sm md:text-base leading-relaxed">
             You have the right to choose not to be evaluated, treated or
             transported if desired; however, there is a possibility that you
             could suffer serious complications or even death from conditions
@@ -712,25 +794,25 @@ export default function ConductionRefusalForm() {
           </p>
         </div>
 
-        <div className="text-center font-bold text-sm mb-4">
+        <div className="text-center font-bold text-sm md:text-base mb-4">
           PLEASE CHECK THE FOLLOWING THAT APPLY:
         </div>
 
-        <div className="space-y-2 mb-4">
-          <label className="flex items-center">
+        <div className="space-y-3 md:space-y-2 mb-4">
+          <label className="flex items-start md:items-center text-sm md:text-base">
             <input
               type="checkbox"
-              className="mr-2"
+              className="mr-2 mt-1 md:mt-0 flex-shrink-0"
               name="refused_treatment_and_transport"
               checked={formData.refused_treatment_and_transport || false}
               onChange={handleInputChange}
             />
             I refused to be treated and transported.
           </label>
-          <label className="flex items-center">
+          <label className="flex items-start md:items-center text-sm md:text-base">
             <input
               type="checkbox"
-              className="mr-2"
+              className="mr-2 mt-1 md:mt-0 flex-shrink-0"
               name="refused_treatment_willing_transport"
               checked={formData.refused_treatment_willing_transport || false}
               onChange={handleInputChange}
@@ -738,10 +820,10 @@ export default function ConductionRefusalForm() {
             I refused to be treated but willing to be transported to a medical
             facility and/ or seen by a physician.
           </label>
-          <label className="flex items-center">
+          <label className="flex items-start md:items-center text-sm md:text-base">
             <input
               type="checkbox"
-              className="mr-2"
+              className="mr-2 mt-1 md:mt-0 flex-shrink-0"
               name="wants_treatment_refused_transport"
               checked={formData.wants_treatment_refused_transport || false}
               onChange={handleInputChange}
@@ -750,46 +832,47 @@ export default function ConductionRefusalForm() {
           </label>
         </div>
 
-        <div className="text-center font-bold text-sm mb-4">
+        <div className="text-center font-bold text-sm md:text-base mb-4">
           WITNESSED TREATMENT:
         </div>
 
         <div className="mb-4">
-          <p>
+          <p className="text-sm md:text-base leading-relaxed">
             I observed the above named person; review and signed the statement
             above. The person was alert and did not appear confused. The person
             appeared to understand the statement and did not state otherwise.
           </p>
         </div>
 
-        <div className="grid grid-cols gap-8 items-start">
-          <div className="flex gap-6 mb-6">
-            <div className="w-1/2">
-              <label className="block mb-1 font-medium">
+        <div className="grid grid-cols gap-4 md:gap-8 items-start">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 mb-6">
+            <div className="w-full lg:w-1/2">
+              <label className="block mb-1 font-medium text-sm md:text-base">
                 Witness Signature
               </label>
               <div
-                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[156px] hover:bg-gray-100 cursor-pointer"
+                className="bg-gray-50 border border-dashed border-gray-400 p-4 rounded-md flex items-center justify-center min-h-[120px] md:min-h-[156px] hover:bg-gray-100 cursor-pointer"
                 onClick={() => setActiveSig('witnessSignature')}
               >
                 {sigData['witnessSignature'] ? (
                   <img
                     src={sigData['witnessSignature']}
                     alt="Witness signature"
-                    className="max-h-[100px]"
+                    className="max-h-[80px] md:max-h-[100px]"
                   />
                 ) : (
-                  <Plus className="h-8 w-8 text-gray-500" />
+                  <Plus className="h-6 w-6 md:h-8 md:w-8 text-gray-500" />
                 )}
               </div>
             </div>
 
-            <div className="w-1/2 space-y-4">
+            <div className="w-full lg:w-1/2 space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Witness Name
                 </label>
                 <Input
+                  required
                   type="text"
                   className="w-full"
                   name="witness_name"
@@ -800,6 +883,7 @@ export default function ConductionRefusalForm() {
               <div>
                 <label className="block text-sm font-medium mb-1">Date</label>
                 <Input
+                  required
                   type="date"
                   className="w-full"
                   name="witness_date"
@@ -819,10 +903,10 @@ export default function ConductionRefusalForm() {
                 <VisuallyHidden>Witness Signature</VisuallyHidden>
               </Dialog.Title>
               <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-              <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
-                  <div className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-lg font-semibold">
+              <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
+                <div className="bg-white rounded-lg shadow-lg relative w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl max-h-[95vh] md:max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-3 md:p-4 border-b">
+                    <h2 className="text-base md:text-lg font-semibold">
                       Witness E-Signature
                     </h2>
                     <Dialog.Close asChild>
@@ -830,12 +914,12 @@ export default function ConductionRefusalForm() {
                         className="text-gray-500 hover:text-gray-700"
                         onClick={() => setActiveSig(null)}
                       >
-                        <X className="w-6 h-6" />
+                        <X className="w-5 h-5 md:w-6 md:h-6" />
                       </button>
                     </Dialog.Close>
                   </div>
 
-                  <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+                  <div className="p-3 md:p-4 overflow-y-auto max-h-[calc(95vh-60px)] md:max-h-[calc(90vh-80px)]">
                     <SignatureForm
                       onSubmit={handleSignatureSubmit}
                       defaultSignature={sigPaths[activeSig || '']}
@@ -848,9 +932,9 @@ export default function ConductionRefusalForm() {
           </Dialog.Root>
         </div>
       </div>
-      <div className="flex gap-4 mt-6">
+      <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-6">
         <Button
-          className="mt-6"
+          className="w-full sm:w-auto px-6 py-2 text-sm md:text-base"
           onClick={handleSubmit}
           disabled={isSubmitting || loading || !user}
         >
@@ -858,7 +942,9 @@ export default function ConductionRefusalForm() {
         </Button>
 
         {!user && !loading && (
-          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+          <p className="text-red-500 text-sm md:text-base">
+            Please log in to submit the form
+          </p>
         )}
       </div>
     </div>
