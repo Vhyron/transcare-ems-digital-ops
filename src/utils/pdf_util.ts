@@ -1,6 +1,6 @@
 import { PDFDocument, PDFForm } from 'pdf-lib';
 import { toast } from 'sonner';
-import { FormType } from '../db/schema/form_submissions.schema';
+import { FormSubmission } from '../db/schema/form_submissions.schema';
 import {
   advanceDirectivesFormPdf,
   conductionRefusalFormPdf,
@@ -9,13 +9,23 @@ import {
   operationCensusRecordsFormPdf,
   refusalForTreatmentOrTransportFormPdf,
 } from './pdf_forms';
+import { fetchReferenceForm } from '../actions/form_submissions.action';
 
 export const generatePdf = async (
-  form: FormType,
-  data: any,
+  form: FormSubmission,
   returnBuffer: boolean = false
 ) => {
-  switch (form) {
+  const data = await fetchReferenceForm(form.form_type, form.reference_id);
+  
+  if (!data) {
+    toast.error('Failed to fetch form data', {
+      description: 'The form data could not be retrieved.',
+      richColors: true,
+    });
+    return;
+  }
+
+  switch (form.form_type) {
     case 'hospital_trip_tickets':
       return await hospitalTripTicketsPdf(data, returnBuffer);
     case 'dispatch_forms':
