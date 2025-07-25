@@ -308,64 +308,79 @@ export default function OperationCensusForm() {
       </h1>
 
       <div className="space-y-4 mb-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-          <Input
-            placeholder="Date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          />
-          <Input
-            placeholder="Event Owner"
-            value={formData.event_owner}
-            onChange={(e) =>
-              setFormData({ ...formData, event_owner: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Time In"
-            type="time"
-            value={formData.time_in}
-            onChange={(e) =>
-              setFormData({ ...formData, time_in: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Time Out"
-            type="time"
-            value={formData.time_out}
-            onChange={(e) =>
-              setFormData({ ...formData, time_out: e.target.value })
-            }
-          />
+        <div className="grid grid-cols-12 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">Date</label>
+
+            <Input
+              required
+              placeholder="Date"
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">
+              Event Owner
+            </label>
+            <Input
+              required
+              value={formData.event_owner}
+              onChange={(e) =>
+                setFormData({ ...formData, event_owner: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">Time in</label>
+            <Input
+              required
+              placeholder="Time In"
+              type="time"
+              value={formData.time_in}
+              onChange={(e) =>
+                setFormData({ ...formData, time_in: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-1">
+            <label className="font-medium text-sm md:text-base">Time out</label>
+            <Input
+              required
+              placeholder="Time Out"
+              type="time"
+              value={formData.time_out}
+              onChange={(e) =>
+                setFormData({ ...formData, time_out: e.target.value })
+              }
+            />
+          </div>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-4">
-          <Input
-            placeholder="Activity"
-            value={formData.activity}
-            onChange={(e) =>
-              setFormData({ ...formData, activity: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Location"
-            value={formData.location}
-            onChange={(e) =>
-              setFormData({ ...formData, location: e.target.value })
-            }
-          />
+          <div className="md:col-span">
+            <label className="font-medium text-sm md:text-base">Activity</label>
+            <Input
+              required
+              value={formData.activity}
+              onChange={(e) =>
+                setFormData({ ...formData, activity: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span">
+            <label className="font-medium text-sm md:text-base">Location</label>
+            <Input
+              required
+              value={formData.location}
+              onChange={(e) =>
+                setFormData({ ...formData, location: e.target.value })
+              }
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="mb-4">
-        <Button
-          onClick={addPatientRecord}
-          className="flex items-center gap-2"
-          type="button"
-        >
-          <Plus className="w-4 h-4" />
-          Add Patient Record
-        </Button>
       </div>
 
       <div className="mb-4 flex items-center gap-2">
@@ -408,6 +423,7 @@ export default function OperationCensusForm() {
                   </td>
                   <td className="border p-1 sm:p-2">
                     <Input
+                      required
                       value={record.name}
                       onChange={(e) =>
                         updatePatientRecord(record.id, 'name', e.target.value)
@@ -418,6 +434,7 @@ export default function OperationCensusForm() {
                   </td>
                   <td className="border p-1 sm:p-2">
                     <Input
+                      required
                       value={record.age_sex}
                       onChange={(e) =>
                         updatePatientRecord(
@@ -432,6 +449,7 @@ export default function OperationCensusForm() {
                   </td>
                   <td className="border p-1 sm:p-2">
                     <Input
+                      required
                       value={record.chief_complaint}
                       onChange={(e) =>
                         updatePatientRecord(
@@ -446,6 +464,7 @@ export default function OperationCensusForm() {
                   </td>
                   <td className="border p-1 sm:p-2">
                     <Input
+                      required
                       value={record.vital_signs}
                       onChange={(e) =>
                         updatePatientRecord(
@@ -460,6 +479,7 @@ export default function OperationCensusForm() {
                   </td>
                   <td className="border p-1 sm:p-2">
                     <Input
+                      required
                       value={record.management}
                       onChange={(e) =>
                         updatePatientRecord(

@@ -107,10 +107,82 @@ export default function HospitalTripForm() {
       setIsSigLoading(false);
     }
   };
+  // Add this validation function before your handleSubmit function
 
+  const validateForm = () => {
+    const requiredFields = [
+      { field: 'date', label: 'Date' },
+      { field: 'time', label: 'Time' },
+      { field: 'room', label: 'Room' },
+      { field: 'trip_type', label: 'Trip Type' },
+      { field: 'vehicle', label: 'Vehicle' },
+      { field: 'plate', label: 'Plate' },
+      { field: 'age_sex', label: 'Age/Sex' },
+      { field: 'patient_name', label: 'Patient Name' },
+      { field: 'purpose', label: 'Purpose' },
+      { field: 'pickup', label: 'Pick up' },
+      { field: 'destination', label: 'Destination' },
+      { field: 'billing_class', label: 'Billing Class' },
+      { field: 'tare', label: 'TARE' },
+      { field: 'billing_type', label: 'Billing Type' },
+      { field: 'gross', label: 'Gross' },
+      { field: 'discount', label: 'Discount' },
+      { field: 'payables', label: 'Payables' },
+      { field: 'vat', label: 'VAT' },
+      { field: 'vatables', label: 'Vatables' },
+      { field: 'zero_vat', label: 'Zero VAT' },
+      { field: 'withholding', label: 'Withholding' },
+      { field: 'remarks', label: 'Remarks' },
+    ];
+
+    const missingFields = [];
+
+    for (const { field, label } of requiredFields) {
+      const value = formData[field as keyof typeof formData];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(label);
+      }
+    }
+
+    // Check for signatures
+    const requiredSignatures = ['nurse', 'billing', 'ambulance'];
+    const missingSignatures = requiredSignatures.filter((sig) => !sigData[sig]);
+
+    if (missingSignatures.length > 0) {
+      missingSignatures.forEach((sig) => {
+        missingFields.push(`${getSignatureTitle(sig)} Signature`);
+      });
+    }
+
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+    };
+  };
+
+  // Replace your existing handleSubmit function with this enhanced version:
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Authentication required', {
+        description: 'Please log in to submit the form',
+      });
+      return;
+    }
+
+    // Validate form before submission
+    const validation = validateForm();
+
+    if (!validation.isValid) {
+      const missingFieldsList = validation.missingFields.join(', ');
+      toast.error('Form validation failed', {
+        description: `Please fill in the following required fields: ${missingFieldsList}`,
+        duration: 5000, // Show for 5 seconds
+      });
+
+      // Optional: Focus on the first missing field
+      const firstMissingField = validation.missingFields[0];
+      console.log('First missing field:', firstMissingField);
+
       return;
     }
 
@@ -213,7 +285,9 @@ export default function HospitalTripForm() {
         }
       }
 
-      toast.success('Trip ticket saved successfully!');
+      toast.success('Trip ticket saved successfully!', {
+        description: 'Your hospital trip ticket has been submitted for review.',
+      });
 
       // Reset form
       setFormData({
@@ -245,7 +319,8 @@ export default function HospitalTripForm() {
     } catch (error) {
       console.error('Error saving:', error);
       toast.error('Failed to save trip ticket', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       });
     } finally {
       setIsSubmitting(false);
@@ -284,8 +359,9 @@ export default function HospitalTripForm() {
               Date
             </label>
             <Input
+              required
               type="date"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.date}
               onChange={(e) =>
                 setFormData({ ...formData, date: e.target.value })
@@ -297,8 +373,9 @@ export default function HospitalTripForm() {
               Time
             </label>
             <Input
+              required
               type="time"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.time}
               onChange={(e) =>
                 setFormData({ ...formData, time: e.target.value })
@@ -310,8 +387,9 @@ export default function HospitalTripForm() {
               Room
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.room}
               onChange={(e) =>
                 setFormData({ ...formData, room: e.target.value })
@@ -323,14 +401,15 @@ export default function HospitalTripForm() {
               Type
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.trip_type}
               onChange={(e) =>
                 setFormData({ ...formData, trip_type: e.target.value })
               }
             >
               {['BLS', 'ALS', 'BLS-ER', 'ALS1'].map((type) => (
-                <option key={type} value={type} className="text-gray-700">
+                <option key={type} value={type}>
                   {type}
                 </option>
               ))}
@@ -345,8 +424,9 @@ export default function HospitalTripForm() {
               Vehicle
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.vehicle}
               onChange={(e) =>
                 setFormData({ ...formData, vehicle: e.target.value })
@@ -358,8 +438,9 @@ export default function HospitalTripForm() {
               Plate
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.plate}
               onChange={(e) =>
                 setFormData({ ...formData, plate: e.target.value })
@@ -371,8 +452,9 @@ export default function HospitalTripForm() {
               Age/Sex
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.age_sex}
               onChange={(e) =>
                 setFormData({ ...formData, age_sex: e.target.value })
@@ -388,8 +470,9 @@ export default function HospitalTripForm() {
               Patient Name
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.patient_name}
               onChange={(e) =>
                 setFormData({ ...formData, patient_name: e.target.value })
@@ -401,7 +484,8 @@ export default function HospitalTripForm() {
               Purpose
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.purpose}
               onChange={(e) =>
                 setFormData({ ...formData, purpose: e.target.value })
@@ -426,8 +510,9 @@ export default function HospitalTripForm() {
               Pick up
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.pickup}
               onChange={(e) =>
                 setFormData({ ...formData, pickup: e.target.value })
@@ -443,8 +528,9 @@ export default function HospitalTripForm() {
               Destination
             </label>
             <Input
+              required
               type="text"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.destination}
               onChange={(e) =>
                 setFormData({ ...formData, destination: e.target.value })
@@ -465,7 +551,8 @@ export default function HospitalTripForm() {
               Type
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.billing_type}
               onChange={(e) =>
                 setFormData({ ...formData, billing_type: e.target.value })
@@ -484,7 +571,8 @@ export default function HospitalTripForm() {
               TARE
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.tare}
               onChange={(e) =>
                 setFormData({ ...formData, tare: e.target.value })
@@ -503,7 +591,8 @@ export default function HospitalTripForm() {
               Billing
             </label>
             <select
-              className="w-full h-10 sm:h-11 text-sm sm:text-base border rounded px-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               value={formData.billing_class}
               onChange={(e) =>
                 setFormData({ ...formData, billing_class: e.target.value })
@@ -525,9 +614,10 @@ export default function HospitalTripForm() {
               Gross
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.gross}
               onChange={(e) =>
                 setFormData({ ...formData, gross: e.target.value })
@@ -539,9 +629,10 @@ export default function HospitalTripForm() {
               Discount
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.discount}
               onChange={(e) =>
                 setFormData({ ...formData, discount: e.target.value })
@@ -553,9 +644,10 @@ export default function HospitalTripForm() {
               Payables
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.payables}
               onChange={(e) =>
                 setFormData({ ...formData, payables: e.target.value })
@@ -567,9 +659,10 @@ export default function HospitalTripForm() {
               VAT
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.vat}
               onChange={(e) =>
                 setFormData({ ...formData, vat: e.target.value })
@@ -581,9 +674,10 @@ export default function HospitalTripForm() {
               Vatables
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.vatables}
               onChange={(e) =>
                 setFormData({ ...formData, vatables: e.target.value })
@@ -595,9 +689,10 @@ export default function HospitalTripForm() {
               ZeroVAT
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.zero_vat}
               onChange={(e) =>
                 setFormData({ ...formData, zero_vat: e.target.value })
@@ -609,9 +704,10 @@ export default function HospitalTripForm() {
               Withholding
             </label>
             <Input
+              required
               type="number"
               step="0.01"
-              className="h-10 sm:h-11 text-sm sm:text-base"
+              className="w-full"
               value={formData.withholding}
               onChange={(e) =>
                 setFormData({ ...formData, withholding: e.target.value })
@@ -626,6 +722,7 @@ export default function HospitalTripForm() {
             Remarks
           </label>
           <Textarea
+            required
             className="w-full h-20 sm:h-24 text-sm sm:text-base resize-none"
             value={formData.remarks}
             onChange={(e) =>

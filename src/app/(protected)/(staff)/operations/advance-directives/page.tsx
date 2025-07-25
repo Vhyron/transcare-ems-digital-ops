@@ -276,11 +276,93 @@ export default function AdvanceDirectivesForm() {
     setSigPaths({});
   };
 
+  // Add this validation function before the handleSubmit function
+
+  const validateRequiredFields = () => {
+    const requiredFields = [
+      // Patient fields
+      { field: formData.patient.firstName, name: 'Patient First Name' },
+      { field: formData.patient.middleName, name: 'Patient Middle Name' },
+      { field: formData.patient.lastName, name: 'Patient Last Name' },
+      { field: formData.patient.age, name: 'Patient Age' },
+      { field: formData.patient.sex, name: 'Patient Sex' },
+      { field: formData.patient.birthdate, name: 'Patient Birthdate' },
+      { field: formData.patient.citizenship, name: 'Patient Citizenship' },
+      { field: formData.patient.address, name: 'Patient Address' },
+      { field: formData.patient.contactNo, name: 'Patient Contact Number' },
+
+      // Next of Kin fields
+      { field: formData.nextOfKin.name, name: 'Next of Kin Name' },
+      { field: formData.nextOfKin.relation, name: 'Next of Kin Relation' },
+      {
+        field: formData.nextOfKin.contactNo,
+        name: 'Next of Kin Contact Number',
+      },
+      { field: formData.nextOfKin.address, name: 'Next of Kin Address' },
+
+      // Medical Record fields
+      {
+        field: formData.medicalRecord.recordNumber,
+        name: 'Medical Record Number',
+      },
+      {
+        field: formData.medicalRecord.dateAccomplished,
+        name: 'Date Accomplished',
+      },
+
+      // Additional Orders
+      { field: formData.additionalOrders, name: 'Additional Orders' },
+
+      // Decision Maker fields
+      { field: formData.decisionMaker.name, name: 'Decision Maker Name' },
+      {
+        field: formData.decisionMaker.relation,
+        name: 'Decision Maker Relation',
+      },
+      {
+        field: formData.decisionMaker.dateSigned,
+        name: 'Decision Maker Date Signed',
+      },
+
+      // Physician fields
+      { field: formData.physician.name, name: 'Physician Name' },
+      {
+        field: formData.physician.prcLicenseNumber,
+        name: 'PRC License Number',
+      },
+      { field: formData.physician.dateSigned, name: 'Physician Date Signed' },
+    ];
+
+    const emptyFields = requiredFields.filter(({ field }) => {
+      if (typeof field === 'string') {
+        return !field.trim();
+      }
+      return !field;
+    });
+
+    return {
+      isValid: emptyFields.length === 0,
+      emptyFields: emptyFields.map(({ name }) => name),
+    };
+  };
+
+
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Please log in to submit the form');
       return;
     }
+
+    // Validate required fields before submission
+    const validation = validateRequiredFields();
+    if (!validation.isValid) {
+      toast.error('Failed to save advance directives', {
+        description: 'Please fill in all required fields',
+      });
+      console.log('Missing required fields:', validation.emptyFields);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const baseUrl =
@@ -337,11 +419,21 @@ export default function AdvanceDirectivesForm() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          `HTTP ${response.status}: ${
-            errorData.error || 'Failed to submit form'
-          }`
-        );
+
+        // Check for validation error
+        if (
+          response.status === 400 &&
+          errorData.error?.includes('Validation failed')
+        ) {
+          toast.error('Failed to save advance directives', {
+            description: 'Please fill in all required fields',
+          });
+        } else {
+          toast.error('Failed to save advance directives', {
+            description: errorData.error || 'An unexpected error occurred',
+          });
+        }
+        return;
       }
 
       const result = await response.json();
@@ -386,15 +478,13 @@ export default function AdvanceDirectivesForm() {
         }
       }
 
-      alert('Saved successfully!');
+      toast.success('Advance Directives saved successfully!');
       resetForm();
     } catch (error) {
       console.error('Error saving:', error);
-      alert(
-        `Failed to save: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+      toast.error('Failed to save advance directives', {
+        description: 'An unexpected error occurred. Please try again.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -423,6 +513,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">First</label>
             <Input
+              required
               type="text"
               name="patient.firstName"
               className="w-full"
@@ -433,6 +524,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Middle</label>
             <Input
+              required
               type="text"
               name="patient.middleName"
               className="w-full"
@@ -443,6 +535,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Last</label>
             <Input
+              required
               type="text"
               name="patient.lastName"
               className="w-full"
@@ -456,7 +549,8 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-2">
             <label className="font-medium">Age</label>
             <Input
-              type="text"
+              required
+              type="number"
               name="patient.age"
               className="w-full"
               value={formData.patient.age}
@@ -466,6 +560,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-2">
             <label className="font-medium">Sex</label>
             <Input
+              required
               type="text"
               name="patient.sex"
               className="w-full"
@@ -474,8 +569,9 @@ export default function AdvanceDirectivesForm() {
             />
           </div>
           <div className="md:col-span-4">
-            <label className="font-medium">Birthdate(mm/dd/yyyy):</label>
+            <label className="font-medium">Birthdate</label>
             <Input
+              required
               type="date"
               name="patient.birthdate"
               className="w-full"
@@ -486,6 +582,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Citizenship</label>
             <Input
+              required
               type="text"
               name="patient.citizenship"
               className="w-full"
@@ -499,6 +596,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Address</label>
             <Input
+              required
               type="text"
               name="patient.address"
               className="w-full"
@@ -509,6 +607,7 @@ export default function AdvanceDirectivesForm() {
           <div className="md:col-span-4">
             <label className="font-medium">Contact No.</label>
             <Input
+              required
               type="text"
               name="patient.contactNo"
               className="w-full"
@@ -529,6 +628,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Name</label>
               <Input
+                required
                 type="text"
                 name="nextOfKin.name"
                 className="w-full"
@@ -540,6 +640,7 @@ export default function AdvanceDirectivesForm() {
               <div>
                 <label className="font-medium">Relation</label>
                 <Input
+                  required
                   type="text"
                   name="nextOfKin.relation"
                   className="w-full"
@@ -550,6 +651,7 @@ export default function AdvanceDirectivesForm() {
               <div>
                 <label className="font-medium">Contact No.</label>
                 <Input
+                  required
                   type="text"
                   name="nextOfKin.contactNo"
                   className="w-full"
@@ -561,6 +663,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Address</label>
               <Input
+                required
                 type="text"
                 name="nextOfKin.address"
                 className="w-full"
@@ -574,6 +677,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Medical Record</label>
               <Input
+                required
                 type="text"
                 name="medicalRecord.recordNumber"
                 className="w-full"
@@ -584,6 +688,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="font-medium">Date Accomplished</label>
               <Input
+                required
                 type="date"
                 name="medicalRecord.dateAccomplished"
                 className="w-full"
@@ -609,14 +714,10 @@ export default function AdvanceDirectivesForm() {
                 name="carePreferences.attemptCPR"
                 value={formData.carePreferences.attemptCPR ? 'yes' : 'no'}
                 onChange={handleInputChange}
-                className="border rounded px-2 py-1 w-full"
+                className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto md:w-full"
               >
-                <option value="yes" className="text-gray-700">
-                  yes
-                </option>
-                <option value="no" className="text-gray-700">
-                  no
-                </option>
+                <option value="yes">yes</option>
+                <option value="no">no</option>
               </select>
             </div>
             <div className="lg:col-span-5">
@@ -740,6 +841,7 @@ export default function AdvanceDirectivesForm() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">ADDITIONAL ORDERS</h2>
         <textarea
+          required
           name="additionalOrders"
           className="w-full border border-gray-300 rounded-md p-2 min-h-[100px]"
           value={formData.additionalOrders}
@@ -811,6 +913,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
+                required
                 type="text"
                 name="decisionMaker.name"
                 placeholder="write 'self' if patient"
@@ -822,6 +925,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Relation</label>
               <Input
+                required
                 type="text"
                 name="decisionMaker.relation"
                 className="w-full"
@@ -832,6 +936,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
+                required
                 type="date"
                 name="decisionMaker.dateSigned"
                 className="w-full"
@@ -877,6 +982,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Name</label>
               <Input
+                required
                 type="text"
                 name="physician.name"
                 className="w-full"
@@ -889,6 +995,7 @@ export default function AdvanceDirectivesForm() {
                 PRC License Number
               </label>
               <Input
+                required
                 type="text"
                 name="physician.prcLicenseNumber"
                 className="w-full"
@@ -899,6 +1006,7 @@ export default function AdvanceDirectivesForm() {
             <div>
               <label className="block font-medium mb-1">Date Signed</label>
               <Input
+                required
                 type="date"
                 name="physician.dateSigned"
                 className="w-full"
