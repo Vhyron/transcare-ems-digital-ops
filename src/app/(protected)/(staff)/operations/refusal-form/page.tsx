@@ -288,9 +288,103 @@ export default function RefusalTreatmentTransportationForm() {
     setSigData({});
   };
 
+  // Replace the validateRequiredFields function (around line 295)
+  const validateRequiredFields = (formData: any) => {
+    const missingFields: string[] = [];
+
+    // Define required fields based on the 'required' attributes in your JSX
+    const requiredFields = [
+      { key: 'leagueEvent', label: 'League/Event' },
+      { key: 'type', label: 'Type' },
+      { key: 'location', label: 'Location' },
+      { key: 'incident', label: 'Incident' },
+      { key: 'patientName', label: 'Patient Name' },
+      { key: 'dob', label: 'Date of Birth' },
+      { key: 'age', label: 'Age' },
+      { key: 'landline', label: 'Landline' },
+      { key: 'cell', label: 'Cell' },
+      { key: 'pcr', label: 'PCR' },
+      { key: 'date', label: 'Date' },
+      { key: 'time', label: 'Time' },
+    ];
+
+    // Check regular required fields
+    requiredFields.forEach((field) => {
+      const value = formData[field.key];
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(field.label);
+      }
+    });
+
+    // Check required signature fields (both name and signature required)
+    const signatureFields = [
+      {
+        section: 'patientGuardian',
+        nameKey: 'patient_guardian_signature_name',
+        imageKey: 'patient_guardian_signature_image',
+        label: 'Patient/Guardian',
+      },
+      {
+        section: 'eventsOrganizer',
+        nameKey: 'events_organizer_signature_name',
+        imageKey: 'events_organizer_signature_image',
+        label: 'Events Organizer',
+      },
+      {
+        section: 'witness',
+        nameKey: 'witness_signature_name',
+        imageKey: 'witness_signature_image',
+        label: 'Witness',
+      },
+      {
+        section: 'medicPersonnel',
+        nameKey: 'medic_personnel_signature_name',
+        imageKey: 'medic_personnel_signature_image',
+        label: 'Medic Personnel',
+      },
+    ];
+
+    signatureFields.forEach((field) => {
+      const sectionData = formData[field.section];
+
+      // Check if name is provided
+      const nameValue = sectionData?.[field.nameKey];
+      if (
+        !nameValue ||
+        (typeof nameValue === 'string' && nameValue.trim() === '')
+      ) {
+        missingFields.push(`${field.label} Name`);
+      }
+
+      // Check if signature is provided
+      const signatureValue = sectionData?.[field.imageKey];
+      if (
+        !signatureValue ||
+        (typeof signatureValue === 'string' && signatureValue.trim() === '')
+      ) {
+        missingFields.push(`${field.label} Signature`);
+      }
+    });
+
+    return missingFields;
+  };
+
+  // Replace the handleSubmit function (around line 370)
   const handleSubmit = async () => {
     if (!user) {
-      alert('Please log in to submit the form');
+      toast.error('Authentication required', {
+        description: 'Please log in to submit the form',
+      });
+      return;
+    }
+
+    // Validate required fields before submission
+    const missingFields = validateRequiredFields(formData);
+
+    if (missingFields.length > 0) {
+      toast.error('Please fill in required fields', {
+        description: `Missing: ${missingFields.join(', ')}`,
+      });
       return;
     }
 
@@ -298,55 +392,6 @@ export default function RefusalTreatmentTransportationForm() {
 
     try {
       const submitData = { ...formData };
-
-      // ENHANCED DEBUG LOGGING
-      console.log('=== FORM SUBMISSION DEBUG ===');
-      console.log('Full formData:', submitData);
-      console.log('Signature paths state:', sigPaths);
-      console.log('Signature data state:', sigData);
-
-      // Debug each signature section
-      console.log('Individual signature sections:');
-      console.log('patientGuardian:', {
-        image: submitData.patientGuardian?.patient_guardian_signature_image,
-        name: submitData.patientGuardian?.patient_guardian_signature_name,
-        sigPath: sigPaths.patientGuardian,
-      });
-      console.log('eventsOrganizer:', {
-        image: submitData.eventsOrganizer?.events_organizer_signature_image,
-        name: submitData.eventsOrganizer?.events_organizer_signature_name,
-        sigPath: sigPaths.eventsOrganizer,
-      });
-      console.log('witness:', {
-        image: submitData.witness?.witness_signature_image,
-        name: submitData.witness?.witness_signature_name,
-        sigPath: sigPaths.witness,
-      });
-      console.log('medicPersonnel:', {
-        image: submitData.medicPersonnel?.medic_personnel_signature_image,
-        name: submitData.medicPersonnel?.medic_personnel_signature_name,
-        sigPath: sigPaths.medicPersonnel,
-      });
-
-      // Check for missing signature paths
-      const missingSignatures = [];
-      if (!submitData.patientGuardian?.patient_guardian_signature_image) {
-        missingSignatures.push('patientGuardian');
-      }
-      if (!submitData.eventsOrganizer?.events_organizer_signature_image) {
-        missingSignatures.push('eventsOrganizer');
-      }
-      if (!submitData.witness?.witness_signature_image) {
-        missingSignatures.push('witness');
-      }
-      if (!submitData.medicPersonnel?.medic_personnel_signature_image) {
-        missingSignatures.push('medicPersonnel');
-      }
-
-      if (missingSignatures.length > 0) {
-        console.warn('Missing signature images for:', missingSignatures);
-        // You can choose to show a warning or continue with submission
-      }
 
       const baseUrl =
         process.env.NODE_ENV === 'development'
@@ -400,9 +445,17 @@ export default function RefusalTreatmentTransportationForm() {
       }
 
       if (!response.ok) {
-        throw new Error(
-          `HTTP ${response.status}: ${result.error || 'Failed to submit form'}`
-        );
+        // Handle specific error cases with user-friendly messages
+        if (
+          response.status === 500 &&
+          result.error?.includes('invalid input syntax for type date')
+        ) {
+          throw new Error(
+            'Please check your date fields and ensure they are properly filled'
+          );
+        }
+
+        throw new Error('Failed to save the form');
       }
 
       console.log('Server response:', result);
@@ -446,37 +499,47 @@ export default function RefusalTreatmentTransportationForm() {
         }
       }
 
-      alert('Form saved successfully!');
+      toast.success('Refusal form saved successfully!');
       resetForm();
     } catch (error) {
       console.error('Error saving form:', error);
-      alert(
-        `Failed to save form: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`
-      );
+
+      // Display user-friendly error message
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+
+      toast.error('Failed to save the form', {
+        description:
+          errorMessage === 'Failed to save the form'
+            ? 'Please check all fields and try again'
+            : errorMessage,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
   // Don't render until mounted
   if (!mounted) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="p-10 w-full">
-      <h1 className="text-xl font-bold mb-6">
-        Transcare Emergency Medical Services - Refusal Form
+    // Main container
+    <div className="p-4 md:p-6 lg:p-10 w-full">
+      <h1 className="text-lg md:text-xl font-bold mb-4 md:mb-6">
+        Transcare Emergency Medical Services - Refusal for Treatment or
+        Transportation
       </h1>
 
       {/* Event Information */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             League /Event:
           </label>
           <Input
+            required
             type="text"
             name="leagueEvent"
             value={formData.leagueEvent}
@@ -487,6 +550,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">TYPE:</label>
           <Input
+            required
             type="text"
             name="type"
             value={formData.type}
@@ -496,10 +560,11 @@ export default function RefusalTreatmentTransportationForm() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Location:</label>
           <Input
+            required
             type="text"
             name="location"
             value={formData.location}
@@ -510,6 +575,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">Incident:</label>
           <Input
+            required
             type="text"
             name="incident"
             value={formData.incident}
@@ -520,12 +586,13 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Patient Information */}
-      <div className="grid grid-cols-4 gap-4 mb-4">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1">
             Patient Name:
           </label>
           <Input
+            required
             type="text"
             name="patientName"
             value={formData.patientName}
@@ -536,6 +603,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">DOB:</label>
           <Input
+            required
             type="date"
             name="dob"
             value={formData.dob}
@@ -543,9 +611,10 @@ export default function RefusalTreatmentTransportationForm() {
             className="w-full h-10 text-base"
           />
         </div>
-        <div className="">
+        <div>
           <label className="block text-sm font-medium mb-1">Age:</label>
           <Input
+            required
             type="number"
             name="age"
             value={formData.age}
@@ -556,12 +625,13 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Contact Details */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">
             Contact Details - Landline:
           </label>
           <Input
+            required
             type="tel"
             name="landline"
             value={formData.landline}
@@ -572,6 +642,7 @@ export default function RefusalTreatmentTransportationForm() {
         <div>
           <label className="block text-sm font-medium mb-1">Cell:</label>
           <Input
+            required
             type="tel"
             name="cell"
             value={formData.cell}
@@ -583,24 +654,22 @@ export default function RefusalTreatmentTransportationForm() {
 
       {/* Guardian Information */}
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <label className="text-sm font-medium">GUARDIAN:</label>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+          <label className="text-sm font-medium text-foreground">
+            GUARDIAN:
+          </label>
           <select
             name="guardian"
             value={formData.guardian}
             onChange={handleInputChange}
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-border rounded-md px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full sm:w-auto"
           >
-            <option value="yes" className="text-gray-700">
-              YES
-            </option>
-            <option value="no" className="text-gray-700">
-              NO
-            </option>
+            <option value="yes">YES</option>
+            <option value="no">NO</option>
           </select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Landline:</label>
             <Input
@@ -625,7 +694,7 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Guardian Details */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium mb-1">Name:</label>
           <Input
@@ -666,7 +735,7 @@ export default function RefusalTreatmentTransportationForm() {
           Situation of Injury/Illness:
         </label>
         <textarea
-          className="w-full border border-gray-300 rounded-md p-2 min-h-[80px]"
+          className="w-full border border-gray-300 rounded-md p-2 min-h-[80px] text-sm md:text-base"
           name="situation"
           value={formData.situation}
           onChange={handleInputChange}
@@ -674,8 +743,10 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Check Applicable Refusal */}
-      <div className="border rounded-lg p-6 shadow-sm mb-6">
-        <h3 className="text-lg font-semibold mb-4">Check Applicable Refusal</h3>
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm mb-6">
+        <h3 className="text-base md:text-lg font-semibold mb-4">
+          Check Applicable Refusal
+        </h3>
 
         <div className="space-y-3">
           <label className="flex items-start">
@@ -684,7 +755,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="treatmentNotNecessary"
               checked={formData.refusalReasons.treatmentNotNecessary}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient refuses treatment; transport is not necessary for the
@@ -698,7 +769,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="refusesTransportAgainstAdvice"
               checked={formData.refusalReasons.refusesTransportAgainstAdvice}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient refuses treatment and transport to a hospital against EMS
@@ -712,7 +783,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="treatmentReceivedNoTransport"
               checked={formData.refusalReasons.treatmentReceivedNoTransport}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient receives treatment does not desire transport to hospital
@@ -726,7 +797,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="alternativeTransportation"
               checked={formData.refusalReasons.alternativeTransportation}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient / Guardian believes alternative transportation plan is
@@ -740,7 +811,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="acceptsTransportRefusesTreatment"
               checked={formData.refusalReasons.acceptsTransportRefusesTreatment}
               onChange={handleInputChange}
-              className="mr-3 mt-1"
+              className="mr-3 mt-1 flex-shrink-0"
             />
             <span className="text-sm">
               Patient accepts transportation to hospital by EMS but refuses any
@@ -753,7 +824,7 @@ export default function RefusalTreatmentTransportationForm() {
               Specify treatment refused:
             </label>
             <textarea
-              className="w-full border border-gray-300 rounded-md p-2 min-h-[60px]"
+              className="w-full border border-gray-300 rounded-md p-2 min-h-[60px] text-sm md:text-base"
               name="treatmentRefused"
               value={formData.treatmentRefused}
               onChange={handleInputChange}
@@ -763,8 +834,8 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Legal Text */}
-      <div className="border rounded-lg p-6 shadow-sm mb-6">
-        <div className="text-sm space-y-4">
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm mb-6">
+        <div className="text-xs md:text-sm space-y-4">
           <p>
             This form is being provided to me because I have refused assessment,
             treatment and/or transport by EMS personnel myself or on behalf of
@@ -785,9 +856,9 @@ export default function RefusalTreatmentTransportationForm() {
       </div>
 
       {/* Acknowledgment and Signature Section */}
-      <div className="border rounded-lg p-6 shadow-sm mb-6">
-        <div className="text-sm mb-6">
-          <p>
+      <div className="border rounded-lg p-4 md:p-6 shadow-sm mb-6">
+        <div className="text-xs md:text-sm mb-6">
+          <p className="leading-relaxed">
             I acknowledge that this advice has been explained to me by the
             ambulance crew and upon affixing my signature for myself or on
             behalf of the patient signing this form, I am releasing Transcare
@@ -797,7 +868,7 @@ export default function RefusalTreatmentTransportationForm() {
               name="company"
               value={formData.company}
               onChange={handleInputChange}
-              className="border-b border-gray-400 outline-none px-1 w-48 inline-block"
+              className="border-b border-gray-400 outline-none px-1 w-32 sm:w-48 inline-block text-xs md:text-sm"
               placeholder="Organizer"
             />{' '}
             and its employees of any liability or medical claims resulting from
@@ -806,7 +877,7 @@ export default function RefusalTreatmentTransportationForm() {
         </div>
 
         {/* Signature Grid */}
-        <div className="grid grid-cols-2 gap-8 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
           {/* Patient/Guardian Signature */}
           <div className="space-y-4">
             <div>
@@ -820,8 +891,8 @@ export default function RefusalTreatmentTransportationForm() {
                 {sigData['patientGuardian'] ? (
                   <img
                     src={sigData['patientGuardian']}
-                    alt="Witness signature"
-                    className="max-h-[100px]"
+                    alt="Patient/Guardian signature"
+                    className="max-h-[60px] md:max-h-[100px]"
                   />
                 ) : (
                   <Plus className="h-6 w-6 text-gray-500" />
@@ -835,6 +906,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="patientGuardian.patient_guardian_signature_name"
                 type="text"
                 className="w-full"
@@ -875,6 +947,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="eventsOrganizer.events_organizer_signature_name"
                 type="text"
                 className="w-full"
@@ -888,7 +961,7 @@ export default function RefusalTreatmentTransportationForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-6">
           {/* Witness Signature */}
           <div className="space-y-4">
             <div>
@@ -915,6 +988,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="witness.witness_signature_name"
                 type="text"
                 className="w-full"
@@ -952,6 +1026,7 @@ export default function RefusalTreatmentTransportationForm() {
             <div>
               <label className="block text-sm font-medium mb-1">Name</label>
               <Input
+                required
                 name="medicPersonnel.medic_personnel_signature_name"
                 type="text"
                 className="w-full"
@@ -965,10 +1040,11 @@ export default function RefusalTreatmentTransportationForm() {
         </div>
 
         {/* Bottom Information */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">PCR:</label>
             <Input
+              required
               type="text"
               name="pcr"
               value={formData.pcr}
@@ -979,6 +1055,7 @@ export default function RefusalTreatmentTransportationForm() {
           <div>
             <label className="block text-sm font-medium mb-1">DATE:</label>
             <Input
+              required
               type="date"
               name="date"
               value={formData.date}
@@ -989,6 +1066,7 @@ export default function RefusalTreatmentTransportationForm() {
           <div>
             <label className="block text-sm font-medium mb-1">TIME:</label>
             <Input
+              required
               type="time"
               name="time"
               value={formData.time}
@@ -998,6 +1076,8 @@ export default function RefusalTreatmentTransportationForm() {
           </div>
         </div>
       </div>
+
+      {/* Dialog for signatures - responsive modal */}
       <Dialog.Root
         open={!!activeSig}
         onOpenChange={(open) => !open && setActiveSig(null)}
@@ -1011,10 +1091,10 @@ export default function RefusalTreatmentTransportationForm() {
             </VisuallyHidden>
           </Dialog.Title>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">
+          <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
+            <div className="bg-white rounded-lg shadow-lg relative w-full max-w-sm md:max-w-4xl max-h-[95vh] md:max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between p-3 md:p-4 border-b">
+                <h2 className="text-base md:text-lg font-semibold">
                   {activeSig
                     ? `${getSignatureTitle(activeSig)} E-Signature`
                     : 'E-Signature'}
@@ -1024,12 +1104,12 @@ export default function RefusalTreatmentTransportationForm() {
                     className="text-gray-500 hover:text-gray-700"
                     onClick={() => setActiveSig(null)}
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 </Dialog.Close>
               </div>
 
-              <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="p-3 md:p-4 overflow-y-auto max-h-[calc(95vh-60px)] md:max-h-[calc(90vh-80px)]">
                 <SignatureForm
                   onSubmit={handleSignatureSubmit}
                   defaultSignature={sigPaths[activeSig || '']}
@@ -1042,9 +1122,9 @@ export default function RefusalTreatmentTransportationForm() {
       </Dialog.Root>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 mt-6">
+      <div className="flex flex-col sm:flex-row gap-4 mt-6">
         <Button
-          className="mt-6"
+          className="mt-0 sm:mt-6 w-full sm:w-auto"
           onClick={handleSubmit}
           disabled={isSubmitting || loading || !user}
         >
@@ -1052,7 +1132,9 @@ export default function RefusalTreatmentTransportationForm() {
         </Button>
 
         {!user && !loading && (
-          <p className="text-red-500 mt-2">Please log in to submit the form</p>
+          <p className="text-red-500 text-sm mt-2">
+            Please log in to submit the form
+          </p>
         )}
       </div>
     </div>

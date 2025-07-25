@@ -62,7 +62,8 @@ export const dispatchForms = pgTable(DISPATCH_FORM_TABLE, {
       }>
     >()
     .default([]),
-  md_names: jsonb().$type<string[]>().default([]),
+  md_names: text(),
+  md_signature: text(),
   point_of_destinations: jsonb().$type<string[]>().default([]),
 
   special_consideration: text(),

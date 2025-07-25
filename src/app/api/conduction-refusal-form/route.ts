@@ -8,17 +8,54 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
-
   try {
     const { formData } = await request.json();
 
     // Log the incoming data for debugging
     console.log('Received form data:', JSON.stringify(formData, null, 2));
 
-    // Validate required fields
-    if (!formData.patient_first_name || !formData.patient_last_name) {
+    // Enhanced validation for required fields
+    const requiredFields = [
+      { field: 'patient_first_name', label: 'Patient First Name' },
+      { field: 'patient_middle_name', label: 'Patient Middle Name' },
+      { field: 'patient_last_name', label: 'Patient Last Name' },
+      { field: 'patient_age', label: 'Patient Age' },
+      { field: 'patient_sex', label: 'Patient Sex' },
+      { field: 'patient_birthdate', label: 'Patient Birthdate' },
+      { field: 'patient_citizenship', label: 'Patient Citizenship' },
+      { field: 'patient_address', label: 'Patient Address' },
+      { field: 'patient_contact_no', label: 'Patient Contact No.' },
+      { field: 'kin_name', label: 'Next of Kin Name' },
+      { field: 'kin_relation', label: 'Relation' },
+      { field: 'kin_contact_no', label: 'Next of Kin Contact No.' },
+      { field: 'kin_address', label: 'Next of Kin Address' },
+      { field: 'medical_record', label: 'Medical Record' },
+      { field: 'date_accomplished', label: 'Date Accomplished' },
+      { field: 'witness_name', label: 'Witness Name' },
+      { field: 'witness_date', label: 'Witness Date' },
+    ];
+
+    const missingFields: string[] = [];
+
+    requiredFields.forEach(({ field, label }) => {
+      const value = formData[field];
+
+      // Check if field is empty, null, undefined, or 0 (for age)
+      if (
+        !value ||
+        (field === 'patient_age' && (value === 0 || value === '0'))
+      ) {
+        missingFields.push(label);
+      }
+    });
+
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { message: 'Patient name is required' },
+        {
+          message: 'Validation failed',
+          error: 'Please fill in all required fields',
+          missingFields: missingFields,
+        },
         { status: 400 }
       );
     }
@@ -26,8 +63,11 @@ export async function POST(request: NextRequest) {
     // FIXED: Better signature path extraction logic with comprehensive debugging
     console.log('=== SIGNATURE DEBUGGING ===');
     console.log('formData.witnessSignature:', formData.witnessSignature);
-    console.log('formData.witness_signature_image:', formData.witness_signature_image);
-    
+    console.log(
+      'formData.witness_signature_image:',
+      formData.witness_signature_image
+    );
+
     // Prepare the data for insertion
     const insertData = {
       // Patient General Information
@@ -86,7 +126,7 @@ export async function POST(request: NextRequest) {
       // Witness Information - FIXED: Use the extracted path
       witness_name: formData.witness_name || null,
       witness_date: formData.witness_date || null,
-      witness_signature_image: formData.witness_signature_image, 
+      witness_signature_image: formData.witness_signature_image,
 
       // Metadata
       completed_by: formData.completed_by || null,

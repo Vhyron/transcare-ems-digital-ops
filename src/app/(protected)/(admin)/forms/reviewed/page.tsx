@@ -1,7 +1,7 @@
 import { listReviewedForms } from '@/actions/form_submissions.action';
 import { DataTable } from '@/components/table/data-table';
+import { formTypes, reviewedFormStatus } from '../data';
 import { columns } from './columns';
-import { reviewedFormStatus } from '../data';
 
 const ReviewedFormsPage = async () => {
   const data = await listReviewedForms();
@@ -19,9 +19,10 @@ const ReviewedFormsPage = async () => {
       <DataTable
         columns={columns}
         data={data}
-        searchPlaceholder="Filter form types and submitted by..."
+        searchPlaceholder="Filter submitted by..."
         filters={[
           { columnKey: 'status', title: 'Status', options: reviewedFormStatus },
+          { columnKey: 'form_type', title: 'Form Type', options: formTypes },
         ]}
       />
     </>

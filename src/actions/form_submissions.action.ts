@@ -60,12 +60,44 @@ export async function deleteFormSubmission(id: string) {
   return deleted;
 }
 
-export type PendingFormType = {
+export async function fetchReferenceForm(
+  formType: string,
+  referenceId: string
+): Promise<any> {
+  try {
+    const query = sql.raw(
+      `SELECT * FROM "${formType}" WHERE id = '${referenceId}'`
+    );
+
+    const result = await db.execute(query);
+    return result[0] || null;
+  } catch (error) {
+    console.error(`Failed to fetch reference form: ${error}`);
+    return null;
+  }
+}
+
+export interface ListFormType {
   form_submissions: FormSubmission;
   submitted_by: User;
-  referenceForm: Record<string, unknown>;
-};
-export async function listPendingForms(): Promise<PendingFormType[]> {
+}
+export async function listAllForms(): Promise<ListFormType[]> {
+  const submittedByQuery = db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
+    .as('submitted_by');
+
+  const forms = await db
+    .select()
+    .from(formSubmissionsTable)
+    .orderBy(desc(formSubmissionsTable.created_at))
+    .innerJoinLateral(submittedByQuery, sql`true`)
+
+  return forms;
+}
+
+export async function listPendingForms(): Promise<ListFormType[]> {
   const submittedByQuery = db
     .select()
     .from(usersTable)
@@ -79,38 +111,17 @@ export async function listPendingForms(): Promise<PendingFormType[]> {
     .orderBy(desc(formSubmissionsTable.created_at))
     .innerJoinLateral(submittedByQuery, sql`true`);
 
-  const forms = [];
-  for (const form of pendingSubmissions) {
-    const formType = form.form_submissions.form_type;
-    const referenceId = form.form_submissions.reference_id;
-
-    const query = sql.raw(
-      `SELECT * FROM "${formType}" WHERE id = '${referenceId}'`
-    );
-
-    const referenceForm = await db.execute(query);
-    forms.push({ ...form, referenceForm: referenceForm[0] || null });
-  }
-
-  return forms;
+  return pendingSubmissions;
 }
 
-export interface ReviewedFormType extends PendingFormType {
-  reviewed_by: User;
-}
-export async function listReviewedForms(): Promise<ReviewedFormType[]> {
+export async function listReviewedForms(): Promise<ListFormType[]> {
   const submittedByQuery = db
     .select()
     .from(usersTable)
     .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
     .as('submitted_by');
-  const reviewedByQuery = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, formSubmissionsTable.reviewed_by))
-    .as('reviewed_by');
 
-  const pendingSubmissions = await db
+  const reviewedSubmissions = await db
     .select()
     .from(formSubmissionsTable)
     .where(
@@ -119,60 +130,8 @@ export async function listReviewedForms(): Promise<ReviewedFormType[]> {
         eq(formSubmissionsTable.status, 'rejected')
       )
     )
-    .orderBy(desc(formSubmissionsTable.created_at))
+    .orderBy(desc(formSubmissionsTable.updated_at))
     .innerJoinLateral(submittedByQuery, sql`true`)
-    .innerJoinLateral(reviewedByQuery, sql`true`);
 
-  const forms = [];
-  for (const form of pendingSubmissions) {
-    const formType = form.form_submissions.form_type;
-    const referenceId = form.form_submissions.reference_id;
-
-    const query = sql.raw(
-      `SELECT * FROM "${formType}" WHERE id = '${referenceId}'`
-    );
-
-    const referenceForm = await db.execute(query);
-    forms.push({ ...form, referenceForm: referenceForm[0] || null });
-  }
-
-  return forms;
-}
-
-export interface AllFormType extends PendingFormType {
-  reviewed_by?: User | null;
-}
-export async function listAllForms(): Promise<AllFormType[]> {
-  const submittedByQuery = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, formSubmissionsTable.submitted_by))
-    .as('submitted_by');
-  const reviewedByQuery = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, formSubmissionsTable.reviewed_by))
-    .as('reviewed_by');
-
-  const pendingSubmissions = await db
-    .select()
-    .from(formSubmissionsTable)
-    .orderBy(desc(formSubmissionsTable.created_at))
-    .innerJoinLateral(submittedByQuery, sql`true`)
-    .leftJoinLateral(reviewedByQuery, sql`true`);
-
-  const forms = [];
-  for (const form of pendingSubmissions) {
-    const formType = form.form_submissions.form_type;
-    const referenceId = form.form_submissions.reference_id;
-
-    const query = sql.raw(
-      `SELECT * FROM "${formType}" WHERE id = '${referenceId}'`
-    );
-
-    const referenceForm = await db.execute(query);
-    forms.push({ ...form, referenceForm: referenceForm[0] || null });
-  }
-
-  return forms;
+  return reviewedSubmissions;
 }

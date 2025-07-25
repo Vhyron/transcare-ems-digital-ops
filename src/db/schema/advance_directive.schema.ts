@@ -40,9 +40,10 @@ export const advanceDirectives = pgTable(ADVANCE_DIRECTIVES_TABLE, {
   limited_intervention: boolean().default(false),
   iv_fluid: boolean().default(false),
   ng_tube: boolean().default(false),
-  o2_therapy: boolean().default(false),
+  gt_tube: boolean().default(false),
   cpap_bipap: boolean().default(false),
   antibiotics: boolean().default(false),
+  laboratory: boolean().default(false),
   diagnostics: boolean().default(false),
   full_treatment: boolean().default(false),
 

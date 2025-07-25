@@ -1,6 +1,5 @@
 import {
   ClipboardList,
-  FilePlus,
   FileText,
   Grid2X2,
   Users2,
@@ -113,7 +112,7 @@ export const staffNavs: NavItem[] = [
       },
       {
         title: 'Trip Tickets',
-        url: '/trip-tickets/hospital',
+        url: '/operations/trip-tickets',
         breadcrumbs: [
           { label: 'Trip Tickets' },
           { label: 'Hospital Trip Ticket', isPage: true },
@@ -160,27 +159,27 @@ export const staffNavs: NavItem[] = [
   //     },
   //   ],
   // },
-  {
-    title: 'More Forms',
-    icon: FilePlus,
-    url: '/forms',
-    items: [
-      {
-        title: 'New Form A',
-        url: '/forms/new-form-a',
-        breadcrumbs: [
-          { label: 'More Forms' },
-          { label: 'New Form A', isPage: true },
-        ],
-      },
-      {
-        title: 'New Form B',
-        url: '/forms/new-form-b',
-        breadcrumbs: [
-          { label: 'More Forms' },
-          { label: 'New Form B', isPage: true },
-        ],
-      },
-    ],
-  },
+  // {
+  //   title: 'More Forms',
+  //   icon: FilePlus,
+  //   url: '/forms',
+  //   items: [
+  //     {
+  //       title: 'New Form A',
+  //       url: '/forms/new-form-a',
+  //       breadcrumbs: [
+  //         { label: 'More Forms' },
+  //         { label: 'New Form A', isPage: true },
+  //       ],
+  //     },
+  //     {
+  //       title: 'New Form B',
+  //       url: '/forms/new-form-b',
+  //       breadcrumbs: [
+  //         { label: 'More Forms' },
+  //         { label: 'New Form B', isPage: true },
+  //       ],
+  //     },
+  //   ],
+  // },
 ];
